@@ -1,2 +1,2 @@
-# sindcelma-web-service
-Site + API
+# sindcelma-api
+API dos serviços SINDCELMA
