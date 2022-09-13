@@ -1,13 +1,23 @@
-class User {
+abstract class User {
     
-    private email
+    private sess:string
+    private type:String
 
-    constructor(email:String) {
-        this.email = email
+    constructor(type:String, sess:string = "") {
+        this.type = type
+        this.sess = sess
     }
 
-    public getEmail(){
-        return this.email
+    public getType(){
+        return this.type
+    }
+
+    public getSession(){
+        return this.sess
+    }
+
+    public setSession(sess:string){
+        this.sess = sess
     }
 
 }

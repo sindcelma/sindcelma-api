@@ -1,5 +1,5 @@
 import express, { Express } from "express";
-import Config from "./config"
+import Config from "./lib/config"
 import routes from "./routes";
 import User from './model/User';
 import factory from './model/UserFactory'
@@ -14,6 +14,7 @@ declare global{
 
 const app:Express = express()
 const config:Config = Config.instance()
+app.use(express.json())
 app.use('/', factory)
 routes(app)
 
