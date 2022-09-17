@@ -1,0 +1,7 @@
+{
+    "host":"localhost",
+    "user":"root",
+    "pass":"password@123",
+    "port":"3306",
+    "name":"sindcelma"
+}
