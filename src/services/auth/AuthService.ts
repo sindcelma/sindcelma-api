@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import jwt from "../../lib/jwt";
+// import jwt from "../../lib/jwt";
 import mysqli from "../../lib/mysqli";
 
 class AuthService {
@@ -21,8 +21,7 @@ class AuthService {
             conn.end()
             res.send("error")
         }
-        
-        
+
     }
 
 }
