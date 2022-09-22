@@ -1,4 +1,4 @@
-import express, { Express } from "express";
+import express, { Express, Response } from "express";
 import Config from "./lib/config"
 import routes from "./routes";
 import User from './model/User';
@@ -8,6 +8,14 @@ declare global{
     namespace Express {
         interface Request {
             user: User
+        }
+    }
+}
+
+declare global{
+    namespace Express {
+        interface Response {
+            user?: User
         }
     }
 }

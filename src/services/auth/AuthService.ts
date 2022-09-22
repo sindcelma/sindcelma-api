@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-// import jwt from "../../lib/jwt";
+import { generateToken} from "../../lib/jwt"
 import mysqli from "../../lib/mysqli";
 
 class AuthService {
