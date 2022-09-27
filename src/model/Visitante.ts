@@ -1,9 +1,17 @@
+import { DataUser } from '../lib/jwt';
 import User from './User';
 
 class Visitante extends User {
 
     constructor(){
-       super("Visitante")
+        const visitante:DataUser = {
+            id:0,
+            nome:'',
+            sobrenome:'',
+            email:'',
+            ativo:false
+        }
+        super("Visitante",visitante)
     }
 
 }

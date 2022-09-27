@@ -1,9 +1,10 @@
 import User from './User';
+import { DataUser } from "../lib/jwt"
 
 class Socio extends User {
 
-    constructor(){
-        super("Socio")
+    constructor(user:DataUser) {
+        super("Socio", user)
     }
 
 }

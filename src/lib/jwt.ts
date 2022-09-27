@@ -3,10 +3,18 @@ import Config from './config'
 
 const config:Config = Config.instance()
 
+interface DataUser {
+    id:Number,
+    nome:String,
+    sobrenome:String,
+    email:String,
+    ativo:boolean
+}
+
 interface Token {
     type:string,
     expired:boolean,
-    data:{},
+    data:DataUser,
     status:boolean
 }
 
@@ -17,6 +25,22 @@ interface header {
 }
 
 const limit = Date.now() + (1000 * 60 * 60)  // uma hora de duração
+
+const emptyUser:DataUser = {
+    id:0,
+    nome:'',
+    sobrenome:'',
+    email:'',
+    ativo:false
+} 
+
+const visitante:Token = {
+    status:false,
+    type:"Visitante",
+    expired:true,
+    data:emptyUser
+}
+
 
 const generateToken = function(type:string, body:{}){
         
@@ -31,6 +55,7 @@ const generateToken = function(type:string, body:{}){
     
     return `${h}.${b}.${crypto.createHmac(header.alg, config.json().salt).update(h+'.'+b).digest('base64')}`
 }
+
 
 const verifyToken = function(hash:string):Token{
 
@@ -49,12 +74,7 @@ const verifyToken = function(hash:string):Token{
         let expired = agora > header.tim
         
         if(expired && (agora - header.tim) > (limit + (1000 * 15))){
-            return {
-                status:false,
-                type:header.typ,
-                expired:true,
-                data:{}
-            }
+            return visitante
         }
 
         return (
@@ -65,27 +85,18 @@ const verifyToken = function(hash:string):Token{
                     data: JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8')), 
                     expired: expired
                 }
-            :  {
-                status: true,
-                type:header.typ,
-                expired:expired,
-                data:{}
-            } 
+            :  visitante
         )
 
     } catch(e){
-        return {
-            status:false,
-            type:'Visitante',
-            expired:true,
-            data:{}
-        }
+        return visitante
     }
     
 }
 
 export {
     Token,
+    DataUser,
     generateToken,
     verifyToken
 }

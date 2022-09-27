@@ -11,8 +11,8 @@ const getUser = (sessionToken:Token):User => {
     if(!sessionToken.status) return new Visitante()
 
     switch (sessionToken.type) {
-        case "Socio": return new Socio() 
-        case "Admin": return new Admin() 
+        case "Socio": return new Socio(sessionToken.data) 
+        case "Admin": return new Admin(sessionToken.data) 
         default: return new Visitante()
     }
 

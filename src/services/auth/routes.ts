@@ -1,11 +1,12 @@
 import { Router } from "express";
 import AuthService from "./AuthService";
+import AuthAdmin from './AuthAdmin';
 
 const router = Router()
 
 export default () => {
 
-    router.get('/login', AuthService.login)
+    router.get('/admin/login', AuthAdmin.login)
     return router
 
 }

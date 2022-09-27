@@ -2,7 +2,7 @@ import { Response } from "express"
 
 interface resp {
     message:any,
-    session?:string
+    session?:String
 }
 
 export default (res:Response) => {
