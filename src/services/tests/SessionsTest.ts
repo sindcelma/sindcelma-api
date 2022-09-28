@@ -13,8 +13,12 @@ class SessionTest {
 
     public static checarTipoDeSessao(req:Request, res:Response){
         try {
-            assertion(res).isAdmin(req.user).isSocio(req.user)
-            response(res).success("ok")
+            assertion(res)
+            .isSocio(req.user)
+            .isAdmin(req.user)
+            .assert()
+            
+            response(res).success(req.user)
         } catch (error) {
             // nada...
         }

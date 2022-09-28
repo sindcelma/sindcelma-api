@@ -35,21 +35,19 @@ class AuthAdmin {
                 if(result.length > 0){
                     
                     const message = result[0]
-                    const user:DataUser = {
+                    const user = {
                         id:message.id,
                         nome:message.nome,
                         sobrenome:message.sobrenome,
                         email:message.email,
                         ativo:message.ativo == 1
                     } 
-                    message.session = generateToken("Admin", user)
+                    const admin = new Admin(user)
+                    admin.setSlug(message.slug)
+                    message.session = generateToken("Admin", admin)
                     
                     if(remem){
-        
-                        const admin = new Admin(user)
-                        admin.setSlug(message.slug)
                         message.remembermetk = admin.getRememberMeToken()
-
                         conn.query("INSERT INTO user_devices (user_id, rememberme) VALUES (?,?)", [message.id, message.remembermetk])
                     }
                     response(res).success(message)

@@ -1,12 +1,12 @@
 import { Router } from "express";
-import Socio from "./Socio";
+import SocioManager from "./SocioManager";
 
 
 const router = Router()
 
 export default () => {
 
-    router.get('/list', Socio.list)
+    router.get('/manager/list', SocioManager.list)
     return router
 
 }

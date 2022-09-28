@@ -42,7 +42,7 @@ const visitante:Token = {
 }
 
 
-const generateToken = function(type:string, body:{}){
+const generateToken = function(type:string, body:any){
         
     const header:header = {
         alg:"sha256",

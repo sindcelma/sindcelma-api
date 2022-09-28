@@ -5,6 +5,12 @@ import Visitante from './Visitante';
 import Socio from "./Socio";
 import {generateToken, verifyToken, Token} from "../lib/jwt";
 
+const genAdmin = (dataToken:any):User => {
+    const adm = new Admin(dataToken)
+    adm.setSlug(dataToken.slug)
+    return adm
+}
+
 
 const getUser = (sessionToken:Token):User => {
 
@@ -12,7 +18,7 @@ const getUser = (sessionToken:Token):User => {
 
     switch (sessionToken.type) {
         case "Socio": return new Socio(sessionToken.data) 
-        case "Admin": return new Admin(sessionToken.data) 
+        case "Admin": return genAdmin(sessionToken.data) 
         default: return new Visitante()
     }
 
