@@ -36,8 +36,8 @@ const setUserBySessionToken = (sessionToken:string):User => {
 }
 
 export default async function(req:Request, res:Response, next?:any){
-
     req.user = req.body.session != null ? setUserBySessionToken(String(req.body.session)) : new Visitante()
+    req.user.setAgent(req.get('User-Agent'))
     if(!(req.user instanceof Visitante)){
         res.user = req.user
     }

@@ -24,7 +24,7 @@ interface header {
     tim:number
 }
 
-const limit = Date.now() + (1000 * 60 * 60)  // uma hora de duração
+const limit = Date.now() + (1000 * 60 * 15)  // 15 minutos de duração
 
 const emptyUser:DataUser = {
     id:0,
@@ -58,7 +58,7 @@ const generateToken = function(type:string, body:any){
 
 
 const verifyToken = function(hash:string):Token{
-
+    
     try {
 
         const parts  = hash.split('.')
@@ -73,7 +73,7 @@ const verifyToken = function(hash:string):Token{
 
         let expired = agora > header.tim
         
-        if(expired && (agora - header.tim) > (limit + (1000 * 15))){
+        if(expired && (agora - header.tim) > (1000 * 60 * 15)){
             return visitante
         }
 

@@ -1,5 +1,5 @@
 import { Response, Request } from 'express';
-import { DataUser, generateToken } from '../../lib/jwt';
+import { generateToken } from '../../lib/jwt';
 import mysqli from "../../lib/mysqli";
 import response from '../../lib/response';
 import Admin from '../../model/Admin';
@@ -32,6 +32,10 @@ class AuthAdmin {
 
             conn.query(query, [email, senha], (err, result) => {
                 
+                if(err){
+                    return response(res).error(500, 'Internal Error')
+                }
+
                 if(result.length > 0){
                     
                     const message = result[0]
@@ -48,13 +52,13 @@ class AuthAdmin {
                     
                     if(remem){
                         message.remembermetk = admin.getRememberMeToken()
-                        conn.query("INSERT INTO user_devices (user_id, rememberme) VALUES (?,?)", [message.id, message.remembermetk])
+                        conn.query("INSERT INTO user_devices (user_id, header, rememberme) VALUES (?,?,?)", [message.id, admin.getAgent(), message.remembermetk])
                     }
-                    response(res).success(message)
-                } else {
-                    response(res).error(404, 'Not Found')
-                }
+                    return response(res).success(message)
+                } 
+
                 conn.end()
+                response(res).error(404, 'Not Found')
                 
             })
         } catch (error) {

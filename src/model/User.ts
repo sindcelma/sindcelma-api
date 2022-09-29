@@ -7,6 +7,7 @@ abstract class User {
     private id:Number = 0
     private sess:String = ""
     private rememberMeToken:String = ""
+    private agent:String = ""
 
     private nome:String
     private sobrenome:String
@@ -39,8 +40,17 @@ abstract class User {
         return this.sess
     }
 
+    public getAgent(){
+        return this.agent
+    }
+
     public setSession(sess:String){
         this.sess = sess
+    }
+
+    public setAgent(agent:String|undefined){
+        if(agent)
+        this.agent = agent
     }
 
     public getRememberMeToken(){
