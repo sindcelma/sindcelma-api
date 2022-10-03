@@ -9,27 +9,15 @@ abstract class User {
     private rememberMeToken:String = ""
     private agent:String = ""
 
-    private nome:String
-    private sobrenome:String
     private type:String
     
     constructor(type:String, user:DataUser) {
         this.type = type
         this.id = user.id
-        this.nome = user.nome
-        this.sobrenome = user.sobrenome
     }
 
-    public getNome(){
-        return this.nome 
-    }
-
-    public getNomeCompleto() {
-        return this.nome + " " + this.sobrenome
-    }
-
-    public getSobrenome(){
-        return this.sobrenome
+    public getId(){
+        return this.id
     }
 
     public getType(){

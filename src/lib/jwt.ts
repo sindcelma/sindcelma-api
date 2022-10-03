@@ -5,8 +5,6 @@ const config:Config = Config.instance()
 
 interface DataUser {
     id:Number,
-    nome:String,
-    sobrenome:String,
     email:String,
     ativo:boolean
 }
@@ -28,8 +26,6 @@ const limit = Date.now() + (1000 * 60 * 15)  // 15 minutos de duração
 
 const emptyUser:DataUser = {
     id:0,
-    nome:'',
-    sobrenome:'',
     email:'',
     ativo:false
 } 
@@ -42,7 +38,7 @@ const visitante:Token = {
 }
 
 
-const generateToken = function(type:string, body:any){
+const generateToken = function(type:string, body:any):String{
         
     const header:header = {
         alg:"sha256",

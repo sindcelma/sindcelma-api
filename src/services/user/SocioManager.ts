@@ -18,11 +18,13 @@ class SocioManager {
         const tipo  = req.body.tipo
 
         const conn = mysqli()
+        /*
         conn.query("INSERT INTO user (nome, sobrenome, email, senha, ativo) VALUES (?,?,?,?,?)", 
                 [nome, sobr, email, senha, 0], (err, result) => {
 
                     
         })
+        */
     }
 
 
@@ -30,6 +32,15 @@ class SocioManager {
 
         const socio_id = req.body.socio_id
 
+        // dados pessoais
+        const nasc  = req.body.data_nascimento
+        const civil = req.body.estado_civil
+        const cpf   = req.body.cpf
+        const rg    = req.body.rg
+        const sexo  = req.body.sexo
+        
+        const conn = mysqli()
+        /*
         conn.query("INSERT INTO socios_dados_pessoais (socio_id, rg, cpf, sexo, estado_civil, data_nascimento) VALUES (?,?,?,?,?,?)",
             [ sid, rg, cpf, sexo, civil, nasc ], (err) => {
                 if(err) {
@@ -40,6 +51,7 @@ class SocioManager {
                 conn.end()
             }
         )
+        */
     }
 
     public static list(req:Request, res:Response){
@@ -67,12 +79,7 @@ class SocioManager {
         const nome  = req.body.nome // criptografar
         const sobr  = req.body.sobrenome
     
-        // dados pessoais
-        const nasc  = req.body.data_nascimento
-        const civil = req.body.estado_civil
-        const cpf   = req.body.cpf
-        const rg    = req.body.rg
-        const sexo  = req.body.sexo
+       
 
         /*
         // empresa id

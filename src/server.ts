@@ -2,7 +2,7 @@ import express, { Express, Response } from "express";
 import Config from "./lib/config"
 import routes from "./routes";
 import User from './model/User';
-import factory from './model/UserFactory'
+import { middleware } from './model/UserFactory'
 
 declare global{
     namespace Express {
@@ -23,7 +23,7 @@ declare global{
 const app:Express = express()
 const config:Config = Config.instance()
 app.use(express.json())
-app.use('/', factory)
+app.use('/', middleware)
 routes(app)
 
 app.listen(config.json().port, () => {
