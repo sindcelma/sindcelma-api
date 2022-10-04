@@ -9,10 +9,13 @@ import mysqli from "../lib/mysqli";
 
 const setDataAdmin = (data:any, admin:Admin):Admin => {
     admin.setSlug(data.slug)
+    admin.setNome(data.nome)
     return admin
 }
 
 const setDataSocio = (data:any, socio:Socio):Socio => {
+    socio.setFullName(data.nome, data.sobrenome)
+    socio.setSlug(data.slug)
     return socio
 }
 
@@ -42,17 +45,17 @@ const getAdmin = (email:String, senha:String, fn:(user:User, error:Boolean) => v
 
             if(result.length > 0){
                 
-                const message = result[0]
+                const res = result[0]
                 const user = {
-                    id:message.id,
-                    email:message.email,
-                    ativo:message.ativo == 1
+                    id:res.id,
+                    email:res.email,
+                    ativo:res.ativo == 1
                 } 
 
                 const admin = new Admin(user)
                 conn.end()
                 
-                return fn(setDataAdmin(message, admin), false)
+                return fn(setDataAdmin(res, admin), false)
                 
             } 
 
@@ -73,16 +76,22 @@ const getSocio = (email:String, senha:String, fn:(user:User, error:Boolean) => v
 
     try {
         let query = 
-                `SELECT 
-                    user.id,
-                    user.email,
-                    user.ativo,
-                    admin.slug
-                FROM user 
-                JOIN admin ON admin.user_id = user.id
-                    WHERE user.email = ?
-                    AND   user.senha = ?
-                    AND   user.ativo = 1`;
+        `SELECT 
+                socios.nome,
+                socios.sobrenome,
+                socios.slug,
+                user.id,
+                user.email,
+                user.ativo
+                 
+           FROM  user
+           JOIN  socios ON user.id = socios.user_id 
+           
+          WHERE  user.email = ?
+            AND  user.senha = ?
+            AND  user.ativo = 1 
+            AND  socios.status = 1`
+        ;
 
         conn.query(query, [email, senha], (err, result) => {
             
@@ -92,18 +101,17 @@ const getSocio = (email:String, senha:String, fn:(user:User, error:Boolean) => v
 
             if(result.length > 0){
                 
-                const message = result[0]
+                const res = result[0]
                 const user = {
-                    id:message.id,
-                    email:message.email,
-                    ativo:message.ativo == 1
+                    id:res.id,
+                    email:res.email,
+                    ativo:res.ativo == 1
                 } 
 
-                const admin = new Admin(user)
-                admin.setSlug(message.slug)
+                const socio = new Socio(user)
                 conn.end()
                 
-                return fn(admin, false)
+                return fn(setDataSocio(res, socio), false)
                 
             } 
 

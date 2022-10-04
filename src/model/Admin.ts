@@ -4,6 +4,7 @@ import { DataUser } from "../lib/jwt"
 class Admin extends User {
 
     private slug:String = ""
+    private nome:String = ""
 
     constructor(user:DataUser) {
         super("Admin", user)
@@ -15,6 +16,14 @@ class Admin extends User {
 
     public getSlug(){
         return this.slug
+    }
+
+    public setNome(nome:String){
+        this.nome = nome
+    }
+
+    public getNome(){
+        return this.nome
     }
 
 }
