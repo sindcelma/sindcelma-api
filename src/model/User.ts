@@ -6,7 +6,6 @@ abstract class User {
     
     private id:Number = 0
     private sess:String = ""
-    private rememberMeToken:String = ""
     private agent:String = ""
 
     private type:String
@@ -45,16 +44,10 @@ abstract class User {
 
         const config:Config = Config.instance()
 
-        if(this.rememberMeToken == ""){
-            this.rememberMeToken =  crypto
-                                    .createHmac('sha256', config.json().salt+String(this.id))
-                                    .update(String((new Date()).getMilliseconds() + Math.floor(Math.random() * (10000 + 1))))
-                                    .digest('base64')
-            
-        }
-            
-        
-        return this.rememberMeToken
+        return crypto
+        .createHmac('sha256', config.json().salt+String(this.id))
+        .update(String((new Date()).getMilliseconds() + Math.floor(Math.random() * (10000 + 1))))
+        .digest('base64')
 
     }
 

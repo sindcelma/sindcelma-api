@@ -3,9 +3,9 @@ import { DataUser, generateToken } from "../../lib/jwt"
 import mysqli from "../../lib/mysqli";
 import response from "../../lib/response";
 import User from "../../model/User";
-import { getUser } from '../../model/UserFactory'
+import { getUser, getUserByRememberme } from '../../model/UserFactory'
 
-
+interface msg { session:String, user:User, remembermetk?:any }
 
 class AuthService {
 
@@ -16,13 +16,11 @@ class AuthService {
         const remem = req.body.rememberme
         const type  = req.body.type
 
-        getUser(type, email, senha, (user, error) => {
+        getUser(type, email, senha, (user, error, msg) => {
 
             if(error){
-                return response(res).error(500, 'Internal Error')
+                return response(res).error(500, msg)
             }
-            
-            interface msg { session:String, user:User, remembermetk?:any }
             
             const message:msg = {
                 session: generateToken(type, user),
@@ -55,45 +53,19 @@ class AuthService {
         
         const remembermeToken = req.body.rememberme
         const type = req.body.type
-        const con = mysqli()
         
-        const join = 
-            type == 'Admin' 
-            ? `JOIN admin  ON  admin.user_id = user.id`
-            : `JOIN socios ON socios.user_id = user.id`
-
-        const query = `
-            SELECT 
-                user.id,
-                user.email,
-                user.ativo
-            FROM user_devices
-            JOIN user ON user.id = user_devices.user_id 
-            ${join}
-            WHERE user_devices.rememberme = ?`
-        ;
-
-        
-        con.query(query, [ remembermeToken ], (err, result) => {
-            
-            if(err){
-                return response(res).error(500, 'Internal Error')
-            }
-
-            if(result.length == 0){
-                return response(res).error(404, 'Not Found')
+        getUserByRememberme(type, remembermeToken, (user, error, msg) => {
+           
+            if(error){
+                return response(res).error(500, msg)
             }
             
-            const message = result[0]
-            const user:DataUser = {
-                id:message.id,
-                email:message.email,
-                ativo:message.ativo == 1
-            } 
-            
-            message.session = generateToken(type, user)
+            const message:msg = {
+                session: generateToken(type, user),
+                user:user
+            }
+
             response(res).success(message)
-
         })
 
     }

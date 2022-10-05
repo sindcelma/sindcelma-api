@@ -6,6 +6,7 @@ class Socio extends User {
     private nome:String = ""
     private sobrenome:String = ""
     private slug:String = ""
+    private status:Number = 0
 
     constructor(user:DataUser) {
         super("Socio", user)
@@ -18,6 +19,10 @@ class Socio extends User {
 
     public setSlug(slug:String){
         this.slug = slug
+    }
+
+    public setStatus(status:Number){
+        this.status = status
     }
 
 

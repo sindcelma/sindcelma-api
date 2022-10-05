@@ -26,8 +26,7 @@ export default (res:Response) => {
 
         assert: () => {
             if(!obj.status){
-                response(res).error(401, 'unauthorized')
-                throw new Error("unauthorized");
+                throw new Error("Error in assertion");
             }
         }
     

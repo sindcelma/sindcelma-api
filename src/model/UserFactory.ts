@@ -16,11 +16,12 @@ const setDataAdmin = (data:any, admin:Admin):Admin => {
 const setDataSocio = (data:any, socio:Socio):Socio => {
     socio.setFullName(data.nome, data.sobrenome)
     socio.setSlug(data.slug)
+    socio.setStatus(data.status)
     return socio
 }
 
 
-const getAdmin = (email:String, senha:String, fn:(user:User, error:Boolean) => void, remem:Boolean) =>{
+const getAdmin = (email:String, senha:String, fn:(user:User, error:Boolean, msg:String) => void, remem:Boolean) =>{
 
     const conn = mysqli()
 
@@ -40,7 +41,7 @@ const getAdmin = (email:String, senha:String, fn:(user:User, error:Boolean) => v
         conn.query(query, [email, senha], (err, result) => {
             
             if(err){
-                return fn(new Visitante, true)
+                return fn(new Visitante, true, "Internal Error")
             }
 
             if(result.length > 0){
@@ -55,22 +56,22 @@ const getAdmin = (email:String, senha:String, fn:(user:User, error:Boolean) => v
                 const admin = new Admin(user)
                 conn.end()
                 
-                return fn(setDataAdmin(res, admin), false)
+                return fn(setDataAdmin(res, admin), false, "")
                 
             } 
 
             conn.end()
-            fn(new Visitante, true)
+            fn(new Visitante, true, "Você digitou e-mail e/ou senha incorretos ou este usuário não existe")
             
         })
     } catch (error) {
-        fn(new Visitante, true)
+        fn(new Visitante, true, "Internal Error")
         conn.end()
     }
 
 }
 
-const getSocio = (email:String, senha:String, fn:(user:User, error:Boolean) => void, remember:Boolean) => {
+const getSocio = (email:String, senha:String, fn:(user:User, error:Boolean, msg:String) => void, remember:Boolean) => {
 
     const conn = mysqli()
 
@@ -80,6 +81,7 @@ const getSocio = (email:String, senha:String, fn:(user:User, error:Boolean) => v
                 socios.nome,
                 socios.sobrenome,
                 socios.slug,
+                socios.status,
                 user.id,
                 user.email,
                 user.ativo
@@ -89,14 +91,13 @@ const getSocio = (email:String, senha:String, fn:(user:User, error:Boolean) => v
            
           WHERE  user.email = ?
             AND  user.senha = ?
-            AND  user.ativo = 1 
-            AND  socios.status = 1`
+            AND  user.ativo = 1 `
         ;
 
         conn.query(query, [email, senha], (err, result) => {
             
             if(err){
-                return fn(new Visitante, true)
+                return fn(new Visitante, true, "Internal Error")
             }
 
             if(result.length > 0){
@@ -108,29 +109,33 @@ const getSocio = (email:String, senha:String, fn:(user:User, error:Boolean) => v
                     ativo:res.ativo == 1
                 } 
 
+                if(res.status > 1){
+                    return fn(new Visitante, true, "Sócio Bloqueado")                    
+                }
+
                 const socio = new Socio(user)
                 conn.end()
                 
-                return fn(setDataSocio(res, socio), false)
+                return fn(setDataSocio(res, socio), false, "")
                 
             } 
 
             conn.end()
-            fn(new Visitante, true)
+            fn(new Visitante, true, "Você digitou e-mail e/ou senha incorretos, este usuário não existe ou está bloqueado.")
             
         })
     } catch (error) {
-        fn(new Visitante, true)
+        fn(new Visitante, true, "Internal Error")
         conn.end()
     }
 
 }
 
-const getUser = (type:String, email:String, senha:String, fn:(user:User, error:Boolean) => void, remember:Boolean = false) => {
+const getUser = (type:String, email:String, senha:String, fn:(user:User, error:Boolean, msg:String) => void, remember:Boolean = false) => {
     switch (type) {
         case "Admin": getAdmin(email, senha, fn, remember); break;
         case "Socio": getSocio(email, senha, fn, remember); break;
-        default: fn(new Visitante, true)
+        default: fn(new Visitante, true, "Este tipo de usuário não existe")
     }
     
 }
@@ -140,6 +145,121 @@ const genAdmin = (dataToken:any):User => {
     return setDataAdmin(dataToken, adm)
 }
 
+
+const getSocioByRememberme = (remembermetk:String, fn:(user:User, error:Boolean, msg:String) => void) => {
+
+    let query:string = `
+        SELECT 
+            socios.nome,
+            socios.sobrenome,
+            socios.slug,
+            socios.status,
+            user.id,
+            user.email,
+            user.ativo
+            
+        FROM  user
+            JOIN socios ON user.id = socios.user_id 
+            JOIN user_devices ON user_devices.user_id = user.id
+                    WHERE user_devices.rememberme = ?
+                    AND   user.ativo = 1`
+
+    const conn = mysqli() 
+    try {
+        conn.query(query, [remembermetk], (err, result) => {
+        
+            if(err){
+                return fn(new Visitante, true, "Internal Error")
+            }
+    
+            const res = result[0]
+    
+            if(result.length > 0){
+                    
+                const res = result[0]
+                const user = {
+                    id:res.id,
+                    email:res.email,
+                    ativo:res.ativo == 1
+                } 
+    
+                if(res.status > 1){
+                    return fn(new Visitante, true, "Sócio Bloqueado")                    
+                }
+
+                const socio = new Socio(user)
+                conn.end()
+                
+                return fn(setDataSocio(res, socio), false, "")
+                
+            } 
+    
+            conn.end()
+            fn(new Visitante, true, "Este Token expirou ou não é válido")
+        })
+    } catch (error) {
+        fn(new Visitante, true, "Internal Error")
+        conn.end()
+    }
+}
+
+const getAdminByRememberme = (remembermetk:String, fn:(user:User, error:Boolean, msg:String) => void) => {
+    
+    let query:string = `
+        SELECT 
+            user.id,
+            user.email,
+            user.ativo,
+            admin.slug
+        FROM user 
+            JOIN admin ON admin.user_id = user.id
+            JOIN user_devices ON user_devices.user_id = user.id
+                    WHERE user_devices.rememberme = ?
+                    AND   user.ativo = 1`
+
+    const conn = mysqli() 
+    try {
+        conn.query(query, [remembermetk], (err, result) => {
+        
+            if(err){
+                return fn(new Visitante, true, "Internal Error")
+            }
+    
+            const res = result[0]
+    
+            if(result.length > 0){
+                    
+                const res = result[0]
+                const user = {
+                    id:res.id,
+                    email:res.email,
+                    ativo:res.ativo == 1
+                } 
+    
+                const admin = new Admin(user)
+                conn.end()
+                
+                return fn(setDataAdmin(res, admin), false, "")
+                
+            } 
+    
+            conn.end()
+            fn(new Visitante, true, "Este Token expirou ou não é válido")
+        })
+    } catch (error) {
+        fn(new Visitante, true, "Internal Error")
+        conn.end()
+    }
+    
+}
+
+const getUserByRememberme = (type:String, remembermetk:String, fn:(user:User, error:Boolean, msg:String) => void) => {
+    switch (type) {
+        case "Admin": getAdminByRememberme(remembermetk, fn); break;
+        case "Socio": getSocioByRememberme(remembermetk, fn); break;
+        default: fn(new Visitante, true, "Este tipo de usuário não existe")
+    }
+}
 
 const getUserByToken = (sessionToken:Token):User => {
 
@@ -176,5 +296,6 @@ const middleware = async function(req:Request, res:Response, next?:any){
 
 export {
     middleware,
-    getUser
+    getUser,
+    getUserByRememberme
 }

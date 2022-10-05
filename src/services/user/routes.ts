@@ -1,5 +1,6 @@
 import { Router } from "express";
 import SocioManager from "./SocioManager";
+import AuthService from './AuthService';
 
 
 const router = Router()
@@ -9,6 +10,8 @@ export default () => {
     // admin
 
     // user
+    router.get('/rememberme', AuthService.rememberme)
+    router.get('/login', AuthService.login)
 
     // socio
     router.get('/socio/manager/aprove', SocioManager.list)
