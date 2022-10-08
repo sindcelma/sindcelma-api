@@ -7,51 +7,54 @@ import Config from "../../lib/config";
 
 class SocioManager {
 
-    public static add_dados_profissionais(req:Request, res:Response){
 
-        // empresa id
-        const empresaID = req.body.empresaID 
-        // dados profissionais
-        const cargo = req.body.cargo
-        const admis = req.body.data_admissao
-        const matrc = req.body.num_matricula
-        const tipo  = req.body.tipo
-
-        const conn = mysqli()
-        /*
-        conn.query("INSERT INTO user (nome, sobrenome, email, senha, ativo) VALUES (?,?,?,?,?)", 
-                [nome, sobr, email, senha, 0], (err, result) => {
-
-                    
-        })
-        */
+    public static get_socio_by_login(req:Request, res:Response){
+        // verificar se o cliente enviou email ou CPF 
+        // verificar se se há um usuário cadastrado
+        // - se não houver avisar o cliente para cadastrar 
+        //   verificar se houve confirmação através de código
+        //   - se houver confirmação solicitar senha 
+        //   - se não houver solicitar confirmação
     }
 
+    public static cadastrar_usuario(req:Request, res:Response){
+        // verificar se o cliente enviou o CPF, email, senha e telefone (se ele quiser)
+        // salvar no mailing o email e o telefone se ele solicitar receber notificações
+    }
+
+    public static update_usuario(req:Request, res:Response){
+        // alterar email
+    }
+
+    public static confirmar_cadastro(req:Request, res:Response){
+        // verificar se o cliente enviou o CPF, email com o código de confirmação
+    }
+
+    public static recuperar_login(req:Request, res:Response){
+        // gerar o código e enviar via email ou telefone
+    }
+
+    public static checar_codigo_login(req:Request, res:Response){
+        // verificar o codigo
+    }
+
+    public static cadastrar_socio(req:Request, res:Response){
+        // Nome, sobrenome, CPF
+    }
+
+    public static add_dados_profissionais(req:Request, res:Response){
+        // cargo, empresa, etc...
+        // verificar se o user é admin
+        // verificar se o user é um sócio, se for um sócio verificar se o id é o mesmo
+        // que o do usuário que será registrado
+        // socio slug 
+    }
 
     public static add_dados_pessoais(req:Request, res:Response){
-
-        const socio_id = req.body.socio_id
-
-        // dados pessoais
-        const nasc  = req.body.data_nascimento
-        const civil = req.body.estado_civil
-        const cpf   = req.body.cpf
-        const rg    = req.body.rg
-        const sexo  = req.body.sexo
-        
-        const conn = mysqli()
-        /*
-        conn.query("INSERT INTO socios_dados_pessoais (socio_id, rg, cpf, sexo, estado_civil, data_nascimento) VALUES (?,?,?,?,?,?)",
-            [ sid, rg, cpf, sexo, civil, nasc ], (err) => {
-                if(err) {
-                    conn.end()
-                    return response(res).error(500, "Internal error.")
-                }
-                response(res).success("Sócio temporário foi criado com sucesso.")
-                conn.end()
-            }
-        )
-        */
+        // verificar se o user é admin
+        // verificar se o user é um sócio, se for um sócio verificar se o id é o mesmo
+        // que o do usuário que será registrado
+        // socio slug 
     }
 
     public static list(req:Request, res:Response){
@@ -67,70 +70,6 @@ class SocioManager {
         response(res).success()
     }
 
-    /**
-     * Adicionar sócio
-     * coloca-lo pra aprovação
-     */
-    public static add(req:Request, res:Response){
-        
-        // dados socio
-        const email = req.body.email 
-        const senha = req.body.senha // criptografar
-        const nome  = req.body.nome // criptografar
-        const sobr  = req.body.sobrenome
-    
-       
-
-        /*
-        // empresa id
-        const empresaID = req.body.empresaID 
-        // dados profissionais
-        const cargo = req.body.cargo
-        const admis = req.body.data_admissao
-        const matrc = req.body.num_matricula
-        const tipo  = req.body.tipo
-        */
-        const conn = mysqli()
-        
-        try { 
-            conn.query("INSERT INTO user (nome, sobrenome, email, senha, ativo) VALUES (?,?,?,?,?)", 
-                [nome, sobr, email, senha, 0], (err, result) => {
-                
-                    if(err) {
-                        conn.end()
-                        return response(res).error(401, "Este e-mail já está cadastrado.")
-                    }
-                    
-                    const uid = result.insertId
-                    
-                    const slug = createHmac('sha256', Config.instance().json().salt)
-                    .update(`user_id_${uid + email}`)
-                    .digest('hex');
-
-                    conn.query("INSERT INTO socios (user_id, slug, status) VALUES (?,?,?)", 
-                        [uid, slug, 0], (err, result2) => {
-                        
-                            if(err) {
-                                conn.end()
-                                return response(res).error(500, "Internal error.")
-                            }
-
-                            conn.end()
-                        }
-                    )
-                    
-                }
-            )
-        } catch (error) {
-            conn.end()
-            return response(res).error(500, "Internal Error")
-        }
-
-    }
-
-    /**
-     * Aprovar sócio
-     */
     public static aprove(req:Request, res:Response){
         try {
             assertion(res)
@@ -143,10 +82,15 @@ class SocioManager {
         response(res).success()
     }
 
-    /**
-     * Editar dados sócio
-     */
-    public static update(req:Request, res:Response){
+    public static update_dados_socio(req:Request, res:Response){
+        // nao pode alterar cpf
+    }
+
+    public static update_dados_profissionais(req:Request, res:Response){
+
+    }
+
+    public static update_dados_pessoais(req:Request, res:Response){
 
     }
 

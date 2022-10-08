@@ -28,12 +28,15 @@ class AdminManager {
 
         conn.query("INSERT INTO user (email, senha, ativo) VALUES (?,?,1)", 
             [email, senha], (err, result) => {
+                
                 if(err){
                     conn.end()
                     return response(res).error(500, "Internal Error")
                 }
+                
                 const id   = result.insertId
                 const slug = generateSlug(String(id)+email)
+                
                 conn.query("INSERT INTO admin (nome, user_id, slug) VALUES (?,?,?)",
                     [nome, id, slug], err2 => {
                         if(err2){
@@ -44,6 +47,7 @@ class AdminManager {
                         conn.end()
                     }
                 )
+                
             }
         )
     }
