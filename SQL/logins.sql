@@ -2,11 +2,10 @@ use sindcelma;
 
 SELECT 
 		user.id,
-		user.nome,
-		user.sobrenome,
 		user.email,
 		user.ativo,
-		admin.slug
+		admin.slug,
+        admin.nome
     FROM 
 		user 
     JOIN admin ON admin.user_id = user.id
