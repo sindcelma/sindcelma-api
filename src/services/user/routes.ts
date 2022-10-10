@@ -17,9 +17,10 @@ export default () => {
     router.get('/socio/manager/aprove', SocioManager.list)
     router.get('/socio/manager/block', SocioManager.list)
     router.get('/socio/manager/list', SocioManager.list)
-    router.get('/socio/manager/add', SocioManager.add)
     router.get('/socio/manager/add_dados_profissionais', SocioManager.add_dados_profissionais)
     router.get('/socio/manager/add_dados_pessoais', SocioManager.add_dados_pessoais)
+    router.get('/socio/manager/cadastrar', SocioManager.cadastrar_socio)
+
     return router
 
 }

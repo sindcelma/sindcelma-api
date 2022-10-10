@@ -25,6 +25,10 @@ class Socio extends User {
         this.status = status
     }
 
+    public getSlug(){
+        return this.slug
+    }
+
 
 }
 

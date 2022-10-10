@@ -13,7 +13,7 @@ class SessionTest {
 
     public static checarTipoDeSessao(req:Request, res:Response){
         try {
-            assertion(res)
+            assertion()
             .isSocio(req.user)
             .isAdmin(req.user)
             .assert()

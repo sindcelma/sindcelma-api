@@ -90,12 +90,16 @@ const verifyToken = function(hash:string):Token{
     
 }
 
+const generateCode = function(){
+    return Math.random().toString(36).substring(7)
+}
+
 const generateSlug = function(content:any){
     return Buffer.from(
         crypto.createHmac('sha256', config.json().salt)
         .update(content)
         .digest('base64'), 'base64'
-    ).toString('ascii')
+    ).toString('hex')
 }
 
 export {
@@ -103,5 +107,6 @@ export {
     DataUser,
     generateToken,
     verifyToken,
-    generateSlug
+    generateSlug,
+    generateCode
 }

@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
-import { DataUser, generateToken } from "../../lib/jwt"
+import { dateFormat } from "../../lib/data";
+import { generateToken, generateCode } from "../../lib/jwt"
 import mysqli from "../../lib/mysqli";
 import response from "../../lib/response";
 import User from "../../model/User";
@@ -41,14 +42,93 @@ class AuthService {
 
     }
 
-    public static checkCode(req:Request, res:Response){
-        
-    }
+    /**
+     * testado: false
+     */
+    public static recover(req:Request, res:Response){
+        // gerar o código e enviar via email ou telefone
+        let email = req.body.email
+        let cpf = req.body.cpf 
+        let type = req.body.type
+        let to = req.body.to
 
-    public static forgotMyPass(req:Request, res:Response){
+        const conn = mysqli()
+
+        const query:Array<String|Array<String>> = type == 'Socio' ? 
+        [ 
+            `
+            SELECT 
+                user.id, user.email, socios_dados_pessoais.telefone 
+            FROM 
+                socios 
+            JOIN user ON socios.user_id = user.id 
+            JOIN socios_dados_pessoais ON socios_dados_pessoais.socio_id = socios.id 
+            WHERE user.email = ? OR socios.cpf = ?
+            `, 
+            [email, cpf]
+        ] :
+        [
+            `SELECT 
+                user.id, user.email
+            FROM 
+                user 
+            WHERE user.email = ?`,
+            [email]
+        ]
+
+        conn.query(String(query[0]), query[1], (err, result) => {
+            
+            if(err){ 
+                conn.end()
+                return response(res).error(500, 'Internal Error') 
+            }
+
+            if(result.length == 0) { 
+                conn.end()
+                return response(res).error(404, 'Not Found')
+            }
+            
+            const resUser = result[0]
+
+            let data = new Date()
+            data.setHours(data.getHours() + 1)
+            const limite = dateFormat(data, 'yyyy-MM-dd H:i:s')
+            const code = generateCode()
+
+            conn.query(`
+                INSERT INTO user_recover (user_id, data_limite, codigo) VALUES (?,?,?)
+            `, [resUser.id, limite, code], (err2, result2) => {
+
+                if(err){ 
+                    conn.end()
+                    return response(res).error(500, 'Internal Error') 
+                }
+
+                if(to == 'email') {
+                    // envia por email
+                    console.log(code + " eviado por email");
+                }
+    
+                if(to == 'phone'){
+                    // envia por telefone
+                    console.log(code + " eviado por msg");
+                }
+    
+                response(res).success()
+
+            })
+
+        })
 
     }
     
+    /**
+     * testado: false
+     */
+    public static check_code_recover(req:Request, res:Response){
+        
+    }
+
     public static rememberme(req:Request, res:Response){
         
         const remembermeToken = req.body.rememberme
