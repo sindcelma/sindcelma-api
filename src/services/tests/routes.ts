@@ -5,7 +5,7 @@ const router = Router()
 
 export default () => {
 
-    router.get('/gerarSessao', SessionTest.genSessionTest)
+    router.post('/gerarSessao', SessionTest.genSessionTest)
     router.get('/checarSessao', SessionTest.checarTipoDeSessao)
     return router
 

@@ -15,7 +15,7 @@ class SessionTest {
         try {
             assertion()
             .isSocio(req.user)
-            .isAdmin(req.user)
+            .orIsAdmin(req.user)
             .assert()
             
             response(res).success(req.user)

@@ -7,19 +7,12 @@ import response from "../../lib/response";
 class SocioManager {
 
 
-    /**
-     * testado: false
-     */
     public static get_socio_by_login(req:Request, res:Response){
-
-        //   verificar se houve confirmação através de código
-        //   - se houver confirmação solicitar senha 
-        //   - se não houver solicitar confirmação
 
         let email = req.body.email 
         let doc   = req.body.doc 
         
-        if(!email || !doc){
+        if(!email && !doc){
             return response(res).error(400, 'Bad Request')
         }
         
@@ -76,24 +69,25 @@ class SocioManager {
                 if(result.length == 0) return response(res).error(404, 'Not Found')
 
                 let data:any = result[0]
+                if(data.status == 2) return response(res).error(401, 'Unauthorized')
 
                 return response(res).success({
                     action:'pass',
                     email:data.email,
                     cpf:data.cpf
                 })
+
             })
+
         }
 
     }
 
-    /**
-     * testado: false
-     */
+
     public static cadastrar_usuario(req:Request, res:Response){
         // verificar se o cliente enviou o CPF, email, senha
         let email = req.body.email 
-        let doc = req.body.cpf 
+        let doc = req.body.doc 
         let senha = req.body.senha 
         let news = req.body.news
         
@@ -109,18 +103,18 @@ class SocioManager {
 
             if(err) {
                 conn.end() 
-                return response(res).error(500, 'Internal Error')
+                return response(res).error(500, 'Este e-mail já está cadastrado')
             }
 
             const user_id = result.insertId
 
             conn.query(`
-                UPDATE FROM socios SET user_id = ? WHERE cpf = ?
-            `, [user_id, doc], (err2, result2) => {
+                UPDATE socios SET user_id = ? WHERE cpf = ?
+            `, [user_id, doc], err2 => {
 
                 if(err2) {
                     conn.end() 
-                    return response(res).error(500, 'Critical Error')
+                    return response(res).error(500, 'Erro Crítico - contate o admin')
                 }
 
                 if(news){
@@ -139,9 +133,33 @@ class SocioManager {
 
     }
 
-    /**
-     * testado: false
-     */
+
+    public static delete_usuario(req:Request, res:Response){
+
+        let user_id = req.body.user_id
+        let user  = req.user 
+
+        try {
+            assertion()
+            .isAdmin(user)
+            .assert()
+        } catch (error) {
+            return response(res).error(401, 'Unauthorized')
+        }
+
+        const conn = mysqli()
+
+        conn.query("DELETE FROM user WHERE id = ?", [user_id], err => {
+            conn.end()
+            if(err){
+                return response(res).error(500, 'Server Error')
+            }
+            response(res).success()
+        })
+
+    }
+
+
     public static update_usuario(req:Request, res:Response){
         // alterar email
 
@@ -149,14 +167,14 @@ class SocioManager {
         let email = req.body.email
 
         let user  = req.user 
-        
+
         try {
             assertion()
             .isAdmin(user)
             .orIsSameSocio(user, slug)
             .assert()
         } catch (error) {
-            response(res).error(401, 'Unauthorized')
+            return response(res).error(401, 'Unauthorized')
         }
 
         const conn = mysqli()
@@ -169,13 +187,18 @@ class SocioManager {
             
             if(err1) {
                 conn.end()
+                return response(res).error(500, 'Server Error')
+            }
+
+            if(result.length == 0){
+                conn.end()
                 return response(res).error(404, 'Not Found')
             }
             
             conn.query("UPDATE user SET email = ? WHERE id = ?", [email, result[0].id], err2 => {
                 conn.end()
                 if(err2){
-                    return response(res).error(500, 'Internal Error')
+                    return response(res).error(500, 'Este email já está cadastrado')
                 }
                 response(res).success()
             })
@@ -211,9 +234,6 @@ class SocioManager {
     
     }
 
-    /**
-     * testado: false
-     */
     public static add_dados_profissionais(req:Request, res:Response){
 
         const slug = req.body.slug
@@ -225,7 +245,7 @@ class SocioManager {
         try {
             assertion()
             .isAdmin(req.user)
-            .isSameSocio(req.user, slug)
+            .orIsSameSocio(req.user, slug)
             .assert()
         } catch (error) {
             return response(res).error(401, 'Unauthorized')
@@ -258,7 +278,7 @@ class SocioManager {
             `,[empresa_id, socio_id, cargo, data_admissao, num_matricula], err2 => {
                 conn.end()
                 if(err2){
-                    return response(res).error(500, 'Internal Error')
+                    return response(res).error(501, 'Já existem dados profissionais cadastrados neste socio')
                 }
                 response(res).success()
             })
@@ -267,9 +287,6 @@ class SocioManager {
 
     }
 
-    /**
-     * testado: false
-     */
     public static add_dados_pessoais(req:Request, res:Response){
         
         const slug = req.body.slug
@@ -282,7 +299,7 @@ class SocioManager {
         try {
             assertion()
             .isAdmin(req.user)
-            .isSameSocio(req.user, req.body.slug)
+            .orIsSameSocio(req.user, req.body.slug)
             .assert()
         } catch (error) {
             return response(res).error(401, 'Unauthorized')
@@ -320,12 +337,77 @@ class SocioManager {
                 response(res).success()
             })
         })
+
     }
 
-    /**
-     * testado: false
-     */
-    public static list(req:Request, res:Response){
+
+    public static listar(req:Request, res:Response){
+
+        try {
+            assertion()
+            .isAdmin(req.user)
+            .assert()
+        } catch (error) {
+            return response(res).error(401, 'Unauthorized')
+        }
+
+        const limite = parseInt(req.body.limite)
+        const pagina = (parseInt(req.body.pagina) -1) * limite
+        const status = parseInt(req.body.status)
+        // opcionais
+        const snome = req.body.nome
+        const ssobr = req.body.sobrenome
+        const scpf  = req.body.cpf
+
+        let more = ' '
+        let vars:Array<any> = []
+        vars.push(status)
+
+        if(snome){
+            more += ' AND nome LIKE ? '
+            vars.push(`%${snome}%`)
+        }
+
+        if(ssobr){
+            more += ' AND sobrenome LIKE ? '
+            vars.push(`%${ssobr}%`)
+        }
+
+        if(scpf){
+            more += ' AND cpf = ? '
+            vars.push(scpf)
+        }
+
+        const conn = mysqli()
+
+        vars.push(pagina, limite)
+
+        const q = `
+            SELECT
+                socios.nome,
+                socios.sobrenome,
+                socios.slug,
+                socios.cpf 
+            FROM socios
+            WHERE status = ?
+            ${more}
+            ORDER BY id ASC LIMIT ?,?; 
+        ` 
+        conn.query(q, vars, (err, result) => {
+            conn.end()
+            if(err) return response(res).error(400, 'Bad Request')
+            response(res).success(result)
+        })
+        
+    }
+
+
+    public static mudar_status(req:Request, res:Response){
+        /**
+         * aguardando = 0
+         * aprovado   = 1
+         * bloqueado  = 2
+         */
         
         try {
             assertion()
@@ -335,29 +417,14 @@ class SocioManager {
             return response(res).error(401, 'Unauthorized')
         }
 
-        response(res).success()
-    }
+        const status = parseInt(req.body.status)
+        const conn   = mysqli()
 
-    /**
-     * testado: false
-     */
-    public static aprove(req:Request, res:Response){
-        try {
-            assertion()
-            .isAdmin(req.user)
-            .assert()
-        } catch (error) {
-            return response(res).error(401, 'Unauthorized')
-        }
-
-        const conn = mysqli()
         conn.query(`
-            UPDATE socios SET status = 1 WHERE slug = ?
-        `, [req.body.slug], err => {
+            UPDATE socios SET status = ? WHERE slug = ?
+        `, [status, req.body.slug], err => {
             conn.end()
-            if(err) {
-                return response(res).error(500, 'Internal Error')
-            }
+            if(err) return response(res).error(500, 'Internal Error')
             response(res).success()
         })
         
@@ -375,7 +442,7 @@ class SocioManager {
         try {
             assertion()
             .isAdmin(req.user)
-            .isSameSocio(req.user, req.body.slug)
+            .orIsSameSocio(req.user, req.body.slug)
             .assert()
         } catch (error) {
             return response(res).error(401, 'Unauthorized')
@@ -408,7 +475,7 @@ class SocioManager {
         try {
             assertion()
             .isAdmin(req.user)
-            .isSameSocio(req.user, req.body.slug)
+            .orIsSameSocio(req.user, req.body.slug)
             .assert()
         } catch (error) {
             return response(res).error(401, 'Unauthorized')
@@ -468,7 +535,7 @@ class SocioManager {
         try {
             assertion()
             .isAdmin(req.user)
-            .isSameSocio(req.user, req.body.slug)
+            .orIsSameSocio(req.user, req.body.slug)
             .assert()
         } catch (error) {
             return response(res).error(401, 'Unauthorized')
@@ -513,7 +580,7 @@ class SocioManager {
             })
 
         })
-        
+
     }
 
 }
