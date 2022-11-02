@@ -13,7 +13,7 @@ class AdminManager {
     public static add(req:Request, res:Response){
 
         try {
-            assertion(res)
+            assertion()
             .isAdmin(req.user)
             .assert()
         } catch (error) {

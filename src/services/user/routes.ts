@@ -1,6 +1,7 @@
 import { Router } from "express";
 import SocioManager from "./SocioManager";
 import AuthService from './AuthService';
+import UserManager from "./UserManager";
 
 
 const router = Router()
@@ -10,6 +11,7 @@ export default () => {
     // admin
 
     // user
+    router.post('/check_email', UserManager.check_email)
     router.post('/rememberme', AuthService.rememberme)
     router.post('/login', AuthService.login)
 
@@ -26,6 +28,8 @@ export default () => {
     router.post('/socios/update_dados_socio', SocioManager.update_dados_socio)
     router.post('/socios/update_dados_profissionais', SocioManager.update_dados_profissionais)
     router.post('/socios/update_dados_pessoais', SocioManager.update_dados_pessoais)
+
+    router.post('/socios/check_document', SocioManager.check_document)
     
     return router
 

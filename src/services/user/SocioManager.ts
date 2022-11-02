@@ -3,9 +3,37 @@ import assertion from "../../lib/assertion";
 import { generateSlug } from "../../lib/jwt";
 import mysqli from "../../lib/mysqli";
 import response from "../../lib/response";
+import Socio from "../../model/Socio";
 
 class SocioManager {
 
+
+    public static check_document(req:Request, res:Response){
+        const conn = mysqli()
+        let doc   = req.body.doc
+
+        if(!doc){
+            return response(res).error(400, 'Bad Request')
+        }
+
+        const cpf = Socio.transformCpf(doc);
+
+        conn.query(
+            `SELECT 
+                socios.id
+            FROM socios 
+            WHERE
+                socios.cpf = ?`, 
+        [cpf], (err, result) => {
+            
+            conn.end()
+            
+            if(err) return response(res).error(500, 'Interal Error')
+            if(result.length == 0) return response(res).success()
+            return response(res).error(401, 'Unauthorized')
+            
+        })
+    }
 
     public static get_socio_by_login(req:Request, res:Response){
 

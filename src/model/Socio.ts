@@ -29,6 +29,19 @@ class Socio extends User {
         return this.slug
     }
 
+    public static transformCpf(cpf:string){
+        
+        cpf = cpf.trim();
+
+        const match = /(\d{2,3})\.?(\d{3})\.?(\d{3})-?(\d{2})$/.exec(cpf);
+        
+        if(match == null){
+            return false;
+        }
+
+        return match[1]+"."+match[2]+"."+match[3]+"-"+match[4]
+
+    }
 
 }
 
