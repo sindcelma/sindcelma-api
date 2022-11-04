@@ -7,10 +7,10 @@ import Socio from "../../model/Socio";
 
 class SocioManager {
 
-
     public static check_document(req:Request, res:Response){
+        
         const conn = mysqli()
-        let doc   = req.body.doc
+        let doc    = req.body.doc
 
         if(!doc){
             return response(res).error(400, 'Bad Request')
@@ -20,25 +20,38 @@ class SocioManager {
 
         conn.query(
             `SELECT 
-                socios.id
+                status,
+                id
             FROM socios 
             WHERE
-                socios.cpf = ?`, 
+                cpf = ? `, 
         [cpf], (err, result) => {
             
-            conn.end()
-            
             if(err) return response(res).error(500, 'Interal Error')
-            if(result.length == 0) return response(res).success()
-            return response(res).error(401, 'Unauthorized')
+            
+            if(result.length == 0) {
+                conn.end()
+                return response(res).success()
+            }
+            
+            let data:any = result[0]
+
+            if(data.status > 0){
+                conn.end()
+                return response(res).error(401, 'Unauthorized')
+            } else {
+                conn.query("DELETE FROM socios WHERE id = ?", [data.id], () => conn.end())
+                return response(res).success()
+            }
             
         })
+        
     }
 
     public static get_socio_by_login(req:Request, res:Response){
 
         let email = req.body.email 
-        let doc   = req.body.doc 
+        let doc   = Socio.transformCpf(req.body.doc);
         
         if(!email && !doc){
             return response(res).error(400, 'Bad Request')
@@ -115,9 +128,9 @@ class SocioManager {
     public static cadastrar_usuario(req:Request, res:Response){
         // verificar se o cliente enviou o CPF, email, senha
         let email = req.body.email 
-        let doc = req.body.doc 
+        let doc   = Socio.transformCpf(req.body.doc); 
         let senha = req.body.senha 
-        let news = req.body.news
+        let news  = req.body.news
         
         if(!email || !doc || !senha){
             return response(res).error(400, 'Bad Request')
@@ -240,7 +253,7 @@ class SocioManager {
         // Nome, sobrenome, CPF
         const nome = req.body.nome 
         const sobrenome = req.body.sobrenome 
-        const cpf = req.body.cpf
+        const cpf = Socio.transformCpf(req.body.cpf);
 
         const conn = mysqli()
         
@@ -264,20 +277,14 @@ class SocioManager {
 
     public static add_dados_profissionais(req:Request, res:Response){
 
-        const slug = req.body.slug
-        const empresa_id = req.body.empresa_id
-        const cargo = req.body.cargo
-        const data_admissao = req.body.data_admissao
-        const num_matricula = req.body.num_matricula
 
-        try {
-            assertion()
-            .isAdmin(req.user)
-            .orIsSameSocio(req.user, slug)
-            .assert()
-        } catch (error) {
-            return response(res).error(401, 'Unauthorized')
-        }
+        //const empresa_id = req.body.empresa_id
+        const empresa_id = 1
+
+        const slug      = req.body.slug
+        const cargo     = req.body.cargo
+        const admissao  = req.body.data_admissao
+        //const matricula = req.body.num_matricula
 
         const conn = mysqli()
 
@@ -285,6 +292,7 @@ class SocioManager {
             SELECT socios.id 
             FROM socios 
             WHERE slug = ?
+            AND status = 0
         `, [slug], (err1, result) => {
 
             if(err1){
@@ -303,7 +311,7 @@ class SocioManager {
                 INSERT INTO socios_dados_profissionais
                 (empresa_id, socio_id, cargo, data_admissao, num_matricula)
                 VALUES (?,?,?,?,?)
-            `,[empresa_id, socio_id, cargo, data_admissao, num_matricula], err2 => {
+            `,[empresa_id, socio_id, cargo, admissao, ''], err2 => {
                 conn.end()
                 if(err2){
                     return response(res).error(501, 'Já existem dados profissionais cadastrados neste socio')
@@ -324,21 +332,13 @@ class SocioManager {
         const data_nascimento = req.body.data_nascimento
         const telefone = req.body.telefone
 
-        try {
-            assertion()
-            .isAdmin(req.user)
-            .orIsSameSocio(req.user, req.body.slug)
-            .assert()
-        } catch (error) {
-            return response(res).error(401, 'Unauthorized')
-        }
-
         const conn = mysqli()
 
         conn.query(`
             SELECT socios.id 
             FROM socios 
             WHERE slug = ?
+            AND status = 0
         `, [slug], (err1, result) => {
 
             if(err1){
@@ -358,11 +358,19 @@ class SocioManager {
                 (socio_id, rg, sexo, estado_civil, data_nascimento, telefone)
                 VALUES (?,?,?,?,?,?)
             `,[socio_id, rg, sexo, estado_civil, data_nascimento, telefone], err2 => {
-                conn.end()
                 if(err2){
+                    conn.end()
                     return response(res).error(500, 'Internal Error')
                 }
-                response(res).success()
+                conn.query("UPDATE socios SET status = 1 WHERE id = ?", [socio_id], 
+                    (err3)=> {
+                        conn.end()
+                        if(err3){
+                            return response(res).error(500, 'Internal Error')
+                        }
+                        response(res).success()
+                    } 
+                )
             })
         })
 
