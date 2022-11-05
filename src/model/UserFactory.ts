@@ -3,7 +3,7 @@ import User from "./User";
 import Admin from "./Admin";
 import Visitante from './Visitante';
 import Socio from "./Socio";
-import {generateToken, verifyToken, Token} from "../lib/jwt";
+import {generateToken, verifyToken, Token, comparePass} from "../lib/jwt";
 import mysqli from "../lib/mysqli";
 
 
@@ -21,7 +21,7 @@ const setDataSocio = (data:any, socio:Socio):Socio => {
 }
 
 
-const getAdmin = (email:String, senha:String, fn:(user:User, error:Boolean, msg:String) => void, remem:Boolean) =>{
+const getAdmin = (email:String, senha:string, fn:(user:User, error:Boolean, msg:String) => void, remem:Boolean) =>{
 
     const conn = mysqli()
 
@@ -71,7 +71,7 @@ const getAdmin = (email:String, senha:String, fn:(user:User, error:Boolean, msg:
 
 }
 
-const getSocio = (email:String, senha:String, fn:(user:User, error:Boolean, msg:String) => void, remember:Boolean) => {
+const getSocio = (email:String, senha:string, fn:(user:User, error:Boolean, msg:String) => void, remember:Boolean) => {
 
     const conn = mysqli()
 
@@ -84,17 +84,16 @@ const getSocio = (email:String, senha:String, fn:(user:User, error:Boolean, msg:
                 socios.status,
                 user.id,
                 user.email,
-                user.ativo
+                user.senha
                  
            FROM  user
-           JOIN  socios ON user.id = socios.user_id 
+           JOIN  socios ON socios.id = user.socio_id 
            
           WHERE  user.email = ?
-            AND  user.senha = ?
-            AND  user.ativo = 1 `
+            `
         ;
 
-        conn.query(query, [email, senha], (err, result) => {
+        conn.query(query, [email], async (err, result) => {
             
             if(err){
                 return fn(new Visitante, true, "Internal Error")
@@ -103,13 +102,17 @@ const getSocio = (email:String, senha:String, fn:(user:User, error:Boolean, msg:
             if(result.length > 0){
                 
                 const res = result[0]
+                const status = await comparePass(senha, res.senha);
+                if(!status){
+                    return fn(new Visitante, true, "Não autorizado")
+                }
+
                 const user = {
                     id:res.id,
-                    email:res.email,
-                    ativo:res.ativo == 1
+                    email:res.email
                 } 
 
-                if(res.status > 1){
+                if(res.status > 2){
                     return fn(new Visitante, true, "Sócio Bloqueado")                    
                 }
 
@@ -131,7 +134,8 @@ const getSocio = (email:String, senha:String, fn:(user:User, error:Boolean, msg:
 
 }
 
-const getUser = (type:String, email:String, senha:String, fn:(user:User, error:Boolean, msg:String) => void, remember:Boolean = false) => {
+const getUser = (type:String, email:String, senha:string, fn:(user:User, error:Boolean, msg:String) => void, remember:Boolean = false) => {
+    
     switch (type) {
         case "Admin": getAdmin(email, senha, fn, remember); break;
         case "Socio": getSocio(email, senha, fn, remember); break;
@@ -162,7 +166,7 @@ const getSocioByRememberme = (remembermetk:String, fn:(user:User, error:Boolean,
             JOIN socios ON user.id = socios.user_id 
             JOIN user_devices ON user_devices.user_id = user.id
                     WHERE user_devices.rememberme = ?
-                    AND   user.ativo = 1`
+                    `
 
     const conn = mysqli() 
     try {
@@ -172,15 +176,13 @@ const getSocioByRememberme = (remembermetk:String, fn:(user:User, error:Boolean,
                 return fn(new Visitante, true, "Internal Error")
             }
     
-            const res = result[0]
-    
+        
             if(result.length > 0){
                     
                 const res = result[0]
                 const user = {
                     id:res.id,
-                    email:res.email,
-                    ativo:res.ativo == 1
+                    email:res.email
                 } 
     
                 if(res.status > 1){

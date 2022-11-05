@@ -1,5 +1,6 @@
 import crypto from 'crypto'
 import Config from './config'
+import * as bcrypt from 'bcrypt';
 
 const config:Config = Config.instance()
 
@@ -102,11 +103,21 @@ const generateSlug = function(content:any){
     ).toString('hex')
 }
 
+const hashPass = async function(pass:string) {
+    return await bcrypt.hash(pass+config.json().salt, 10);
+}
+
+const comparePass = async function(pass:string, hash:string){
+    return await bcrypt.compare(pass+config.json().salt, hash);
+}
+
 export {
     Token,
     DataUser,
     generateToken,
     verifyToken,
     generateSlug,
-    generateCode
+    generateCode,
+    hashPass,
+    comparePass
 }

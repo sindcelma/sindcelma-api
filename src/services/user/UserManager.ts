@@ -5,24 +5,34 @@ import response from "../../lib/response";
 class UserManager {
 
     public static check_email(req:Request, res:Response){
-        const conn = mysqli()
-        let email  = req.body.email
+        
+        const email  = req.body.email
 
         if(!email) return response(res).error(401, 'Unauthorized') 
-
+        
+        const conn = mysqli()
         conn.query(
             `SELECT 
-                user.id
+                id,
+                ativo
             FROM user 
             WHERE
-                user.email = ?`, 
+                email = ?`, 
         [email], (err, result) => {
             
-            conn.end()
+            if(err) return response(res).error(500, 'Interal Error 2')
             
-            if(err) return response(res).error(500, 'Interal Error')
-            if(result.length == 0) return response(res).success(email)
-            return response(res).error(401, 'Unauthorized')
+            if(result.length > 0){
+                let user = result[0];
+
+                if(user.ativo == 0) {
+                    conn.query("DELETE FROM user WHERE email = ?", [email])
+                    return response(res).success(email)
+                }
+                return response(res).error(401, 'Este email já está em uso')
+            }
+
+            return response(res).success(email)
             
         })
     }

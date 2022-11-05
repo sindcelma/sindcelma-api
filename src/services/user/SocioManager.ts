@@ -1,11 +1,95 @@
 import { Request, Response } from "express";
 import assertion from "../../lib/assertion";
-import { generateSlug } from "../../lib/jwt";
+import { generateSlug, hashPass } from "../../lib/jwt";
 import mysqli from "../../lib/mysqli";
 import response from "../../lib/response";
 import Socio from "../../model/Socio";
 
 class SocioManager {
+
+    public static async cadastrar_full_socio(req:Request, res:Response){
+
+        const empresa_id = 1
+        const nome       = req.body.nome 
+        const sobrenome  = req.body.sobrenome 
+        const cpf        = Socio.transformCpf(req.body.cpf);
+        const email      = req.body.email 
+        const senha      = await hashPass(req.body.senha)
+        const rg         = req.body.rg
+        const sexo       = req.body.sexo[0]
+        const civil      = req.body.estado_civil
+        const nascimento = req.body.data_nascimento
+        const telefone   = req.body.telefone
+        const cargo      = req.body.cargo
+        const admissao   = req.body.data_admissao
+
+        if(!email || !cpf || !senha || !nome || !sobrenome || !rg || !sexo 
+            || !civil || !nascimento || !telefone || !cargo || !admissao){
+            return response(res).error(400, 'Bad Request')
+        }
+
+        const conn = mysqli()
+        
+        const slug = generateSlug(cpf + String(new Date().getMilliseconds())+String(Math.random()))
+        const salt = generateSlug(slug+ String(new Date().getMilliseconds())+String(Math.random()))
+
+        conn.query(`
+            INSERT INTO socios (nome, sobrenome, cpf, slug, salt, status)
+            VALUES (?,?,?,?,?,0)
+        `,[nome, sobrenome, cpf, slug, salt], (err, result) => {
+            
+            if(err) {
+                return response(res).error(500, "Já existe um sócio cadastrado com este documento")
+            }
+
+            const socio_id = result.insertId
+
+            conn.query(`
+                INSERT INTO user (email, senha, socio_id) VALUES (?,?,?)
+            `, [email, senha, socio_id], (err, result) => {
+
+                if(err) {
+                    conn.end() 
+                    return response(res).error(500, 'Este e-mail já está cadastrado')
+                }
+                
+                conn.query(`
+                    INSERT INTO socios_dados_profissionais
+                    (empresa_id, socio_id, cargo, data_admissao, num_matricula)
+                    VALUES (?,?,?,?,?)
+                `,[empresa_id, socio_id, cargo, admissao, ''])
+
+                conn.query(`
+                    INSERT INTO socios_dados_pessoais
+                    (socio_id, rg, sexo, estado_civil, data_nascimento, telefone)
+                    VALUES (?,?,?,?,?,?)
+                `,[socio_id, rg, sexo, civil, nascimento, telefone], err2 => {
+                    if(err2){
+                        conn.end()
+                        return response(res).error(500, err2.message)
+                    }
+                    conn.query("UPDATE socios SET status = 1 WHERE id = ?", [socio_id], 
+                        (err3)=> {
+
+                            if(err3){
+                                return response(res).error(500, err3.message)
+                            }
+                            
+                            response(res).success({
+                                cpf:cpf,
+                                slug:slug,
+                                salt:salt
+                            })
+
+                        } 
+                    )
+                })
+
+            })
+
+        })
+    
+    }
 
     public static check_document(req:Request, res:Response){
         
