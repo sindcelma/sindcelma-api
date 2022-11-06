@@ -11,11 +11,12 @@ export default () => {
     // admin
 
     // user
+    router.post('/check_session', AuthService.check_session) // apagar depois
     router.post('/check_email', UserManager.check_email)
     router.post('/rememberme', AuthService.rememberme)
     router.post('/login', AuthService.login)
+    router.post('/close_all_sessions', UserManager.close_all_sessions)
 
-    
     // socios
 
     router.post('/socios/cadastrar_full_socio', SocioManager.cadastrar_full_socio)

@@ -30,13 +30,13 @@ const getAdmin = (email:String, senha:string, fn:(user:User, error:Boolean, msg:
                 `SELECT 
                     user.id,
                     user.email,
-                    user.ativo,
+                    user.version,
                     admin.slug
                 FROM user 
                 JOIN admin ON admin.user_id = user.id
                     WHERE user.email = ?
                     AND   user.senha = ?
-                    AND   user.ativo = 1`;
+                `;
 
         conn.query(query, [email, senha], (err, result) => {
             
@@ -50,7 +50,7 @@ const getAdmin = (email:String, senha:string, fn:(user:User, error:Boolean, msg:
                 const user = {
                     id:res.id,
                     email:res.email,
-                    ativo:res.ativo == 1
+                    version:res.version
                 } 
 
                 const admin = new Admin(user)
@@ -84,7 +84,8 @@ const getSocio = (email:String, senha:string, fn:(user:User, error:Boolean, msg:
                 socios.status,
                 user.id,
                 user.email,
-                user.senha
+                user.senha,
+                user.version
                  
            FROM  user
            JOIN  socios ON socios.id = user.socio_id 
@@ -109,7 +110,8 @@ const getSocio = (email:String, senha:string, fn:(user:User, error:Boolean, msg:
 
                 const user = {
                     id:res.id,
-                    email:res.email
+                    email:res.email,
+                    version:res.version
                 } 
 
                 if(res.status > 2){
@@ -160,10 +162,63 @@ const getSocioByRememberme = (remembermetk:String, fn:(user:User, error:Boolean,
             socios.status,
             user.id,
             user.email,
-            user.ativo
+            user.version
             
         FROM  user
-            JOIN socios ON user.id = socios.user_id 
+            JOIN socios ON user.socio_id = socios.id 
+            JOIN user_devices ON user_devices.user_id = user.id
+                    WHERE user_devices.rememberme = ?
+                    `
+
+    const conn = mysqli() 
+    try {
+        conn.query(query, [remembermetk], (err, result) => {
+        
+            if(err){
+                return fn(new Visitante, true, "Internal Error 1")
+            }
+    
+        
+            if(result.length > 0){
+                    
+                const res = result[0]
+
+                const user = {
+                    id:res.id,
+                    email:res.email,
+                    version:res.version
+                } 
+    
+                if(res.status > 2){
+                    return fn(new Visitante, true, "Sócio Bloqueado")                    
+                }
+
+                const socio = new Socio(user)
+                conn.end()
+                
+                return fn(setDataSocio(res, socio), false, "")
+                
+            } 
+    
+            conn.end()
+            fn(new Visitante, true, "Este Token expirou ou não é válido")
+        })
+    } catch (error) {
+        fn(new Visitante, true, "Internal Error 2")
+        conn.end()
+    }
+}
+
+const getAdminByRememberme = (remembermetk:String, fn:(user:User, error:Boolean, msg:String) => void) => {
+    
+    let query:string = `
+        SELECT 
+            user.id,
+            user.email,
+            user.version,
+            admin.slug
+        FROM user 
+            JOIN admin ON admin.user_id = user.id
             JOIN user_devices ON user_devices.user_id = user.id
                     WHERE user_devices.rememberme = ?
                     `
@@ -182,60 +237,8 @@ const getSocioByRememberme = (remembermetk:String, fn:(user:User, error:Boolean,
                 const res = result[0]
                 const user = {
                     id:res.id,
-                    email:res.email
-                } 
-    
-                if(res.status > 1){
-                    return fn(new Visitante, true, "Sócio Bloqueado")                    
-                }
-
-                const socio = new Socio(user)
-                conn.end()
-                
-                return fn(setDataSocio(res, socio), false, "")
-                
-            } 
-    
-            conn.end()
-            fn(new Visitante, true, "Este Token expirou ou não é válido")
-        })
-    } catch (error) {
-        fn(new Visitante, true, "Internal Error")
-        conn.end()
-    }
-}
-
-const getAdminByRememberme = (remembermetk:String, fn:(user:User, error:Boolean, msg:String) => void) => {
-    
-    let query:string = `
-        SELECT 
-            user.id,
-            user.email,
-            user.ativo,
-            admin.slug
-        FROM user 
-            JOIN admin ON admin.user_id = user.id
-            JOIN user_devices ON user_devices.user_id = user.id
-                    WHERE user_devices.rememberme = ?
-                    AND   user.ativo = 1`
-
-    const conn = mysqli() 
-    try {
-        conn.query(query, [remembermetk], (err, result) => {
-        
-            if(err){
-                return fn(new Visitante, true, "Internal Error")
-            }
-    
-            const res = result[0]
-    
-            if(result.length > 0){
-                    
-                const res = result[0]
-                const user = {
-                    id:res.id,
                     email:res.email,
-                    ativo:res.ativo == 1
+                    version:res.version
                 } 
     
                 const admin = new Admin(user)
@@ -287,12 +290,25 @@ const setUserBySessionToken = (sessionToken:string):User => {
 }
 
 const middleware = async function(req:Request, res:Response, next?:any){
+    
     req.user = req.body.session != null ? setUserBySessionToken(String(req.body.session)) : new Visitante()
     req.user.setAgent(req.get('User-Agent'))
+    
     if(!(req.user instanceof Visitante)){
-        res.user = req.user
+        
+        const conn = mysqli();
+        conn.query("SELECT id FROM user WHERE id = ? AND version = ?", [req.user.getId(), req.user.getVersion()], (err, result) => {
+            if(result.length == 0){
+                req.user = new Visitante()
+            } else {
+                res.user = req.user
+            }
+            next()
+        });
+
+    } else {
+        next()
     }
-    next()
 
 }
 

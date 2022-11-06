@@ -4,6 +4,30 @@ import response from "../../lib/response";
 
 class UserManager {
 
+
+    public static close_all_sessions(req:Request, res:Response){
+        
+        // apenas administradores ou usuários com a mesma sessão
+
+        const user_id = req.body.user_id
+
+        if(!user_id) return response(res).error(401, 'Unauthorized') 
+        
+        const conn = mysqli()
+
+        conn.query("UPDATE user SET version = version + 1 WHERE id = ?", [user_id], err => {
+            
+            if(err) return response(res).error(500, 'internal error');
+            
+            conn.query("DELETE FROM user_devices WHERE user_id = ?", [user_id], err => {
+                if(err) return response(res).error(500, 'internal error');
+                response(res).success()
+            })
+
+        })
+
+    }
+
     public static check_email(req:Request, res:Response){
         
         const email  = req.body.email

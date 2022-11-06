@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { dateFormat } from "../../lib/data";
-import { generateToken, generateCode } from "../../lib/jwt"
+import { generateToken, generateCode, verifyToken } from "../../lib/jwt"
 import mysqli from "../../lib/mysqli";
 import response from "../../lib/response";
 import User from "../../model/User";
@@ -9,6 +9,13 @@ import { getUser, getUserByRememberme } from '../../model/UserFactory'
 interface msg { session:String, user:User, remembermetk?:any }
 
 class AuthService {
+
+    // função de teste. apagar depois
+    static check_session(req:Request, res:Response){
+        response(res).success({
+            "status":req.user
+        })
+    }
 
     static login(req:Request, res:Response){
 
@@ -33,7 +40,10 @@ class AuthService {
             if(remem){
                 let conn = mysqli()
                 message.remembermetk = user.getRememberMeToken()
-                conn.query("INSERT INTO user_devices (user_id, header, rememberme) VALUES (?,?,?)", [user.getId(), user.getAgent(), message.remembermetk])
+                conn.query(
+                    "INSERT INTO user_devices (user_id, header, rememberme) VALUES (?,?,?)", 
+                    [user.getId(), user.getAgent(), message.remembermetk]
+                )
             }
             
             return response(res).success(message)

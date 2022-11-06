@@ -7,16 +7,22 @@ abstract class User {
     private id:Number = 0
     private sess:String = ""
     private agent:String = ""
+    private version:Number = 0
 
     private type:String
     
     constructor(type:String, user:DataUser) {
         this.type = type
         this.id = user.id
+        this.version = user.version
     }
 
     public getId(){
         return this.id
+    }
+
+    public getVersion(){
+        return this.version;
     }
 
     public getType(){

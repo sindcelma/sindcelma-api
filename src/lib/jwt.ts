@@ -7,7 +7,7 @@ const config:Config = Config.instance()
 interface DataUser {
     id:Number,
     email:String,
-    ativo:boolean
+    version:Number
 }
 
 interface Token {
@@ -28,7 +28,7 @@ const limit = Date.now() + (1000 * 60 * 15)  // 15 minutos de duração
 const emptyUser:DataUser = {
     id:0,
     email:'',
-    ativo:false
+    version:0
 } 
 
 const visitante:Token = {
