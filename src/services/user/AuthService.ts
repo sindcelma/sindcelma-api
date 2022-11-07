@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
 import { dateFormat } from "../../lib/data";
-import { generateToken, generateCode, verifyToken } from "../../lib/jwt"
+import { generateToken, generateCode, hashPass } from "../../lib/jwt"
 import mysqli from "../../lib/mysqli";
 import response from "../../lib/response";
+import Socio from "../../model/Socio";
 import User from "../../model/User";
 import { getUser, getUserByRememberme } from '../../model/UserFactory'
 
@@ -30,12 +31,18 @@ class AuthService {
                 return response(res).error(500, msg)
             }
             
+            const token = generateToken(type, {
+                id:user.getId(),
+                email:user.getEmail(),
+                version:user.getVersion()
+            })
+
             const message:msg = {
-                session: generateToken(type, user),
+                session: token,
                 user:user
             }
 
-            message.session = generateToken(type, user)
+            message.session = token
                     
             if(remem){
                 let conn = mysqli()
@@ -58,10 +65,10 @@ class AuthService {
     public static recover(req:Request, res:Response){
         // gerar o código e enviar via email ou telefone
         let email = req.body.email
-        let cpf = req.body.cpf 
+        let cpf = Socio.transformCpf(req.body.doc) 
         let type = req.body.type
         let to = req.body.to
-
+        
         const conn = mysqli()
 
         const query:Array<String|Array<String>> = type == 'Socio' ? 
@@ -71,11 +78,11 @@ class AuthService {
                 user.id, user.email, socios_dados_pessoais.telefone 
             FROM 
                 socios 
-            JOIN user ON socios.user_id = user.id 
+            JOIN user ON socios.id = user.socio_id 
             JOIN socios_dados_pessoais ON socios_dados_pessoais.socio_id = socios.id 
-            WHERE user.email = ? OR socios.cpf = ?
+            WHERE socios.cpf = ?
             `, 
-            [email, cpf]
+            [cpf]
         ] :
         [
             `SELECT 
@@ -90,7 +97,7 @@ class AuthService {
             
             if(err){ 
                 conn.end()
-                return response(res).error(500, 'Internal Error') 
+                return response(res).error(500, 'Internal Error 1') 
             }
 
             if(result.length == 0) { 
@@ -124,7 +131,9 @@ class AuthService {
                     console.log(code + " eviado por msg");
                 }
     
-                response(res).success()
+                response(res).success({
+                    email:resUser.email
+                })
 
             })
 
@@ -135,8 +144,75 @@ class AuthService {
     /**
      * testado: false
      */
-    public static check_code_recover(req:Request, res:Response){
+    public static check_code_recover(req:Request, res:Response) {
         
+        const email  = req.body.email;
+        const codigo = req.body.codigo;
+
+        if(!email || !codigo) return response(res).error(400, 'Bad Request')
+
+        const conn = mysqli()
+        conn.query(`
+          SELECT 
+                 user_recover.id
+            FROM user_recover 
+            JOIN user ON user.id = user_recover.user_id 
+           WHERE user_recover.codigo = ?
+             AND user_recover.data_limite > now()
+             AND user.email = ?`, [codigo, email], async (err, result) => {
+               
+                if(err) return response(res).error(500, 'Server Error 1')
+                if(result.length == 0) return response(res).error()
+                
+                const recover_id = result[0]['id'];
+                const slugHashCode = await hashPass(recover_id+codigo+email);
+
+                conn.query("UPDATE user_recover SET codigo = ? WHERE id = ?", [slugHashCode, recover_id], err => {
+                   
+                    if(err) return response(res).error(500, 'Internal Error')
+                    response(res).success({
+                        codigo: slugHashCode
+                    })
+                })
+
+             })
+
+    }
+
+
+    public static change_pass_using_code(req:Request, res:Response){
+        
+        const email  = req.body.email;
+        const codigo = req.body.codigo;
+        const senha  = req.body.senha;
+
+        if(!email || !senha || !codigo) return response(res).error(400, 'Bad Request')
+
+        const conn = mysqli();
+        conn.query(`
+          SELECT 
+                 user_recover.id
+            FROM user_recover 
+            JOIN user ON user.id = user_recover.user_id 
+           WHERE user_recover.codigo = ?
+             AND user.email = ?`, [codigo, email], 
+             async (err, result) => {
+
+                if(err) return response(res).error(500, 'Server Error 1')
+                if(result.length == 0) return response(res).error()
+                
+                const recover_id = result[0]['id'];
+                const pass  = await hashPass(senha);
+
+                conn.query("UPDATE user SET senha = ? WHERE email = ?", [pass, email], err => {
+  
+                    if(err) return response(res).error(500, 'Internal Error')
+                    conn.query("DELETE FROM user_recover WHERE id = ?", [recover_id])
+                    response(res).success();
+                })
+
+             })
+
     }
 
     public static rememberme(req:Request, res:Response){
@@ -151,7 +227,11 @@ class AuthService {
             }
             
             const message:msg = {
-                session: generateToken(type, user),
+                session: generateToken(type, {
+                    id:user.getId(),
+                    email:user.getEmail(),
+                    version:user.getVersion()
+                }),
                 user:user
             }
 

@@ -4,6 +4,18 @@ import * as bcrypt from 'bcrypt';
 
 const config:Config = Config.instance()
 
+interface DataSocio {
+    rg:String,
+    sexo:String,
+    estado_civil:String,
+    data_nascimento:String,
+    telefone:String,
+    cargo:String,
+    data_admissao:String,
+    num_matricula:String,
+    nome_empresa:String
+}
+
 interface DataUser {
     id:Number,
     email:String,
@@ -39,7 +51,7 @@ const visitante:Token = {
 }
 
 
-const generateToken = function(type:string, body:any):String{
+const generateToken = function(type:string, body:DataUser):String{
         
     const header:header = {
         alg:"sha256",
@@ -114,6 +126,7 @@ const comparePass = async function(pass:string, hash:string){
 export {
     Token,
     DataUser,
+    DataSocio,
     generateToken,
     verifyToken,
     generateSlug,

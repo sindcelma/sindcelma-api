@@ -8,12 +8,14 @@ abstract class User {
     private sess:String = ""
     private agent:String = ""
     private version:Number = 0
+    private email:String = ""
 
     private type:String
     
     constructor(type:String, user:DataUser) {
         this.type = type
         this.id = user.id
+        this.email = user.email
         this.version = user.version
     }
 
@@ -23,6 +25,10 @@ abstract class User {
 
     public getVersion(){
         return this.version;
+    }
+
+    public getEmail(){
+        return this.email;
     }
 
     public getType(){
@@ -45,6 +51,7 @@ abstract class User {
         if(agent)
         this.agent = agent
     }
+    
 
     public getRememberMeToken(){
 

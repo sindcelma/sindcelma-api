@@ -17,6 +17,7 @@ const setDataSocio = (data:any, socio:Socio):Socio => {
     socio.setFullName(data.nome, data.sobrenome)
     socio.setSlug(data.slug)
     socio.setStatus(data.status)
+    socio.setOthersDatas(data);
     return socio
 }
 
@@ -78,21 +79,29 @@ const getSocio = (email:String, senha:string, fn:(user:User, error:Boolean, msg:
     try {
         let query = 
         `SELECT 
-                socios.nome,
-                socios.sobrenome,
-                socios.slug,
-                socios.status,
-                user.id,
-                user.email,
-                user.senha,
-                user.version
-                 
-           FROM  user
-           JOIN  socios ON socios.id = user.socio_id 
-           
-          WHERE  user.email = ?
-            `
-        ;
+            socios.nome,
+            socios.sobrenome,
+            socios.slug,
+            socios.status,
+            user.id,
+            user.email,
+            user.senha,
+            user.version,
+            socios_dados_pessoais.rg,
+            socios_dados_pessoais.sexo,
+            socios_dados_pessoais.estado_civil,
+            socios_dados_pessoais.data_nascimento,
+            socios_dados_pessoais.telefone,
+            socios_dados_profissionais.cargo,
+            socios_dados_profissionais.data_admissao,
+            socios_dados_profissionais.num_matricula,
+            empresas.nome as nome_empresa
+        FROM  user
+        JOIN  socios ON socios.id = user.socio_id
+        JOIN  socios_dados_pessoais ON socios_dados_pessoais.socio_id = socios.id
+        JOIN  socios_dados_profissionais ON socios_dados_profissionais.socio_id = socios.id
+        JOIN  empresas ON socios_dados_profissionais.empresa_id = empresas.id
+       WHERE  user.email = ?`;
 
         conn.query(query, [email], async (err, result) => {
             
@@ -177,7 +186,6 @@ const getSocioByRememberme = (remembermetk:String, fn:(user:User, error:Boolean,
             if(err){
                 return fn(new Visitante, true, "Internal Error 1")
             }
-    
         
             if(result.length > 0){
                     
