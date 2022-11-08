@@ -6,6 +6,7 @@ const config:Config = Config.instance()
 
 interface DataSocio {
     rg:String,
+    salt:String,
     sexo:String,
     estado_civil:String,
     data_nascimento:String,

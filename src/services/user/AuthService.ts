@@ -114,9 +114,9 @@ class AuthService {
 
             conn.query(`
                 INSERT INTO user_recover (user_id, data_limite, codigo) VALUES (?,?,?)
-            `, [resUser.id, limite, code], (err2, result2) => {
+            `, [resUser.id, limite, code], (err2) => {
 
-                if(err){ 
+                if(err2){ 
                     conn.end()
                     return response(res).error(500, 'Internal Error') 
                 }

@@ -9,7 +9,7 @@ class Socio extends User {
     private slug:String = ""
     private status:Number = 0
 
-    private rg:String = ""
+    private salt:String = ""
     private sexo:String = ""
     private estado_civil:String = ""
     private telefone:String = ""
@@ -37,7 +37,7 @@ class Socio extends User {
         this.data_nascimento    = dateFormat(new Date(dataNascimento), 'dd/MM/yyyy');
         this.data_nascimento_en = dateFormat(new Date(dataNascimento), 'yyyy-MM-dd');
       
-        this.rg = data.rg;
+        this.salt = data.salt;
         this.sexo = data.sexo;
         this.estado_civil = data.estado_civil;
         this.telefone = data.telefone;

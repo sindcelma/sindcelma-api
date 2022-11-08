@@ -3,7 +3,7 @@ import User from "./User";
 import Admin from "./Admin";
 import Visitante from './Visitante';
 import Socio from "./Socio";
-import {generateToken, verifyToken, Token, comparePass} from "../lib/jwt";
+import { generateToken, verifyToken, Token, comparePass } from "../lib/jwt";
 import mysqli from "../lib/mysqli";
 
 
@@ -48,6 +48,7 @@ const getAdmin = (email:String, senha:string, fn:(user:User, error:Boolean, msg:
             if(result.length > 0){
                 
                 const res = result[0]
+
                 const user = {
                     id:res.id,
                     email:res.email,
@@ -83,6 +84,8 @@ const getSocio = (email:String, senha:string, fn:(user:User, error:Boolean, msg:
             socios.sobrenome,
             socios.slug,
             socios.status,
+            socios.salt,
+            socios.cpf,
             user.id,
             user.email,
             user.senha,
@@ -169,19 +172,37 @@ const getSocioByRememberme = (remembermetk:String, fn:(user:User, error:Boolean,
             socios.sobrenome,
             socios.slug,
             socios.status,
+            socios.salt,
+            socios.cpf,
             user.id,
             user.email,
-            user.version
+            user.senha,
+            user.version,
+            socios_dados_pessoais.rg,
+            socios_dados_pessoais.sexo,
+            socios_dados_pessoais.estado_civil,
+            socios_dados_pessoais.data_nascimento,
+            socios_dados_pessoais.telefone,
+            socios_dados_profissionais.cargo,
+            socios_dados_profissionais.data_admissao,
+            socios_dados_profissionais.num_matricula,
+            empresas.nome as nome_empresa
             
         FROM  user
             JOIN socios ON user.socio_id = socios.id 
+            JOIN socios_dados_pessoais ON socios_dados_pessoais.socio_id = socios.id
+            JOIN socios_dados_profissionais ON socios_dados_profissionais.socio_id = socios.id
             JOIN user_devices ON user_devices.user_id = user.id
+            JOIN empresas ON socios_dados_profissionais.empresa_id = empresas.id
                     WHERE user_devices.rememberme = ?
                     `
 
     const conn = mysqli() 
     try {
         conn.query(query, [remembermetk], (err, result) => {
+
+            console.log(err);
+            
         
             if(err){
                 return fn(new Visitante, true, "Internal Error 1")
