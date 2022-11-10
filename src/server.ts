@@ -24,6 +24,7 @@ const app:Express = express()
 const config:Config = Config.instance()
 app.use(express.json())
 app.use('/', middleware)
+app.use(express.static('public'))
 routes(app)
 
 app.listen(config.json().port, () => {

@@ -200,9 +200,6 @@ const getSocioByRememberme = (remembermetk:String, fn:(user:User, error:Boolean,
     const conn = mysqli() 
     try {
         conn.query(query, [remembermetk], (err, result) => {
-
-            console.log(err);
-            
         
             if(err){
                 return fn(new Visitante, true, "Internal Error 1")
