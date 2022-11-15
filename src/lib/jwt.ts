@@ -36,7 +36,8 @@ interface header {
     tim:number
 }
 
-const limit = Date.now() + (1000 * 60 * 15)  // 15 minutos de duração
+ // const limit = Date.now() + (1000 * 60 * 15)  // 15 minutos de duração
+ const limit = Date.now() + (1000 * 60 * 150)  // 15 minutos de duração
 
 const emptyUser:DataUser = {
     id:0,

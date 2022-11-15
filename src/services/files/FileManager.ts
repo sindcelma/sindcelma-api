@@ -1,17 +1,18 @@
 import { Request, Response } from 'express'
 import mysqli from '../../lib/mysqli'
 import { generateSlug } from '../../lib/jwt'
-import {  appendFileSync, readFileSync, writeFileSync, promises as fsPromises, renameSync } from 'fs';
+import {  appendFileSync, readFileSync, copyFileSync, writeFileSync, promises as fsPromises, renameSync } from 'fs';
 import { join } from 'path';
 import response from '../../lib/response';
+
+import Jimp from 'jimp';
 
 
 class FileManager {
 
     public static create_ghost(req:Request, res:Response){
-
-        // const user_id = req.user.getId();
-        const user_id = 40; // apagar depois
+        
+        const user_id = req.user.getId();
         const ext     = req.body.ext;
         const type    = req.body.type != null ? req.body.type : "fav";
 
@@ -23,19 +24,19 @@ class FileManager {
         conn.query("INSERT INTO user_images (user_id, slug, type, ext) VALUES (?,?,?,?)", 
             [user_id, slug, type, ext], err => {
             
-            if(err) return response(res).error(500, 'Internal Error');
+            if(err) return response(res).error(500, err.message);
             const fileStr = `../../../public/images/${type}/${slug}.${ext}.ghost`;
             const file    = join(__dirname, fileStr);
        
             try {
                 writeFileSync(file, "", {
-                    flag: 'w+',
+                    flag: 'w',
                 })
                 response(res).success({
                     slug:slug
                 })
             } catch (e) {
-                response(res).error(500, 'Internal Error')
+                response(res).error(500, e)
             }
 
         })
@@ -45,9 +46,7 @@ class FileManager {
 
     public static append(req:Request, res:Response){
         
-
-        // const user_id = req.user.getId();
-        const user_id = 40; // apagar depois
+        const user_id = req.user.getId();
         const data    = req.body.data;
         const slug    = req.body.slug;
 
@@ -63,10 +62,7 @@ class FileManager {
             const fileSel = result[0];
             if(fileSel.user_id != user_id) return response(res).error(401, 'Unauthorized')
             
-            const dataArr:String[] = data.split(',');
-            const dataf:String     = dataArr.length > 0 ? dataArr[1] : dataArr[0]
-
-            const buff    =  Buffer.from(dataf, "base64")
+            const buff    =  Buffer.from(data, "base64")
             const fileStr = `../../../public/images/${fileSel.type}/${slug}.${fileSel.ext}.ghost`;
             const file    = join(__dirname, fileStr);
             
@@ -83,10 +79,8 @@ class FileManager {
 
     public static commit(req:Request, res:Response){
 
-        // user 
-        // slug 
-        // const user_id = req.user.getId();
-        const user_id = 40; // apagar depois
+        const user_id = req.user.getId();
+        const email   = req.user.getEmail();
         const slug    = req.body.slug;
 
         if(!slug) return response(res).error(400, 'Bad Request')
@@ -104,10 +98,21 @@ class FileManager {
             const oldF    = `${newF}.ghost`;
             const fileN   = join(__dirname, newF);
             const fileO   = join(__dirname, oldF);
-
+            
             try {
 
                 renameSync(fileO, fileN)
+                
+                if(fileSel.type == 'nodoc' || fileSel.type == 'fav'){
+                    let fileFav   = `../../../public/images/fav/${email}.${fileSel.ext}`
+                    const copy    = join(__dirname, fileFav)
+                    copyFileSync(fileN, copy)
+                    if(fileSel.ext != "jpg"){
+                        console.log("salvou em jpg");
+                        let to = `../../../public/images/fav/${email}.jpg`
+                        FileManager.__save_fav_jpg(copy, to)
+                    }
+                }
 
                 conn.query("UPDATE user_images SET ativo = 1 WHERE slug = ?", [slug], err => {
                     if(err) return response(res).error(500, 'Internal Error 1')
@@ -121,6 +126,20 @@ class FileManager {
 
         })
 
+
+    }
+
+    static __save_fav_jpg(path:string, to:string){
+
+        Jimp.read(path)
+        .then(file => {
+            return file
+            .quality(60) // set JPEG quality
+            .write(to); // save
+        })
+        .catch(err => {
+            console.error(err);
+        });
 
     }
 

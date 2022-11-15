@@ -12,6 +12,7 @@ export default () => {
 
     // user
 
+    router.post('/generate_temp_key', AuthService.generate_temp_key)
     router.post('/recover', AuthService.recover)
     router.post('/check_code_recover', AuthService.check_code_recover)
     router.post('/change_pass_using_code', AuthService.change_pass_using_code)
@@ -26,6 +27,7 @@ export default () => {
 
     // socios
 
+    router.post('/socios/check_status', SocioManager.check_status)
     router.post('/socios/cadastrar_full_socio', SocioManager.cadastrar_full_socio)
     router.post('/socios/get_socio_por_login', SocioManager.get_socio_by_login)
     router.post('/socios/cadastrar_usuario', SocioManager.cadastrar_usuario)

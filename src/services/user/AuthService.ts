@@ -1,15 +1,74 @@
 import { Request, Response } from "express";
 import { dateFormat } from "../../lib/data";
-import { generateToken, generateCode, hashPass } from "../../lib/jwt"
+import { generateToken, generateCode, generateSlug, hashPass, comparePass } from "../../lib/jwt"
 import mysqli from "../../lib/mysqli";
 import response from "../../lib/response";
 import Socio from "../../model/Socio";
 import User from "../../model/User";
 import { getUser, getUserByRememberme } from '../../model/UserFactory'
 
+
 interface msg { session:String, user:User, remembermetk?:any }
 
 class AuthService {
+
+
+    static generate_temp_key(req:Request, res:Response){
+
+        const senha = req.body.senha;
+
+        if(!senha) return response(res).error(400)
+
+        const user:User = req.user;
+        const conn = mysqli();
+
+        conn.query(`
+            SELECT id, senha FROM user WHERE email = ?
+        `, [req.user.getEmail()], (err, result) => {
+            
+            if(err) return response(res).error(500, 'Internal Error')
+            if(result.length == 0) return response(res).error(404, 'usuario não encontrado')
+            
+            const senhaHash = result[0]['senha']
+            const user_id   = result[0]['id']
+
+            if(!comparePass(senha, senhaHash)) 
+                return response(res).error(401, 'senha incorreta')
+
+            
+            const data:Date = new Date();
+            const key = generateSlug(req.user.getEmail()+String(data.getMilliseconds()))
+            data.setMinutes(data.getMinutes() + 60);
+
+            const dataStr = data.getUTCFullYear() + '-' +
+                    ('00' + (data.getUTCMonth()+1)).slice(-2) + '-' +
+                    ('00' + data.getUTCDate()).slice(-2) + ' ' + 
+                    ('00' + data.getUTCHours()).slice(-2) + ':' + 
+                    ('00' + data.getUTCMinutes()).slice(-2) + ':' + 
+                    ('00' + data.getUTCSeconds()).slice(-2);
+
+            conn.query("UPDATE user SET temp_key = ?, valid_key = ? WHERE id = ?", 
+            [key, dataStr, user_id], err => {
+
+                if(err) return response(res).error(500, 'Internal Error')
+
+                response(res).success({
+                    key:key
+                });
+
+            })
+            
+           
+
+            
+            
+        });
+
+    }
+
+    static change_pass_word(){
+
+    }
 
     // função de teste. apagar depois
     static check_session(req:Request, res:Response){

@@ -47,7 +47,7 @@ const getAdmin = (email:String, senha:string, fn:(user:User, error:Boolean, msg:
 
             if(result.length > 0){
                 
-                const res = result[0]
+                const res:{id:Number, email:String, version:Number} = result[0]
 
                 const user = {
                     id:res.id,
@@ -114,7 +114,8 @@ const getSocio = (email:String, senha:string, fn:(user:User, error:Boolean, msg:
 
             if(result.length > 0){
                 
-                const res = result[0]
+                const res:{id:Number, email:string, status:Number, version:Number, senha:string} = result[0]
+
                 const status = await comparePass(senha, res.senha);
                 if(!status){
                     return fn(new Visitante, true, "Não autorizado")
@@ -215,7 +216,7 @@ const getSocioByRememberme = (remembermetk:String, fn:(user:User, error:Boolean,
                     version:res.version
                 } 
     
-                if(res.status > 2){
+                if(res.status > 3){
                     return fn(new Visitante, true, "Sócio Bloqueado")                    
                 }
 
@@ -318,7 +319,7 @@ const setUserBySessionToken = (sessionToken:string):User => {
 const middleware = async function(req:Request, res:Response, next?:any){
     
     req.user = req.body.session != null ? setUserBySessionToken(String(req.body.session)) : new Visitante()
-    req.user.setAgent(req.get('User-Agent'))
+    //req.user.setAgent(req.get('User-Agent'))
     
     if(!(req.user instanceof Visitante)){
         

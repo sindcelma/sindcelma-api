@@ -4,8 +4,52 @@ import { generateSlug, hashPass } from "../../lib/jwt";
 import mysqli from "../../lib/mysqli";
 import response from "../../lib/response";
 import Socio from "../../model/Socio";
+import crypto from 'crypto'
+import Config from '../../lib/config';
 
 class SocioManager {
+
+    public static async check_status(req:Request, res:Response){
+
+        const conn = mysqli();
+
+        conn.query(`
+            SELECT 
+                  socios.id,
+                  socios.status
+            FROM  socios
+            JOIN  user ON user.socio_id 
+            WHERE user.id = ?
+        `,[req.user.getId()], (err, result) => {
+            
+            if(err) return response(res).error(500, 'Internal Error 1')
+            if(result.length == 0) return response(res).error()
+            
+            if(result[0].status == 1){
+;
+                const socio_id = result[0].id;
+                conn.query(`
+                    SELECT 
+                          id
+                    FROM  user_images
+                    WHERE type = ?
+                `, ['doc'], (err, result) => {
+
+                    if(err) return response(res).error(500, 'Internal Error 2');
+                    if(result.length == 0) return response(res).error(401);
+
+                    conn.query("UPDATE socios SET status = 2 WHERE id = ? ", [socio_id], err => {
+                        if(err) return response(res).error(500, 'Internal Error 3'); 
+                        response(res).success()
+                    })
+                })
+            } else {   
+                response(res).success()
+            }
+
+        })
+
+    }
 
     public static async cadastrar_full_socio(req:Request, res:Response){
 
@@ -25,7 +69,7 @@ class SocioManager {
 
         if(!email || !cpf || !senha || !nome || !sobrenome || !rg || !sexo 
             || !civil || !nascimento || !telefone || !cargo || !admissao){
-            return response(res).error(400, 'Bad Request')
+            return response(res).error(400, 'Bad Request 1')
         }
 
         const conn = mysqli()
@@ -46,7 +90,9 @@ class SocioManager {
 
             conn.query(`
                 INSERT INTO user (email, senha, socio_id) VALUES (?,?,?)
-            `, [email, senha, socio_id], (err, result) => {
+            `, [email, senha, socio_id], (err, result2) => {
+                
+                const user_id = result2.insertId
 
                 if(err) {
                     conn.end() 
@@ -68,11 +114,12 @@ class SocioManager {
                         conn.end()
                         return response(res).error(500, err2.message)
                     }
+                    
                     conn.query("UPDATE socios SET status = 1 WHERE id = ?", [socio_id], 
-                        (err3)=> {
+                        (err4)=> {
 
-                            if(err3){
-                                return response(res).error(500, err3.message)
+                            if(err4){
+                                return response(res).error(500, err4.message)
                             }
                             
                             response(res).success({
@@ -83,6 +130,7 @@ class SocioManager {
 
                         } 
                     )
+                    
                 })
 
             })
