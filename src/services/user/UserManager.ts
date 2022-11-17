@@ -3,6 +3,8 @@ import { hashPass } from "../../lib/jwt";
 import mysqli from "../../lib/mysqli";
 import response from "../../lib/response";
 import Socio from '../../model/Socio';
+import {  copyFileSync } from 'fs';
+import { join } from 'path';
 
 class UserManager {
 
@@ -135,12 +137,36 @@ class UserManager {
             const socio_id = socio['id'];
 
             if(!socio.email){
-                conn.query("INSERT INTO user(socio_id, email, senha) VALUES (?,?,?)", [socio_id, email, senha], err => {
-                    if(err) return response(res).error(500, 'Erro ao tentar gerar usuário');
-                    response(res).success();
-                })
+                
+                try {
+
+                    const elements = [
+                        'arara-azul.jpg', 'ariranha.jpg',
+                        'mico-leao-dourado.jpg', 'onca-pintada.jpg',
+                        'peixe-boi.jpg', 'tamandua.jpg'
+                    ]
+
+                    const image =  join(
+                        __dirname, 
+                        `../../../public/images/padroes/${elements[Math.floor(Math.random() * elements.length)]}`
+                    );
+
+                    const copy  = join(__dirname, `../../../public/images/fav/${email}.jpg`)
+                    copyFileSync(image, copy)
+                    
+                    conn.query("INSERT INTO user(socio_id, email, senha) VALUES (?,?,?)", [socio_id, email, senha], err => {
+                    
+                        if(err) return response(res).error(500, 'Erro ao tentar gerar usuário');    
+                        response(res).success();
+    
+                    })
+                    
+                } catch (error) {
+                    response(res).error(500, 'Falha ao tentar criar imagem do usuário')
+                }
+                
             } else {
-                response(res).error(500, 'Já existe um usuário cadastrado');
+                response(res).error(500, 'Já existe um usuário cadastrado para o sócio');
             }
 
         })

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import mysqli from '../../lib/mysqli'
 import { generateSlug } from '../../lib/jwt'
-import {  appendFileSync, readFileSync, copyFileSync, writeFileSync, promises as fsPromises, renameSync } from 'fs';
+import {  appendFileSync, copyFileSync, writeFileSync, promises as fsPromises, renameSync } from 'fs';
 import { join } from 'path';
 import response from '../../lib/response';
 

@@ -5,9 +5,52 @@ import mysqli from "../../lib/mysqli";
 import response from "../../lib/response";
 import Socio from "../../model/Socio";
 import crypto from 'crypto'
-import Config from '../../lib/config';
 
 class SocioManager {
+
+    public static async verify_by_qrcode_token(req:Request, res:Response) {
+
+        if(!req.params.token) return response(res).error(400, 'bad request')
+        
+        const fulltoken  = req.params.token
+        const partstoken = fulltoken.split('.')
+        const datasender = Buffer.from(partstoken[0], 'base64').toString('utf-8')
+        const strhash256 = partstoken[1]
+
+        try {
+
+            const objDataUser:{slug:String, duration:Number} = JSON.parse(datasender);
+            
+            if(Date.now() > objDataUser.duration){
+                return response(res).error(403, 'Forbiden - Link Expired')
+            }
+            const conn = mysqli()
+            conn.query("SELECT salt FROM socios WHERE slug = ?", [objDataUser.slug], async (err, result) => {
+
+                if(err) return response(res).error(500, 'internal error')
+                if(result.length == 0) return response(res).error()
+
+                const salt = result[0].salt;
+                const key  = objDataUser.slug+salt+datasender;
+
+                const utf8 = new TextEncoder().encode(key);
+                const hashBuffer = crypto.createHash('sha256').update(utf8).digest('hex');
+                
+                if(hashBuffer != strhash256) {
+                    return response(res).error(401, 'Unauthorized')
+                }
+
+                response(res).success("Sócio está em ativo!")
+                
+            })
+            
+
+        } catch (error) {
+            return response(res).error(400, 'bad request')
+        }
+        
+    
+    }
 
     public static async check_status(req:Request, res:Response){
 
