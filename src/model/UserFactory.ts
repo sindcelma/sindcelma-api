@@ -165,7 +165,7 @@ const genAdmin = (dataToken:any):User => {
 }
 
 
-const getSocioByRememberme = (remembermetk:String, fn:(user:User, error:Boolean, msg:String) => void) => {
+const getSocioByRememberme = (remembermetk:String, fn:(user:User, error:Boolean, codeError:Number, msg:String) => void) => {
 
     let query:string = `
         SELECT 
@@ -203,7 +203,7 @@ const getSocioByRememberme = (remembermetk:String, fn:(user:User, error:Boolean,
         conn.query(query, [remembermetk], (err, result) => {
         
             if(err){
-                return fn(new Visitante, true, "Internal Error 1")
+                return fn(new Visitante, true, 1, "Internal Error 1")
             }
         
             if(result.length > 0){
@@ -217,26 +217,26 @@ const getSocioByRememberme = (remembermetk:String, fn:(user:User, error:Boolean,
                 } 
     
                 if(res.status > 3){
-                    return fn(new Visitante, true, "Sócio Bloqueado")                    
+                    return fn(new Visitante, true, 2, "Sócio Bloqueado")                    
                 }
 
                 const socio = new Socio(user)
                 conn.end()
                 
-                return fn(setDataSocio(res, socio), false, "")
+                return fn(setDataSocio(res, socio), false, 0, "")
                 
             } 
     
             conn.end()
-            fn(new Visitante, true, "Este Token expirou ou não é válido")
+            fn(new Visitante, true, 3, "Este Token expirou ou não é válido")
         })
     } catch (error) {
-        fn(new Visitante, true, "Internal Error 2")
+        fn(new Visitante, true, 4, "Internal Error 2")
         conn.end()
     }
 }
 
-const getAdminByRememberme = (remembermetk:String, fn:(user:User, error:Boolean, msg:String) => void) => {
+const getAdminByRememberme = (remembermetk:String, fn:(user:User, error:Boolean, codeError:Number, msg:String) => void) => {
     
     let query:string = `
         SELECT 
@@ -255,13 +255,13 @@ const getAdminByRememberme = (remembermetk:String, fn:(user:User, error:Boolean,
         conn.query(query, [remembermetk], (err, result) => {
         
             if(err){
-                return fn(new Visitante, true, "Internal Error")
+                return fn(new Visitante, true, 1, "Internal Error")
             }
     
         
             if(result.length > 0){
                     
-                const res = result[0]
+                const res:{id:Number, email:string, version:Number} = result[0]
                 const user = {
                     id:res.id,
                     email:res.email,
@@ -271,25 +271,25 @@ const getAdminByRememberme = (remembermetk:String, fn:(user:User, error:Boolean,
                 const admin = new Admin(user)
                 conn.end()
                 
-                return fn(setDataAdmin(res, admin), false, "")
+                return fn(setDataAdmin(res, admin), false, 0, "")
                 
             } 
     
             conn.end()
-            fn(new Visitante, true, "Este Token expirou ou não é válido")
+            fn(new Visitante, true, 3, "Este Token expirou ou não é válido")
         })
     } catch (error) {
-        fn(new Visitante, true, "Internal Error")
+        fn(new Visitante, true, 4, "Internal Error")
         conn.end()
     }
     
 }
 
-const getUserByRememberme = (type:String, remembermetk:String, fn:(user:User, error:Boolean, msg:String) => void) => {
+const getUserByRememberme = (type:String, remembermetk:String, fn:(user:User, error:Boolean, codeError:Number, msg:String) => void) => {
     switch (type) {
         case "Admin": getAdminByRememberme(remembermetk, fn); break;
         case "Socio": getSocioByRememberme(remembermetk, fn); break;
-        default: fn(new Visitante, true, "Este tipo de usuário não existe")
+        default: fn(new Visitante, true, 5, "Este tipo de usuário não existe")
     }
 }
 

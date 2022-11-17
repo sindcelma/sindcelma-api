@@ -12,7 +12,7 @@ class UserManager {
     public static check_login(req:Request, res:Response){
 
         const doc = req.body.doc
-
+        
         if(!doc) return response(res).error(400, "Bad Request")
 
         const cpf  = Socio.transformCpf(req.body.doc)

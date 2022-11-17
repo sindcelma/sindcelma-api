@@ -5,8 +5,13 @@ import mysqli from "../../lib/mysqli";
 import response from "../../lib/response";
 import Socio from "../../model/Socio";
 import crypto from 'crypto'
+import {readFileSync} from 'fs'
+import { join } from 'path';
+
+const URL = "http://192.168.0.11:3050";
 
 class SocioManager {
+
 
     public static async verify_by_qrcode_token(req:Request, res:Response) {
 
@@ -25,13 +30,14 @@ class SocioManager {
                 return response(res).error(403, 'Forbiden - Link Expired')
             }
             const conn = mysqli()
-            conn.query("SELECT salt FROM socios WHERE slug = ?", [objDataUser.slug], async (err, result) => {
+            conn.query("SELECT salt, nome, sobrenome FROM socios WHERE slug = ?", [objDataUser.slug], async (err, result) => {
 
                 if(err) return response(res).error(500, 'internal error')
                 if(result.length == 0) return response(res).error()
-
-                const salt = result[0].salt;
-                const key  = objDataUser.slug+salt+datasender;
+                
+                const socio:{salt:string, nome:string, sobrenome:string} = result[0]; 
+                const salt  = socio.salt;
+                const key   = objDataUser.slug+salt+datasender;
 
                 const utf8 = new TextEncoder().encode(key);
                 const hashBuffer = crypto.createHash('sha256').update(utf8).digest('hex');
@@ -39,8 +45,13 @@ class SocioManager {
                 if(hashBuffer != strhash256) {
                     return response(res).error(401, 'Unauthorized')
                 }
-
-                response(res).success("Sócio está em ativo!")
+  
+                var html = readFileSync(join(__dirname, '../../html/socio_view.html')).toString();
+                html = html.replace(/\$nome/g, socio.nome+" "+socio.sobrenome)
+                html = html.replace(/\$url/g, URL)
+                
+                res.setHeader("Content-Type", "text/html")
+                res.send(html)
                 
             })
             
@@ -69,7 +80,7 @@ class SocioManager {
             if(result.length == 0) return response(res).error()
             
             if(result[0].status == 1){
-;
+
                 const socio_id = result[0].id;
                 conn.query(`
                     SELECT 

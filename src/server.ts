@@ -23,9 +23,10 @@ declare global{
 
 const app:Express = express()
 const config:Config = Config.instance()
+
 app.use(express.json())
 app.use(express.static('public'))
-// inserir rotar publicas aqui
+// inserir rotas publicas aqui
 app.get('/socio_verify/:token', SocioManager.verify_by_qrcode_token)
 
 app.use('/', middleware)

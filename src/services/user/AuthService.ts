@@ -279,11 +279,18 @@ class AuthService {
         const remembermeToken = req.body.rememberme
         const type = req.body.type
         
-        getUserByRememberme(type, remembermeToken, (user, error, msg) => {
+        getUserByRememberme(type, remembermeToken, (user, error, codeError, msg) => {
            
-            if(error){
-                return response(res).error(500, msg)
+            if(error)
+            switch (codeError) {
+                case 2: 
+                case 3:
+                    return response(res).error(401, msg)
+                case 1:
+                case 4:
+                    return response(res).error(500, msg)
             }
+
             
             const message:msg = {
                 session: generateToken(type, {
