@@ -5,13 +5,8 @@ import mysqli from "../../lib/mysqli";
 import response from "../../lib/response";
 import Socio from "../../model/Socio";
 import crypto from 'crypto'
-import {readFileSync} from 'fs'
-import { join } from 'path';
-
-const URL = "http://192.168.0.11:3050";
 
 class SocioManager {
-
 
     public static async verify_by_qrcode_token(req:Request, res:Response) {
 
@@ -29,7 +24,9 @@ class SocioManager {
             if(Date.now() > objDataUser.duration){
                 return response(res).error(403, 'Forbiden - Link Expired')
             }
+
             const conn = mysqli()
+            
             conn.query("SELECT salt, nome, sobrenome FROM socios WHERE slug = ?", [objDataUser.slug], async (err, result) => {
 
                 if(err) return response(res).error(500, 'internal error')
@@ -46,12 +43,9 @@ class SocioManager {
                     return response(res).error(401, 'Unauthorized')
                 }
   
-                var html = readFileSync(join(__dirname, '../../html/socio_view.html')).toString();
-                html = html.replace(/\$nome/g, socio.nome+" "+socio.sobrenome)
-                html = html.replace(/\$url/g, URL)
-                
-                res.setHeader("Content-Type", "text/html")
-                res.send(html)
+                response(res).html('socio_view', {
+                    nome: socio.nome+" "+socio.sobrenome
+                })
                 
             })
             
@@ -59,9 +53,9 @@ class SocioManager {
         } catch (error) {
             return response(res).error(400, 'bad request')
         }
-        
     
     }
+
 
     public static async check_status(req:Request, res:Response){
 
@@ -105,6 +99,7 @@ class SocioManager {
 
     }
 
+    
     public static async cadastrar_full_socio(req:Request, res:Response){
 
         const empresa_id = 1

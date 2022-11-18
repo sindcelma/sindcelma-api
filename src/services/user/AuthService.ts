@@ -33,7 +33,7 @@ class AuthService {
             const user_id   = result[0]['id']
 
             if(!comparePass(senha, senhaHash)) 
-                return response(res).error(401, 'senha incorreta')
+                return response(res).error(402, 'senha incorreta')
 
             
             const data:Date = new Date();
@@ -58,16 +58,12 @@ class AuthService {
 
             })
             
-           
-
-            
-            
         });
 
     }
 
     static change_pass_word(){
-
+        // alterar versão do usuário
     }
 
     // função de teste. apagar depois
@@ -123,6 +119,7 @@ class AuthService {
      */
     public static recover(req:Request, res:Response){
         // gerar o código e enviar via email ou telefone
+        // alterar versão do usuário
         let email = req.body.email
         let cpf = Socio.transformCpf(req.body.doc) 
         let type = req.body.type
@@ -250,6 +247,7 @@ class AuthService {
         const conn = mysqli();
         conn.query(`
           SELECT 
+                 user.id as user_id,
                  user_recover.id
             FROM user_recover 
             JOIN user ON user.id = user_recover.user_id 
@@ -261,13 +259,17 @@ class AuthService {
                 if(result.length == 0) return response(res).error()
                 
                 const recover_id = result[0]['id'];
+                const user_id    = result[0]['user_id'];
                 const pass  = await hashPass(senha);
 
                 conn.query("UPDATE user SET senha = ? WHERE email = ?", [pass, email], err => {
   
                     if(err) return response(res).error(500, 'Internal Error')
                     conn.query("DELETE FROM user_recover WHERE id = ?", [recover_id])
+                    conn.query("DELETE FROM user_devices WHERE user_id = ?", [user_id])
+                    conn.query("UPDATE user SET version = version+1 WHERE id = ?", [user_id])
                     response(res).success();
+                
                 })
 
              })
@@ -290,7 +292,6 @@ class AuthService {
                 case 4:
                     return response(res).error(500, msg)
             }
-
             
             const message:msg = {
                 session: generateToken(type, {
@@ -302,6 +303,7 @@ class AuthService {
             }
 
             response(res).success(message)
+
         })
 
     }
