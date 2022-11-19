@@ -13,11 +13,13 @@ const setDataAdmin = (data:any, admin:Admin):Admin => {
     return admin
 }
 
-const setDataSocio = (data:any, socio:Socio):Socio => {
+const setDataSocio = (data:any, socio:Socio, full = true):Socio => {
     socio.setFullName(data.nome, data.sobrenome)
     socio.setSlug(data.slug)
     socio.setStatus(data.status)
-    socio.setOthersDatas(data);
+    if(full){
+        socio.setOthersDatas(data);
+    }
     return socio
 }
 
@@ -298,7 +300,7 @@ const getUserByToken = (sessionToken:Token):User => {
     if(!sessionToken.status) return new Visitante()
 
     switch (sessionToken.type) {
-        case "Socio": return new Socio(sessionToken.data) 
+        case "Socio": return new Socio(sessionToken.data)
         case "Admin": return genAdmin(sessionToken.data) 
         default: return new Visitante()
     }
@@ -318,22 +320,49 @@ const setUserBySessionToken = (sessionToken:string):User => {
 
 const middleware = async function(req:Request, res:Response, next?:any){
     
-    req.user = req.body.session != null ? setUserBySessionToken(String(req.body.session)) : new Visitante()
-    //req.user.setAgent(req.get('User-Agent'))
+    const user = req.body.session != null ? setUserBySessionToken(String(req.body.session)) : new Visitante()
     
-    if(!(req.user instanceof Visitante)){
+    if(user instanceof Socio){
         
         const conn = mysqli();
-        conn.query("SELECT id FROM user WHERE id = ? AND version = ?", [req.user.getId(), req.user.getVersion()], (err, result) => {
+        conn.query(`
+            SELECT 
+                user.id,
+                socios.slug,
+                socios.nome,
+                socios.sobrenome,
+                socios.status
+            FROM user 
+            JOIN socios ON socios.id = user.socio_id
+            WHERE user.id = ? AND user.version = ?
+        `, [user.getId(), user.getVersion()], (err, result) => {
+
+            if(err){
+                console.log(err);
+            }
+
             if(result.length == 0){
                 req.user = new Visitante()
             } else {
+                const userres:{
+                    id:number, 
+                    slug:string, 
+                    nome:string, 
+                    sobrenome:string, 
+                    status:number
+                } = result[0];
+
+                req.user = setDataSocio(userres, user, false)
                 res.user = req.user
             }
             next()
         });
 
-    } else {
+    } 
+    else if(user instanceof Admin) {
+        // injetar administrador
+    }
+    else {
         next()
     }
 

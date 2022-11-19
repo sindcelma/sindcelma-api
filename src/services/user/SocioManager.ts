@@ -56,7 +56,6 @@ class SocioManager {
     
     }
 
-
     public static async check_status(req:Request, res:Response){
 
         const conn = mysqli();
@@ -98,7 +97,6 @@ class SocioManager {
         })
 
     }
-
     
     public static async cadastrar_full_socio(req:Request, res:Response){
 
@@ -305,7 +303,6 @@ class SocioManager {
 
     }
 
-
     public static cadastrar_usuario(req:Request, res:Response){
         // verificar se o cliente enviou o CPF, email, senha
         let email = req.body.email 
@@ -355,7 +352,6 @@ class SocioManager {
 
     }
 
-
     public static delete_usuario(req:Request, res:Response){
 
         let user_id = req.body.user_id
@@ -381,16 +377,22 @@ class SocioManager {
 
     }
 
-
     public static update_usuario(req:Request, res:Response){
         // alterar email
 
         let slug  = req.body.slug 
         let email = req.body.email
 
+        if(!slug || !email){
+            return response(res).error(400, 'bad request')
+        }
+
         let user  = req.user 
 
+        var assert = assertion();
+
         try {
+            assert = 
             assertion()
             .isAdmin(user)
             .orIsSameSocio(user, slug)
@@ -402,23 +404,24 @@ class SocioManager {
         const conn = mysqli()
         
         conn.query(`
-            SELECT user.id 
-            FROM user JOIN socios ON socios.user_id = user.id 
-            WHERE socios.slug = ?
+            SELECT user.id, user.temp_key
+            FROM   user JOIN socios ON user.socio_id = socios.id 
+            WHERE  socios.slug = ?
         `, [slug], (err1, result) => {
             
             if(err1) {
-                conn.end()
-                return response(res).error(500, 'Server Error')
+                return response(res).error(500, err1)
             }
 
             if(result.length == 0){
-                conn.end()
                 return response(res).error(404, 'Not Found')
+            }
+
+            if(assert.index != 0 && (!req.body.key || req.body.key != result[0].temp_key)){
+                return response(res).error(400, 'bad request')
             }
             
             conn.query("UPDATE user SET email = ? WHERE id = ?", [email, result[0].id], err2 => {
-                conn.end()
                 if(err2){
                     return response(res).error(500, 'Este email já está cadastrado')
                 }
@@ -428,7 +431,6 @@ class SocioManager {
         })
 
     }
-
 
     public static cadastrar_socio(req:Request, res:Response){
         // Nome, sobrenome, CPF
@@ -557,7 +559,6 @@ class SocioManager {
 
     }
 
-
     public static listar(req:Request, res:Response){
 
         try {
@@ -618,12 +619,13 @@ class SocioManager {
         
     }
 
-
     public static mudar_status(req:Request, res:Response){
         /**
-         * aguardando = 0
-         * aprovado   = 1
-         * bloqueado  = 2
+         * nao existe      = 0
+         * falta usuario   = 1
+         * em aprovação    = 2
+         * aprovado        = 3
+         * bloqueado       = 4
          */
         
         try {
@@ -656,7 +658,10 @@ class SocioManager {
         const sobrenome = req.body.sobrenome 
         const slug = req.body.slug 
         
+        var assert = assertion();
+
         try {
+            assert = 
             assertion()
             .isAdmin(req.user)
             .orIsSameSocio(req.user, req.body.slug)
@@ -666,14 +671,34 @@ class SocioManager {
         }
 
         const conn = mysqli()
+
         conn.query(`
-            UPDATE socios SET nome = ? , sobrenome = ? WHERE slug = ?
-        `, [nome, sobrenome, slug], err => {
-            conn.end()
-            if(err) {
-                return response(res).error(500, 'Internal Error')
+            SELECT user.id, user.temp_key
+            FROM   user JOIN socios ON socios.user_id = user.id 
+            WHERE  socios.slug = ?
+        `, [slug], (err1, result) => {
+
+            if(err1) {
+                return response(res).error(500, 'Server Error')
             }
-            response(res).success()
+
+            if(result.length == 0){
+                return response(res).error(404, 'Not Found')
+            }
+
+            if(assert.index != 0 && (!req.body.key || req.body.key != result[0].temp_key)){
+                return response(res).error(400, 'bad request')
+            }
+
+            conn.query(`
+                UPDATE socios SET nome = ? , sobrenome = ? WHERE slug = ?
+            `, [nome, sobrenome, slug], err => {
+                conn.end()
+                if(err) {
+                    return response(res).error(500, 'Internal Error')
+                }
+                response(res).success()
+            })
         })
 
     }
@@ -701,9 +726,12 @@ class SocioManager {
         const conn = mysqli()
 
         conn.query(`
-            SELECT socios_dados_profissionais.id 
-            FROM   socios_dados_profissionais
-            JOIN   socios ON socios.id = socios_dados_profissionais.socio_id
+            SELECT 
+                   socios_dados_profissionais.id,
+                   user.temp_key,
+             FROM  socios_dados_profissionais
+             JOIN  socios ON socios.id = socios_dados_profissionais.socio_id
+             JOIN  user ON user.socio_id = socios.id 
             WHERE  socios.slug = ?
         `, [slug], (err, result) => {
             

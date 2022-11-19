@@ -37,7 +37,7 @@ interface header {
 }
 
  // const limit = Date.now() + (1000 * 60 * 15)  // 15 minutos de duração
- const limit = Date.now() + (1000 * 60 * 150)  // 15 minutos de duração
+ const limit = Date.now() + (1000 * 60 * 800)  // 800 minutos de duração
 
 const emptyUser:DataUser = {
     id:0,
