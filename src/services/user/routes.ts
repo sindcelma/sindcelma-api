@@ -12,6 +12,7 @@ export default () => {
 
     // user
 
+    router.post('/change_password', AuthService.change_password)
     router.post('/generate_temp_key', AuthService.generate_temp_key)
     router.post('/recover', AuthService.recover)
     router.post('/check_code_recover', AuthService.check_code_recover)

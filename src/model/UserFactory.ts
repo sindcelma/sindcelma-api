@@ -363,8 +363,10 @@ const middleware = async function(req:Request, res:Response, next?:any){
         // injetar administrador
     }
     else {
+        req.user = user
         next()
     }
+
 
 }
 

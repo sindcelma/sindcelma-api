@@ -24,7 +24,7 @@ class AuthService {
 
         conn.query(`
             SELECT id, senha FROM user WHERE email = ?
-        `, [req.user.getEmail()], (err, result) => {
+        `, [user.getEmail()], (err, result) => {
             
             if(err) return response(res).error(500, 'Internal Error')
             if(result.length == 0) return response(res).error(404, 'usuario não encontrado')
@@ -37,7 +37,7 @@ class AuthService {
 
             
             const data:Date = new Date();
-            const key = generateSlug(req.user.getEmail()+String(data.getMilliseconds()))
+            const key = generateSlug(user.getEmail()+String(data.getMilliseconds()))
             data.setMinutes(data.getMinutes() + 60);
 
             const dataStr = data.getUTCFullYear() + '-' +
@@ -62,8 +62,52 @@ class AuthService {
 
     }
 
-    static change_pass_word(){
+    public static change_password(req:Request, res:Response) {
         // alterar versão do usuário
+        let oldPass = req.body.oldPass
+        let newPass = req.body.newPass
+
+        if(!req.body.key || !newPass || !oldPass){
+            return response(res).error(400, 'bad request')
+        }
+
+        let user:User  = req.user 
+
+        const conn = mysqli()
+        
+        conn.query(`
+            SELECT temp_key, senha
+            FROM   user
+            WHERE  id = ?
+        `, [user.getId()], async (err1, result) => {
+            
+            if(err1) {
+                return response(res).error(500, err1)
+            }
+
+            if(result.length == 0){
+                return response(res).error(404, 'Not Found')
+            }
+            
+            if(req.body.key != result[0].temp_key){
+                return response(res).error(403, 'need refresh key')
+            }
+
+            if(!(await comparePass(oldPass, result[0].senha))){
+                return response(res).error(402, 'senha incorreta')
+            }
+            const hashNewPass = await hashPass(newPass);
+
+            conn.query("UPDATE user SET senha = ? WHERE id = ?", [hashNewPass, user.getId()], err2 => {
+                if(err2){
+                    return response(res).error(500, 'Este email já está cadastrado')
+                }
+                conn.query("DELETE FROM user_devices WHERE user_id = ?", [user.getId()])
+                conn.query("UPDATE user SET version = version+1 WHERE id = ?", [user.getId()])
+                response(res).success()
+            })
+
+        })
     }
 
     // função de teste. apagar depois

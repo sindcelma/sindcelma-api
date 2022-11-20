@@ -8,6 +8,272 @@ import crypto from 'crypto'
 
 class SocioManager {
 
+    /**
+     * TESTADO
+     */
+     public static update_dados_socio(req:Request, res:Response){
+        // nao pode alterar cpf
+        const nome      = req.body.nome 
+        const sobrenome = req.body.sobrenome 
+        const slug      = req.body.slug 
+        
+        var assert = assertion();
+
+        try {
+            assert = 
+            assertion()
+            .isAdmin(req.user)
+            .orIsSameSocio(req.user, req.body.slug)
+            .assert()
+        } catch (error) {
+            return response(res).error(401, 'Unauthorized')
+        }
+
+        const conn = mysqli()
+
+        conn.query(`
+            SELECT user.id, user.temp_key
+            FROM   user JOIN socios ON user.socio_id = socios.id 
+            WHERE  socios.slug = ?
+        `, [slug], (err1, result) => {
+
+            if(err1) {
+                return response(res).error(500, err1)
+            }
+
+            if(result.length == 0){
+                return response(res).error(404, 'Not Found')
+            }
+
+            if(!req.body.key){
+                return response(res).error(400, 'bad request')
+            }
+            
+            if(assert.index != 0 && req.body.key != result[0].temp_key){
+                return response(res).error(403, 'need refresh key')
+            }
+
+            conn.query(`
+                UPDATE socios SET nome = ? , sobrenome = ? WHERE slug = ?
+            `, [nome, sobrenome, slug], err => {
+                conn.end()
+                if(err) {
+                    return response(res).error(500, 'Internal Error')
+                }
+                response(res).success()
+            })
+
+        })
+
+    }
+
+    /**
+     *  TESTADO
+     */
+    public static update_dados_profissionais(req:Request, res:Response){
+
+        const slug = req.body.slug
+        const empresa_id = req.body.empresa_id
+        const cargo = req.body.cargo
+        const data_admissao = req.body.data_admissao
+        const num_matricula = req.body.num_matricula
+
+        var assert = assertion();
+
+        try {
+            assert = 
+            assertion()
+            .isAdmin(req.user)
+            .orIsSameSocio(req.user, req.body.slug)
+            .assert()
+        } catch (error) {
+            return response(res).error(401, 'Unauthorized')
+        }
+
+        const conn = mysqli()
+
+        conn.query(`
+            SELECT 
+                   socios_dados_profissionais.id,
+                   user.temp_key
+             FROM  socios_dados_profissionais
+             JOIN  socios ON socios.id = socios_dados_profissionais.socio_id
+             JOIN  user ON user.socio_id = socios.id 
+            WHERE  socios.slug = ?
+        `, [slug], (err1, result) => {
+            
+            if(err1) {
+                return response(res).error(500, err1)
+            }
+
+            if(result.length == 0){
+                return response(res).error(404, 'Not Found')
+            }
+
+            if(!req.body.key){
+                return response(res).error(400, 'bad request')
+            }
+            
+            if(assert.index != 0 && req.body.key != result[0].temp_key){
+                return response(res).error(403, 'need refresh key')
+            }
+
+            const id = result[0].id
+
+            conn.query(`
+                UPDATE socios_dados_profissionais 
+                SET    empresa_id = ?
+                ,      cargo = ? 
+                ,      data_admissao = ? 
+                ,      num_matricula = ?
+                WHERE  id = ?
+            `, [empresa_id, cargo, data_admissao, num_matricula, id], err2 => {
+                conn.end()
+                if(err2) {
+                    return response(res).error(500, 'Internal Error')
+                }
+                response(res).success()
+            })
+
+        })
+
+    }
+
+    /**
+     * TESTADO
+     */
+    public static update_dados_pessoais(req:Request, res:Response){
+        
+        const slug = req.body.slug
+        const rg = req.body.rg
+        const sexo = req.body.sexo
+        const estado_civil = req.body.estado_civil
+        const data_nascimento = req.body.data_nascimento
+        const telefone = req.body.telefone
+        
+        var assert = assertion();
+
+        try {
+            assert = 
+            assertion()
+            .isAdmin(req.user)
+            .orIsSameSocio(req.user, req.body.slug)
+            .assert()
+        } catch (error) {
+            return response(res).error(401, 'Unauthorized')
+        }
+
+        const conn = mysqli()
+
+        conn.query(`
+            SELECT 
+                   socios_dados_pessoais.id ,
+                   user.temp_key
+            FROM   socios_dados_pessoais
+            JOIN   socios ON socios.id = socios_dados_pessoais.socio_id
+            JOIN   user ON user.socio_id = socios.id
+            WHERE  socios.slug = ?
+        `, [slug], (err1, result) => {
+            
+            if(err1) {
+                return response(res).error(500, err1)
+            }
+
+            if(result.length == 0){
+                return response(res).error(404, 'Not Found')
+            }
+
+            if(!req.body.key){
+                return response(res).error(400, 'bad request')
+            }
+            
+            if(assert.index != 0 && req.body.key != result[0].temp_key){
+                return response(res).error(403, 'need refresh key')
+            }
+
+            const id = result[0].id
+
+            conn.query(`
+                UPDATE socios_dados_pessoais 
+                SET    rg = ? 
+                ,      sexo = ? 
+                ,      estado_civil = ?
+                ,      data_nascimento = ?
+                ,      telefone = ?
+                WHERE  id = ?
+            `, [rg, sexo, estado_civil, data_nascimento, telefone, id], err2 => {
+                if(err2) {
+                    return response(res).error(500, err2)
+                }
+                response(res).success()
+            })
+
+        })
+
+    }
+
+    /**
+     * TESTADO
+     */
+    public static update_usuario(req:Request, res:Response){
+        // alterar email
+
+        let slug  = req.body.slug 
+        let email = req.body.email
+
+        if(!slug || !email){
+            return response(res).error(400, 'bad request')
+        }
+
+        let user  = req.user 
+
+        var assert = assertion();
+
+        try {
+            assert = 
+            assertion()
+            .isAdmin(user)
+            .orIsSameSocio(user, slug)
+            .assert()
+        } catch (error) {
+            return response(res).error(401, 'Unauthorized')
+        }
+
+        const conn = mysqli()
+        
+        conn.query(`
+            SELECT user.id, user.temp_key
+            FROM   user JOIN socios ON user.socio_id = socios.id 
+            WHERE  socios.slug = ?
+        `, [slug], (err1, result) => {
+            
+            if(err1) {
+                return response(res).error(500, err1)
+            }
+
+            if(result.length == 0){
+                return response(res).error(404, 'Not Found')
+            }
+
+            if(!req.body.key){
+                return response(res).error(400, 'bad request')
+            }
+            
+            if(assert.index != 0 && req.body.key != result[0].temp_key){
+                return response(res).error(403, 'need refresh key')
+            }
+            
+            conn.query("UPDATE user SET email = ? WHERE id = ?", [email, result[0].id], err2 => {
+                if(err2){
+                    return response(res).error(500, 'Este email já está cadastrado')
+                }
+                response(res).success()
+            })
+
+        })
+
+    }
+
     public static async verify_by_qrcode_token(req:Request, res:Response) {
 
         if(!req.params.token) return response(res).error(400, 'bad request')
@@ -377,61 +643,6 @@ class SocioManager {
 
     }
 
-    public static update_usuario(req:Request, res:Response){
-        // alterar email
-
-        let slug  = req.body.slug 
-        let email = req.body.email
-
-        if(!slug || !email){
-            return response(res).error(400, 'bad request')
-        }
-
-        let user  = req.user 
-
-        var assert = assertion();
-
-        try {
-            assert = 
-            assertion()
-            .isAdmin(user)
-            .orIsSameSocio(user, slug)
-            .assert()
-        } catch (error) {
-            return response(res).error(401, 'Unauthorized')
-        }
-
-        const conn = mysqli()
-        
-        conn.query(`
-            SELECT user.id, user.temp_key
-            FROM   user JOIN socios ON user.socio_id = socios.id 
-            WHERE  socios.slug = ?
-        `, [slug], (err1, result) => {
-            
-            if(err1) {
-                return response(res).error(500, err1)
-            }
-
-            if(result.length == 0){
-                return response(res).error(404, 'Not Found')
-            }
-
-            if(assert.index != 0 && (!req.body.key || req.body.key != result[0].temp_key)){
-                return response(res).error(400, 'bad request')
-            }
-            
-            conn.query("UPDATE user SET email = ? WHERE id = ?", [email, result[0].id], err2 => {
-                if(err2){
-                    return response(res).error(500, 'Este email já está cadastrado')
-                }
-                response(res).success()
-            })
-
-        })
-
-    }
-
     public static cadastrar_socio(req:Request, res:Response){
         // Nome, sobrenome, CPF
         const nome = req.body.nome 
@@ -647,185 +858,6 @@ class SocioManager {
             response(res).success()
         })
         
-    }
-
-    /**
-     * testado: false
-     */
-    public static update_dados_socio(req:Request, res:Response){
-        // nao pode alterar cpf
-        const nome = req.body.nome 
-        const sobrenome = req.body.sobrenome 
-        const slug = req.body.slug 
-        
-        var assert = assertion();
-
-        try {
-            assert = 
-            assertion()
-            .isAdmin(req.user)
-            .orIsSameSocio(req.user, req.body.slug)
-            .assert()
-        } catch (error) {
-            return response(res).error(401, 'Unauthorized')
-        }
-
-        const conn = mysqli()
-
-        conn.query(`
-            SELECT user.id, user.temp_key
-            FROM   user JOIN socios ON socios.user_id = user.id 
-            WHERE  socios.slug = ?
-        `, [slug], (err1, result) => {
-
-            if(err1) {
-                return response(res).error(500, 'Server Error')
-            }
-
-            if(result.length == 0){
-                return response(res).error(404, 'Not Found')
-            }
-
-            if(assert.index != 0 && (!req.body.key || req.body.key != result[0].temp_key)){
-                return response(res).error(400, 'bad request')
-            }
-
-            conn.query(`
-                UPDATE socios SET nome = ? , sobrenome = ? WHERE slug = ?
-            `, [nome, sobrenome, slug], err => {
-                conn.end()
-                if(err) {
-                    return response(res).error(500, 'Internal Error')
-                }
-                response(res).success()
-            })
-        })
-
-    }
-
-    /**
-     * testado: false
-     */
-    public static update_dados_profissionais(req:Request, res:Response){
-
-        const slug = req.body.slug
-        const empresa_id = req.body.empresa_id
-        const cargo = req.body.cargo
-        const data_admissao = req.body.data_admissao
-        const num_matricula = req.body.num_matricula
-
-        try {
-            assertion()
-            .isAdmin(req.user)
-            .orIsSameSocio(req.user, req.body.slug)
-            .assert()
-        } catch (error) {
-            return response(res).error(401, 'Unauthorized')
-        }
-
-        const conn = mysqli()
-
-        conn.query(`
-            SELECT 
-                   socios_dados_profissionais.id,
-                   user.temp_key,
-             FROM  socios_dados_profissionais
-             JOIN  socios ON socios.id = socios_dados_profissionais.socio_id
-             JOIN  user ON user.socio_id = socios.id 
-            WHERE  socios.slug = ?
-        `, [slug], (err, result) => {
-            
-            if(err) {
-                conn.end()
-                return response(res).error(500, 'Internal Error')
-            }
-
-            if(result.length == 0){
-                conn.end()
-                return response(res).error(404, 'Not Found')
-            }
-
-            const id = result[0].id
-
-            conn.query(`
-                UPDATE socios_dados_profissionais 
-                SET    empresa_id = ?
-                ,      cargo = ? 
-                ,      data_admissao = ? 
-                ,      num_matricula = ?
-                WHERE  id = ?
-            `, [empresa_id, cargo, data_admissao, num_matricula, id], err2 => {
-                conn.end()
-                if(err2) {
-                    return response(res).error(500, 'Internal Error')
-                }
-                response(res).success()
-            })
-
-        })
-    }
-
-    /**
-     * testado: false
-     */
-    public static update_dados_pessoais(req:Request, res:Response){
-        
-        const slug = req.body.slug
-        const rg = req.body.rg
-        const sexo = req.body.sexo
-        const estado_civil = req.body.estado_civil
-        const data_nascimento = req.body.data_nascimento
-        const telefone = req.body.telefone
-        
-        try {
-            assertion()
-            .isAdmin(req.user)
-            .orIsSameSocio(req.user, req.body.slug)
-            .assert()
-        } catch (error) {
-            return response(res).error(401, 'Unauthorized')
-        }
-
-        const conn = mysqli()
-
-        conn.query(`
-            SELECT socios_dados_pessoais.id 
-            FROM   socios_dados_pessoais
-            JOIN   socios ON socios.id = socios_dados_pessoais.socio_id
-            WHERE  socios.slug = ?
-        `, [slug], (err, result) => {
-            
-            if(err) {
-                conn.end()
-                return response(res).error(500, 'Internal Error')
-            }
-
-            if(result.length == 0){
-                conn.end()
-                return response(res).error(404, 'Not Found')
-            }
-
-            const id = result[0].id
-
-            conn.query(`
-                UPDATE socios_dados_pessoais 
-                SET    socio_id = ?
-                ,      rg = ? 
-                ,      sexo = ? 
-                ,      estado_civil = ?
-                ,      data_nascimento = ?
-                ,      telefone = ?
-                WHERE  id = ?
-            `, [rg, sexo, estado_civil, data_nascimento, telefone, id], err2 => {
-                conn.end()
-                if(err2) {
-                    return response(res).error(500, 'Internal Error')
-                }
-                response(res).success()
-            })
-
-        })
-
     }
 
 }
