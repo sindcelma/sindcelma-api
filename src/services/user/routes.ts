@@ -30,7 +30,6 @@ export default () => {
 
     router.post('/socios/check_status', SocioManager.check_status)
     router.post('/socios/cadastrar_full_socio', SocioManager.cadastrar_full_socio)
-    router.post('/socios/get_socio_por_login', SocioManager.get_socio_by_login)
     router.post('/socios/cadastrar_usuario', SocioManager.cadastrar_usuario)
     router.post('/socios/delete_usuario', SocioManager.delete_usuario)
     router.post('/socios/update_usuario', SocioManager.update_usuario)
@@ -39,6 +38,11 @@ export default () => {
     router.post('/socios/add_dados_pessoais', SocioManager.add_dados_pessoais)
     router.post('/socios/listar', SocioManager.listar)
     router.post('/socios/mudar_status', SocioManager.mudar_status)
+
+    router.post('/socios/get_socio_por_login', SocioManager.get_socio_by_login)
+    router.post('/socios/get_dados_profissionais', SocioManager.get_dados_profissionais)
+    router.post('/socios/get_dados_pessoais', SocioManager.get_dados_pessoais)
+
     router.post('/socios/update_dados_socio', SocioManager.update_dados_socio)
     router.post('/socios/update_dados_profissionais', SocioManager.update_dados_profissionais)
     router.post('/socios/update_dados_pessoais', SocioManager.update_dados_pessoais)

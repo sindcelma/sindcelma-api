@@ -8,10 +8,128 @@ import crypto from 'crypto'
 
 class SocioManager {
 
+
+    public static get_dados_profissionais(req:Request, res:Response){
+
+        const slug = req.body.slug
+        const empresa_id = req.body.empresa_id
+        
+        if(!slug || !empresa_id) return response(res).error(400, 'bad request');
+
+        var assert = assertion();
+
+        try {
+            assert = 
+            assertion()
+            .isAdmin(req.user)
+            .orIsSameSocio(req.user, req.body.slug)
+            .assert()
+        } catch (error) {
+            return response(res).error(401, 'Unauthorized')
+        }
+
+
+        const conn = mysqli();
+        conn.query(`
+            SELECT 
+                empresas.nome as nome_empresa,
+                socios_dados_profissionais.cargo,
+                socios_dados_profissionais.data_admissao,
+                socios_dados_profissionais.num_matricula,
+                user.temp_key
+            FROM
+                socios_dados_profissionais
+            JOIN socios ON socios_dados_profissionais.socio_id = socios.id 
+            JOIN user ON user.socio_id = socios.id
+            JOIN empresas ON socios_dados_profissionais.empresa_id = empresas.id 
+            WHERE socios.slug = ? AND socios_dados_profissionais.empresa_id = ?
+        `, [slug, empresa_id], (err1, result) => {
+
+            if(err1) {
+                return response(res).error(500, err1)
+            }
+
+            if(result.length == 0){
+                return response(res).error(404, 'Not Found')
+            }
+
+            if(!req.body.key){
+                return response(res).error(400, 'bad request')
+            }
+            
+            if(assert.index != 0 && req.body.key != result[0].temp_key){
+                return response(res).error(403, 'need refresh key')
+            }
+
+            response(res).success(result[0])
+
+        })
+
+    }
+
+    public static get_dados_pessoais(req:Request, res:Response){
+        
+        const slug = req.body.slug
+        
+        if(!slug) return response(res).error(400, 'bad request');
+
+        var assert = assertion();
+
+        try {
+            assert = 
+            assertion()
+            .isAdmin(req.user)
+            .orIsSameSocio(req.user, req.body.slug)
+            .assert()
+        } catch (error) {
+            return response(res).error(401, 'Unauthorized')
+        }
+
+        const conn = mysqli();
+        conn.query(`
+            SELECT
+                 socios.cpf,
+                 socios_dados_pessoais.rg,
+                 socios_dados_pessoais.sexo,
+                 socios_dados_pessoais.data_nascimento,
+                 socios_dados_pessoais.telefone,
+                 socios_dados_pessoais.estado_civil,
+                 user.temp_key
+            FROM 
+                 socios_dados_pessoais
+            JOIN socios ON socios.id = socios_dados_pessoais.socio_id
+            JOIN user   ON user.socio_id = socios.id 
+            WHERE socios.slug = ?
+        `, [slug], (err1, result) => {
+
+            if(err1) {
+                return response(res).error(500, err1)
+            }
+
+            if(result.length == 0){
+                return response(res).error(404, 'Not Found')
+            }
+
+            if(!req.body.key){
+                return response(res).error(400, 'bad request')
+            }
+            
+            if(assert.index != 0 && req.body.key != result[0].temp_key){
+                return response(res).error(403, 'need refresh key')
+            }
+
+            response(res).success(result[0])
+            
+        })
+
+    }
+
+
     /**
      * TESTADO
+     * informações basicas
      */
-     public static update_dados_socio(req:Request, res:Response){
+    public static update_dados_socio(req:Request, res:Response){
         // nao pode alterar cpf
         const nome      = req.body.nome 
         const sobrenome = req.body.sobrenome 
@@ -69,6 +187,7 @@ class SocioManager {
 
     /**
      *  TESTADO
+     * informações profissionais
      */
     public static update_dados_profissionais(req:Request, res:Response){
 

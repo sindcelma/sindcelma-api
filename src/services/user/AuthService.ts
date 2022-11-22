@@ -24,7 +24,7 @@ class AuthService {
 
         conn.query(`
             SELECT id, senha FROM user WHERE email = ?
-        `, [user.getEmail()], (err, result) => {
+        `, [user.getEmail()], async (err, result) => {
             
             if(err) return response(res).error(500, 'Internal Error')
             if(result.length == 0) return response(res).error(404, 'usuario não encontrado')
@@ -32,7 +32,7 @@ class AuthService {
             const senhaHash = result[0]['senha']
             const user_id   = result[0]['id']
 
-            if(!comparePass(senha, senhaHash)) 
+            if(!(await comparePass(senha, senhaHash))) 
                 return response(res).error(402, 'senha incorreta')
 
             
