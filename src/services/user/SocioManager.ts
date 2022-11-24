@@ -6,6 +6,9 @@ import response from "../../lib/response";
 import Socio from "../../model/Socio";
 import crypto from 'crypto'
 
+import { renameSync } from 'fs';
+import { join } from 'path';
+
 class SocioManager {
 
 
@@ -123,7 +126,6 @@ class SocioManager {
         })
 
     }
-
 
     /**
      * TESTADO
@@ -334,7 +336,7 @@ class SocioManager {
     /**
      * TESTADO
      */
-    public static update_usuario(req:Request, res:Response){
+    public static update_email(req:Request, res:Response){
         // alterar email
 
         let slug  = req.body.slug 
@@ -361,7 +363,7 @@ class SocioManager {
         const conn = mysqli()
         
         conn.query(`
-            SELECT user.id, user.temp_key
+            SELECT user.id, user.temp_key, user.email
             FROM   user JOIN socios ON user.socio_id = socios.id 
             WHERE  socios.slug = ?
         `, [slug], (err1, result) => {
@@ -386,6 +388,22 @@ class SocioManager {
                 if(err2){
                     return response(res).error(500, 'Este email já está cadastrado')
                 }
+
+                try {
+                    const newF    = `../../../public/images/fav/${email}.jpg`
+                    const oldF    = `../../../public/images/fav/${result[0].email}.jpg`
+                
+                    const fileN   = join(__dirname, newF)
+                    const fileO   = join(__dirname, oldF)
+                    
+                    renameSync(fileO, fileN)
+                    
+                } catch (error) {
+                    console.log(error);
+                }
+
+                conn.query("DELETE FROM user_devices WHERE user_id = ?", [result[0].id])
+                conn.query("UPDATE user SET version = version+1 WHERE id = ?", [result[0].id])
                 response(res).success()
             })
 
