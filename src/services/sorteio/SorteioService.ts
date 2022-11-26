@@ -3,6 +3,7 @@ import mysqli from '../../lib/mysqli';
 import response from '../../lib/response';
 import assertion from "../../lib/assertion";
 import Socio from '../../model/Socio';
+import { dateFormat } from '../../lib/data';
 
 interface SorteioSocio {
     id:number,
@@ -10,6 +11,7 @@ interface SorteioSocio {
     premios:string,
     qt_vencedores:number,
     data_sorteio:string,
+    data?:String,
     vencedor?:boolean,
     inscrito?:boolean
 }
@@ -45,6 +47,7 @@ class SorteioService {
 
             const socio_id = result[0].id
             const sorteio_id = Number(req.body.sorteio_id)
+           
             
             conn.query(`
                 SELECT 
@@ -161,11 +164,44 @@ class SorteioService {
             
             if(err) return response(res).error(500, err)
             if(result.length == 0) return response(res).error(404, 'not found');
+
+            const data = dateFormat(new Date(result[0].data_sorteio), 'yyyy-MM-dd H:i:s')            
+            result[0]['data'] = data
             
             response(res).success(result)
+
         })
 
     }
+
+    public static get_last(req:Request, res:Response){
+
+        const conn = mysqli();
+        conn.query(`
+          SELECT 
+                    sorteios.id,
+                    sorteios.titulo,
+                    sorteios.premios,
+                    sorteios.qt_vencedores,
+                    sorteios.data_sorteio
+
+             FROM   sorteios 
+            WHERE   ativo = 1
+         ORDER BY   id DESC LIMIT 1
+
+        `, (err, result) => {
+
+            if(err) return response(res).error(500, err)
+            if(result.length == 0) return response(res).success([]);
+
+            const data = dateFormat(new Date(result[0].data_sorteio), 'yyyy-MM-dd H:i:s')            
+            result[0]['data'] = data;
+            response(res).success(result[0]);
+
+        })
+
+    }
+
     
     public static get_last_ativo_by_user(req:Request, res:Response){
         
@@ -187,7 +223,10 @@ class SorteioService {
             if(err) return response(res).error(500, err)
             if(result.length == 0) return response(res).success([]);
 
+            const data = dateFormat(new Date(result[0].data_sorteio), 'yyyy-MM-dd H:i:s')            
             const sorteio:SorteioSocio = result[0];
+            
+            sorteio.data     = data
             sorteio.inscrito = false;
             sorteio.vencedor = false;
             
@@ -210,6 +249,7 @@ class SorteioService {
 
                 sorteio.vencedor = result2[0].vencedor == 1
                 sorteio.inscrito = result2[0].id != null
+                
 
                 response(res).success(sorteio);
 

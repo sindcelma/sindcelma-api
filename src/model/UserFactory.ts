@@ -58,19 +58,16 @@ const getAdmin = (email:String, senha:string, fn:(user:User, error:Boolean, msg:
                 } 
 
                 const admin = new Admin(user)
-                conn.end()
                 
                 return fn(setDataAdmin(res, admin), false, "")
                 
             } 
 
-            conn.end()
             fn(new Visitante, true, "Você digitou e-mail e/ou senha incorretos ou este usuário não existe")
             
         })
     } catch (error) {
         fn(new Visitante, true, "Internal Error")
-        conn.end()
     }
 
 }
@@ -134,19 +131,16 @@ const getSocio = (email:String, senha:string, fn:(user:User, error:Boolean, msg:
                 }
 
                 const socio = new Socio(user)
-                conn.end()
                 
                 return fn(setDataSocio(res, socio), false, "")
                 
             } 
 
-            conn.end()
             fn(new Visitante, true, "Você digitou e-mail e/ou senha incorretos, este usuário não existe ou está bloqueado.")
             
         })
     } catch (error) {
         fn(new Visitante, true, "Internal Error")
-        conn.end()
     }
 
 }
@@ -223,18 +217,15 @@ const getSocioByRememberme = (remembermetk:String, fn:(user:User, error:Boolean,
                 }
 
                 const socio = new Socio(user)
-                conn.end()
                 
                 return fn(setDataSocio(res, socio), false, 0, "")
                 
             } 
     
-            conn.end()
             fn(new Visitante, true, 3, "Este Token expirou ou não é válido")
         })
     } catch (error) {
         fn(new Visitante, true, 4, "Internal Error 2")
-        conn.end()
     }
 }
 
@@ -271,18 +262,15 @@ const getAdminByRememberme = (remembermetk:String, fn:(user:User, error:Boolean,
                 } 
     
                 const admin = new Admin(user)
-                conn.end()
                 
                 return fn(setDataAdmin(res, admin), false, 0, "")
                 
             } 
     
-            conn.end()
             fn(new Visitante, true, 3, "Este Token expirou ou não é válido")
         })
     } catch (error) {
         fn(new Visitante, true, 4, "Internal Error")
-        conn.end()
     }
     
 }

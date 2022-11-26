@@ -196,12 +196,10 @@ class AuthService {
         conn.query(String(query[0]), query[1], (err, result) => {
             
             if(err){ 
-                conn.end()
                 return response(res).error(500, 'Internal Error 1') 
             }
 
             if(result.length == 0) { 
-                conn.end()
                 return response(res).error(404, 'Not Found')
             }
             
@@ -217,7 +215,6 @@ class AuthService {
             `, [resUser.id, limite, code], (err2) => {
 
                 if(err2){ 
-                    conn.end()
                     return response(res).error(500, 'Internal Error') 
                 }
 

@@ -6,6 +6,7 @@ const router = Router()
 export default () => {
 
     router.post('/last_by_user', SorteioService.get_last_ativo_by_user)
+    router.post('/last', SorteioService.get_last)
     router.post('/inscricao', SorteioService.inscreverSe)
     router.get('/:sorteio_id', SorteioService.get_sorteio)
     router.get('/:sorteio_id/participantes', SorteioService.get_participantes)

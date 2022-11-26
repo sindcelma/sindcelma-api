@@ -9,6 +9,7 @@ class ConvencaoColetiva {
     public static save_fav(req:Request, res:Response){
 
         const item_id = req.body.item_id
+        
         if(!item_id) return response(res).error(400, 'bad request')
 
         try {
@@ -38,18 +39,33 @@ class ConvencaoColetiva {
                 [item_id, socio_id], (err2, result2) => {
                     
                     if(err2) return response(res).error(500, 'server error 2')
-                    if(result2.length > 0) return response(res).error(403, 'item já está salvo')
-                    
-                    conn.query(`
-                        INSERT INTO cct_item_fav (cct_item_id, socio_id)
-                        VALUES (?,?)
-                    `, [item_id, socio_id], err3 => {
+                    if(result2.length > 0) {
+
+                        const id_fav = result2[0].id;
                         
-                        if(err3) return response(res).error(500, 'Erro ao tentar salvar')
+                        conn.query(`
+                            DELETE FROM cct_item_fav WHERE id = ?
+                        `, [id_fav], err3 => {
+                            
+                            if(err3) return response(res).error(500, 'Erro ao tentar salvar')
 
-                        response(res).success()
+                            response(res).success()
 
-                    })
+                        })
+
+                    } else {
+                        conn.query(`
+                            INSERT INTO cct_item_fav (cct_item_id, socio_id)
+                            VALUES (?,?)
+                        `, [item_id, socio_id], err3 => {
+                            
+                            if(err3) return response(res).error(500, 'Erro ao tentar salvar')
+
+                            response(res).success()
+
+                        })
+                    }
+                    
 
                 })
            
@@ -104,7 +120,7 @@ class ConvencaoColetiva {
 
         let q:string = `
               SELECT 
-                      id, item, resumo 
+                      id, item, resumo, 0 as fav
                 FROM  cct_item 
                WHERE 
                   (   item   LIKE ?

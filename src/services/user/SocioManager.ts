@@ -176,7 +176,6 @@ class SocioManager {
             conn.query(`
                 UPDATE socios SET nome = ? , sobrenome = ? WHERE slug = ?
             `, [nome, sobrenome, slug], err => {
-                conn.end()
                 if(err) {
                     return response(res).error(500, 'Internal Error')
                 }
@@ -249,7 +248,6 @@ class SocioManager {
                 ,      num_matricula = ?
                 WHERE  id = ?
             `, [empresa_id, cargo, data_admissao, num_matricula, id], err2 => {
-                conn.end()
                 if(err2) {
                     return response(res).error(500, 'Internal Error')
                 }
@@ -545,7 +543,6 @@ class SocioManager {
                 const user_id = result2.insertId
 
                 if(err) {
-                    conn.end() 
                     return response(res).error(500, 'Este e-mail já está cadastrado')
                 }
                 
@@ -561,7 +558,6 @@ class SocioManager {
                     VALUES (?,?,?,?,?,?)
                 `,[socio_id, rg, sexo, civil, nascimento, telefone], err2 => {
                     if(err2){
-                        conn.end()
                         return response(res).error(500, err2.message)
                     }
                     
@@ -612,17 +608,15 @@ class SocioManager {
             if(err) return response(res).error(500, 'Interal Error')
             
             if(result.length == 0) {
-                conn.end()
                 return response(res).success()
             }
             
             let data:any = result[0]
 
             if(data.status > 0){
-                conn.end()
                 return response(res).error(401, 'Unauthorized')
             } else {
-                conn.query("DELETE FROM socios WHERE id = ?", [data.id], () => conn.end())
+                conn.query("DELETE FROM socios WHERE id = ?", [data.id], () => {})
                 return response(res).success()
             }
             
@@ -654,8 +648,6 @@ class SocioManager {
                     socios.cpf = ?`, 
             [doc], (err, result) => {
                 
-                conn.end()
-                
                 if(err) return response(res).error(500, 'Interal Error')
                 if(result.length == 0) return response(res).error(404, 'Not Found')
                 
@@ -685,8 +677,6 @@ class SocioManager {
                 WHERE 
                     user.email = ?`, 
             [email], (err, result) => {
-                
-                conn.end()
                 
                 if(err) return response(res).error(500, 'Interal Error')
                 if(result.length == 0) return response(res).error(404, 'Not Found')
@@ -724,7 +714,6 @@ class SocioManager {
         `, [email, senha], (err, result) => {
 
             if(err) {
-                conn.end() 
                 return response(res).error(500, 'Este e-mail já está cadastrado')
             }
 
@@ -735,16 +724,14 @@ class SocioManager {
             `, [user_id, doc], err2 => {
 
                 if(err2) {
-                    conn.end() 
                     return response(res).error(500, 'Erro Crítico - contate o admin')
                 }
 
                 if(news){
                     conn.query(`
                         INSERT INTO mailing_socio (user_id, ativo) VALUES (?,1)
-                    `, [user_id], () => conn.end())
+                    `, [user_id], () => {})
                 } else {
-                    conn.end()
                 }
 
                 response(res).success()
@@ -771,7 +758,6 @@ class SocioManager {
         const conn = mysqli()
 
         conn.query("DELETE FROM user WHERE id = ?", [user_id], err => {
-            conn.end()
             if(err){
                 return response(res).error(500, 'Server Error')
             }
@@ -795,7 +781,6 @@ class SocioManager {
             INSERT INTO socios (nome, sobrenome, cpf, slug, salt, status)
             VALUES (?,?,?,?,?,0)
         `,[nome, sobrenome, cpf, slug, salt], err => {
-            conn.end()
             if(err) {
                 return response(res).error(500, "Já existe um sócio cadastrado com este documento")
             }
@@ -827,12 +812,10 @@ class SocioManager {
         `, [slug], (err1, result) => {
 
             if(err1){
-                conn.end()
                 return response(res).error(500, 'Internal Error')
             }
 
             if(result.length == 0){
-                conn.end()
                 return response(res).error(404, 'Not Found')
             }
 
@@ -843,7 +826,6 @@ class SocioManager {
                 (empresa_id, socio_id, cargo, data_admissao, num_matricula)
                 VALUES (?,?,?,?,?)
             `,[empresa_id, socio_id, cargo, admissao, ''], err2 => {
-                conn.end()
                 if(err2){
                     return response(res).error(501, 'Já existem dados profissionais cadastrados neste socio')
                 }
@@ -873,12 +855,10 @@ class SocioManager {
         `, [slug], (err1, result) => {
 
             if(err1){
-                conn.end()
                 return response(res).error(500, 'Internal Error')
             }
 
             if(result.length == 0){
-                conn.end()
                 return response(res).error(404, 'Not Found')
             }
 
@@ -890,12 +870,10 @@ class SocioManager {
                 VALUES (?,?,?,?,?,?)
             `,[socio_id, rg, sexo, estado_civil, data_nascimento, telefone], err2 => {
                 if(err2){
-                    conn.end()
                     return response(res).error(500, 'Internal Error')
                 }
                 conn.query("UPDATE socios SET status = 1 WHERE id = ?", [socio_id], 
                     (err3)=> {
-                        conn.end()
                         if(err3){
                             return response(res).error(500, 'Internal Error')
                         }
@@ -960,7 +938,6 @@ class SocioManager {
             ORDER BY id ASC LIMIT ?,?; 
         ` 
         conn.query(q, vars, (err, result) => {
-            conn.end()
             if(err) return response(res).error(400, 'Bad Request')
             response(res).success(result)
         })
@@ -990,7 +967,6 @@ class SocioManager {
         conn.query(`
             UPDATE socios SET status = ? WHERE slug = ?
         `, [status, req.body.slug], err => {
-            conn.end()
             if(err) return response(res).error(500, 'Internal Error')
             response(res).success()
         })

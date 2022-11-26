@@ -30,7 +30,6 @@ class AdminManager {
             [email, senha], (err, result) => {
                 
                 if(err){
-                    conn.end()
                     return response(res).error(500, "Internal Error")
                 }
                 
@@ -40,11 +39,9 @@ class AdminManager {
                 conn.query("INSERT INTO admin (nome, user_id, slug) VALUES (?,?,?)",
                     [nome, id, slug], err2 => {
                         if(err2){
-                            conn.end()
                             return response(res).error(500, "Internal Error")
                         }
                         response(res).success("Admin criado com sucesso")
-                        conn.end()
                     }
                 )
                 
