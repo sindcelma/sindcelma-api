@@ -144,6 +144,72 @@ class SorteioService {
 
     }
 
+    public static list(req:Request, res:Response){
+
+        const conn = mysqli();
+        
+        conn.query(`
+            SELECT 
+                sorteios.id as sorteio_id,
+                sorteios.titulo,
+                sorteios.premios,
+                sorteios.qt_vencedores,
+                sorteios.data_sorteio,
+                sp.status_sorteio
+            FROM   sorteios
+            LEFT JOIN(
+                SELECT 
+                    sorteio_participantes.sorteio_id,
+                    (CASE 
+                        WHEN sorteio_participantes.id IS NULL THEN 0
+                        WHEN sorteio_participantes.vencedor > 0 THEN 2
+                        ELSE 1
+                    END)  as status_sorteio
+                FROM   sorteio_participantes 
+                JOIN   socios ON sorteio_participantes.socio_id = socios.id  
+                JOIN   user   ON user.socio_id = socios.id
+                WHERE  user.id = 54
+                
+            ) as sp ON sp.sorteio_id = sorteios.id 
+            ORDER BY 
+                sorteios.ativo DESC,
+                (
+                    CASE 
+                        WHEN sorteios.ativo = 1
+                            THEN sorteios.data_sorteio
+                    END
+                ) ASC,
+                (
+                    CASE 
+                        WHEN sorteios.ativo = 0
+                            THEN sorteios.data_sorteio
+                    END
+                ) DESC
+
+            ;
+
+        `, [req.user.getId()], (err, result) => {
+
+            if(err) return response(res).error(500, err)
+            if(result.length == 0) return response(res).success([]);
+
+            const sorteios:SorteioSocio[] = [];
+
+            for (let i = 0; i < result.length; i++) {
+                const data = dateFormat(new Date(result[i].data_sorteio), 'yyyy-MM-dd H:i:s')            
+                const sorteio:SorteioSocio = result[i];
+                sorteio.data     = data
+                sorteio.inscrito = result[i].status_sorteio != null && result[i].status_sorteio > 0;
+                sorteio.vencedor = result[i].status_sorteio != null && result[i].status_sorteio == 2;
+                sorteios.push(sorteio)
+            }
+            
+            response(res).success(sorteios);
+            
+        })
+        
+    }
+
     public static get_sorteio(req:Request, res:Response){
 
         if(!req.params.sorteio_id) return response(res).error(400, 'bad request')
