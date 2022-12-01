@@ -1,0 +1,19 @@
+#### TO CREATE FILE ####
+sudo vim /etc/systemd/system/myapp.service
+#########################
+
+[Service]
+ExecStart=cd /home/ec2-user/sindcelma-api && /usr/bin/node /home/ec2-user/sindcelma-api/server/server.js 
+Restart=always
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=sindcelma-api
+User=ec2-user
+EnvironmentFile=/home/ec2-user/sindcelma/app.env
+
+[Install]
+WantedBy=multi-user.target
+
+##### TO EXECUTE ####
+sudo systemctl start myapp.service

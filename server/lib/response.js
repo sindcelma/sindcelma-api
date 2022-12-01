@@ -6,7 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = require("fs");
 const path_1 = require("path");
 const config_1 = __importDefault(require("./config"));
-//const URL = "http://192.168.0.11:3050";
 exports.default = (res) => {
     return {
         success: (message = "") => {

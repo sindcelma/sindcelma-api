@@ -1,4 +1,5 @@
 import {readFileSync} from 'fs';
+import { join } from 'path'
 
 class Config {
     
@@ -6,17 +7,18 @@ class Config {
     private values;
     private database;
     private typeinstance;
+    public static path = process.env.PATH || process.cwd();
 
     private constructor(){
 
-        let res:Buffer = readFileSync(`${process.cwd()}/config.json`);
+        let res:Buffer = readFileSync(join(__dirname, `../../config.json`))
         const type = JSON.parse(res.toString()).type;
         this.typeinstance = type;
 
-        let dat:Buffer = readFileSync(`${process.cwd()}/database.${type}.json`)
+        let dat:Buffer = readFileSync(join(__dirname, `../../database.${type}.json`))
         this.database = JSON.parse(dat.toString())
 
-        let con:Buffer = readFileSync(`${process.cwd()}/config.${type}.json`)
+        let con:Buffer = readFileSync(join(__dirname, `../../config.${type}.json`))
         this.values = JSON.parse(con.toString())
 
     }

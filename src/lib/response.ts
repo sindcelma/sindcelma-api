@@ -8,7 +8,6 @@ interface resp {
     session?:String
 }
 
-//const URL = "http://192.168.0.11:3050";
 
 export default (res:Response) => {
 
