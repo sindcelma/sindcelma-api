@@ -24,7 +24,7 @@ declare global{
 const app:Express = express()
 const config:Config = Config.instance()
 
-const PORT = config.type() == "production" ? process.env.PORT : config.json().port;
+const PORT = config.type() == "production" ? process.env.PORT || 8080 : config.json().port;
 
 app.use(express.static('public'))
 app.use(express.json())

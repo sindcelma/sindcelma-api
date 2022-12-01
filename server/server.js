@@ -10,7 +10,7 @@ const UserFactory_1 = require("./model/UserFactory");
 const SocioManager_1 = __importDefault(require("./services/user/SocioManager"));
 const app = (0, express_1.default)();
 const config = config_1.default.instance();
-const PORT = config.type() == "production" ? process.env.PORT : config.json().port;
+const PORT = config.type() == "production" ? process.env.PORT || 8080 : config.json().port;
 app.use(express_1.default.static('public'));
 app.use(express_1.default.json());
 // inserir rotas publicas aqui
