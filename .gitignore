@@ -1,4 +1,7 @@
 # Logs
+public/images/doc/*.jpg
+public/images/fav/*.jpg
+public/images/nodoc/*.jpg
 *.production.json
 logs
 *.log
