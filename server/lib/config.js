@@ -3,11 +3,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = require("fs");
 class Config {
     constructor() {
-        let res = (0, fs_1.readFileSync)(`${process.cwd()}\\config.json`);
+        let res = (0, fs_1.readFileSync)(`${process.cwd()}/config.json`);
         const type = JSON.parse(res.toString()).type;
-        let dat = (0, fs_1.readFileSync)(`${process.cwd()}\\database.${type}.json`);
+        let dat = (0, fs_1.readFileSync)(`${process.cwd()}/database.${type}.json`);
         this.database = JSON.parse(dat.toString());
-        let con = (0, fs_1.readFileSync)(`${process.cwd()}\\config.${type}.json`);
+        let con = (0, fs_1.readFileSync)(`${process.cwd()}/config.${type}.json`);
         this.values = JSON.parse(con.toString());
     }
     static instance() {
