@@ -5,12 +5,14 @@ class Config {
     private static config:Config;
     private values;
     private database;
+    private typeinstance;
 
     private constructor(){
 
         let res:Buffer = readFileSync(`${process.cwd()}/config.json`);
         const type = JSON.parse(res.toString()).type;
-        
+        this.typeinstance = type;
+
         let dat:Buffer = readFileSync(`${process.cwd()}/database.${type}.json`)
         this.database = JSON.parse(dat.toString())
 
@@ -32,6 +34,10 @@ class Config {
 
     public getDatabase(){
         return this.database;
+    }
+
+    public type(){
+        return this.typeinstance;
     }
 
 }

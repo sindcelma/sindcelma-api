@@ -5,6 +5,7 @@ class Config {
     constructor() {
         let res = (0, fs_1.readFileSync)(`${process.cwd()}/config.json`);
         const type = JSON.parse(res.toString()).type;
+        this.typeinstance = type;
         let dat = (0, fs_1.readFileSync)(`${process.cwd()}/database.${type}.json`);
         this.database = JSON.parse(dat.toString());
         let con = (0, fs_1.readFileSync)(`${process.cwd()}/config.${type}.json`);
@@ -21,6 +22,9 @@ class Config {
     }
     getDatabase() {
         return this.database;
+    }
+    type() {
+        return this.typeinstance;
     }
 }
 exports.default = Config;

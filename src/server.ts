@@ -23,6 +23,9 @@ declare global{
 
 const app:Express = express()
 const config:Config = Config.instance()
+
+const PORT = config.type() == "production" ? process.env.PORT : config.json().port;
+
 app.use(express.static('public'))
 app.use(express.json())
 // inserir rotas publicas aqui
@@ -31,6 +34,6 @@ app.get('/socio_verify/:token', SocioManager.verify_by_qrcode_token)
 app.use('/', middleware)
 routes(app)
 
-app.listen(config.json().port, () => {
-    console.log(`API ativa na porta ${config.json().port}`)
+app.listen(PORT, () => {
+    console.log(`API ativa na porta ${PORT}`)
 })
