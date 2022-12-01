@@ -8,13 +8,13 @@ class Config {
 
     private constructor(){
 
-        let res:Buffer = readFileSync(`${process.cwd()}\\config.json`);
+        let res:Buffer = readFileSync(`${process.cwd()}/config.json`);
         const type = JSON.parse(res.toString()).type;
         
-        let dat:Buffer = readFileSync(`${process.cwd()}\\database.${type}.json`)
+        let dat:Buffer = readFileSync(`${process.cwd()}/database.${type}.json`)
         this.database = JSON.parse(dat.toString())
 
-        let con:Buffer = readFileSync(`${process.cwd()}\\config.${type}.json`)
+        let con:Buffer = readFileSync(`${process.cwd()}/config.${type}.json`)
         this.values = JSON.parse(con.toString())
 
     }
