@@ -6,10 +6,8 @@ class Visitante extends User {
     constructor(){
         const visitante:DataUser = {
             id:0,
-            nome:'',
-            sobrenome:'',
             email:'',
-            ativo:false
+            version:0
         }
         super("Visitante",visitante)
     }

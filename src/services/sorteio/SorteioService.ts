@@ -33,8 +33,7 @@ class SorteioService {
 
         const socio:Socio = <Socio>req.user
         const conn = mysqli();
-        console.log(socio.getSlug());
-        
+       
         conn.query(`
             SELECT
                 id

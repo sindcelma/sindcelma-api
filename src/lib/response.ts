@@ -1,13 +1,14 @@
 import { Response } from "express"
 import {readFileSync} from 'fs'
 import { join } from 'path'
+import Config from "./config"
 
 interface resp {
     message:any,
     session?:String
 }
 
-const URL = "http://192.168.0.11:3050";
+//const URL = "http://192.168.0.11:3050";
 
 export default (res:Response) => {
 
@@ -34,7 +35,7 @@ export default (res:Response) => {
                 html = html.replace(reg, val)
             }
             
-            html = html.replace(/\$url/g, URL)
+            html = html.replace(/\$url/g, Config.instance().json().url)
             
             res.setHeader("Content-Type", "text/html")
             res.status(code).send(html)

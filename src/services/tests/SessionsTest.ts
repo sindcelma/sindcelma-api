@@ -5,11 +5,13 @@ import response from "../../lib/response";
 
 class SessionTest {
     
+    /*
     public static genSessionTest(req:Request, res:Response){
         const email = req.body.email
         const session = generateToken("Admin", {email:email})
         response(res).success({session:session})
     }
+    */
 
     public static checarTipoDeSessao(req:Request, res:Response){
         try {

@@ -1,0 +1,1 @@
+{"version":3,"file":"Visitante.js","sourceRoot":"","sources":["../../src/model/Visitante.ts"],"names":[],"mappings":";;;;;AACA,kDAA0B;AAE1B,MAAM,SAAU,SAAQ,cAAI;IAExB;QACI,MAAM,SAAS,GAAY;YACvB,EAAE,EAAC,CAAC;YACJ,KAAK,EAAC,EAAE;YACR,OAAO,EAAC,CAAC;SACZ,CAAA;QACD,KAAK,CAAC,WAAW,EAAC,SAAS,CAAC,CAAA;IAChC,CAAC;CAEJ;AAGD,kBAAe,SAAS,CAAA"}

@@ -1,5 +1,5 @@
 # Logs
-database.production.json
+*.production.json
 logs
 *.log
 npm-debug.log*
