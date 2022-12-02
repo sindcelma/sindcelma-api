@@ -110,7 +110,7 @@ const getSocio = (email, senha, fn, remember) => {
                     email: res.email,
                     version: res.version
                 };
-                if (res.status > 2) {
+                if (res.status > 3) {
                     return fn(new Visitante_1.default, true, "Sócio Bloqueado");
                 }
                 const socio = new Socio_1.default(user);

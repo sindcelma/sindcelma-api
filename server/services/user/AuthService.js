@@ -103,6 +103,7 @@ class AuthService {
         const remem = req.body.rememberme;
         const type = req.body.type;
         (0, UserFactory_1.getUser)(type, email, senha, (user, error, msg) => {
+            console.log(msg);
             if (error) {
                 return (0, response_1.default)(res).error(500, msg);
             }

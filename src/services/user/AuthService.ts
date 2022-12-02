@@ -125,7 +125,7 @@ class AuthService {
         const type  = req.body.type
 
         getUser(type, email, senha, (user, error, msg) => {
-
+            
             if(error){
                 return response(res).error(500, msg)
             }

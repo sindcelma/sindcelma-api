@@ -126,7 +126,7 @@ const getSocio = (email:String, senha:string, fn:(user:User, error:Boolean, msg:
                     version:res.version
                 } 
 
-                if(res.status > 2){
+                if(res.status > 3){
                     return fn(new Visitante, true, "Sócio Bloqueado")                    
                 }
 
