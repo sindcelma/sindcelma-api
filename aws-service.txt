@@ -20,4 +20,5 @@ EnvironmentFile=/home/ec2-user/sindcelma-api/app.env
 WantedBy=multi-user.target
 
 ##### TO EXECUTE ####
+sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8000
 sudo systemctl start sindcelma_auto.service
