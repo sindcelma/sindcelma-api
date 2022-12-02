@@ -19,9 +19,14 @@ EnvironmentFile=/home/ec2-user/sindcelma-api/app.env
 [Install]
 WantedBy=multi-user.target
 
-##### TO EXECUTE ####
+#### REDIRECIONAR PARA PORTA (não é mais necessário na amazon) #####
 sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8000
+
+##### TO EXECUTE ####
 sudo systemctl start sindcelma_auto.service
+
+##### PAUSAR ####
+sudo systemctl stop sindcelma_auto.service
 
 ##### VERIFICAR E PARAR EXECUÇÃO NA PORTA 80 ####
 sudo lsof -i :80

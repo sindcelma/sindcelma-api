@@ -91,9 +91,9 @@ const getSocio = (email, senha, fn, remember) => {
             empresas.nome as nome_empresa
         FROM  user
         JOIN  socios ON socios.id = user.socio_id
-        JOIN  socios_dados_pessoais ON socios_dados_pessoais.socio_id = socios.id
-        JOIN  socios_dados_profissionais ON socios_dados_profissionais.socio_id = socios.id
-        JOIN  empresas ON socios_dados_profissionais.empresa_id = empresas.id
+        LEFT JOIN  socios_dados_pessoais ON socios_dados_pessoais.socio_id = socios.id
+        LEFT JOIN  socios_dados_profissionais ON socios_dados_profissionais.socio_id = socios.id
+        LEFT JOIN  empresas ON socios_dados_profissionais.empresa_id = empresas.id
        WHERE  user.email = ?`;
         conn.query(query, [email], (err, result) => __awaiter(void 0, void 0, void 0, function* () {
             if (err) {
@@ -164,10 +164,10 @@ const getSocioByRememberme = (remembermetk, fn) => {
             
         FROM  user
             JOIN socios ON user.socio_id = socios.id 
-            JOIN socios_dados_pessoais ON socios_dados_pessoais.socio_id = socios.id
-            JOIN socios_dados_profissionais ON socios_dados_profissionais.socio_id = socios.id
-            JOIN user_devices ON user_devices.user_id = user.id
-            JOIN empresas ON socios_dados_profissionais.empresa_id = empresas.id
+            LEFT JOIN socios_dados_pessoais ON socios_dados_pessoais.socio_id = socios.id
+            LEFT JOIN socios_dados_profissionais ON socios_dados_profissionais.socio_id = socios.id
+            LEFT JOIN user_devices ON user_devices.user_id = user.id
+            LEFT JOIN empresas ON socios_dados_profissionais.empresa_id = empresas.id
                     WHERE user_devices.rememberme = ?
                     `;
     const conn = (0, mysqli_1.default)();

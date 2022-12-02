@@ -17,10 +17,10 @@ class Socio extends User {
     private num_matricula:String = ""
     private empresa:String = ""
 
-    private data_nascimento:String = ""
-    private data_nascimento_en:String = ""
-    private data_admissao:String = ""
-    private data_en:String = ""
+    private data_nascimento:any = ""
+    private data_nascimento_en:any = ""
+    private data_admissao:any = ""
+    private data_en:any = ""
 
     constructor(user:DataUser) {
         super("Socio", user)
@@ -28,14 +28,12 @@ class Socio extends User {
 
     public setOthersDatas(data:DataSocio){
         
-        const dataAdmissao      = data.data_admissao.toString();
-        const dataNascimento    = data.data_nascimento.toString();
+
+        this.data_admissao      = data.data_admissao != null   ? dateFormat(new Date(data.data_admissao.toString()), 'dd/MM/yyyy') : null;
+        this.data_en            = data.data_admissao != null   ? dateFormat(new Date(data.data_admissao.toString()), 'yyyy-MM-dd') : null;
         
-        this.data_admissao      = dateFormat(new Date(dataAdmissao), 'dd/MM/yyyy');
-        this.data_en            = dateFormat(new Date(dataAdmissao), 'yyyy-MM-dd');
-        
-        this.data_nascimento    = dateFormat(new Date(dataNascimento), 'dd/MM/yyyy');
-        this.data_nascimento_en = dateFormat(new Date(dataNascimento), 'yyyy-MM-dd');
+        this.data_nascimento    = data.data_nascimento != null ? dateFormat(new Date(data.data_nascimento.toString()), 'dd/MM/yyyy') : null; 
+        this.data_nascimento_en = data.data_nascimento != null ? dateFormat(new Date(data.data_nascimento.toString()), 'yyyy-MM-dd') : null;
       
         this.salt = data.salt;
         this.sexo = data.sexo;

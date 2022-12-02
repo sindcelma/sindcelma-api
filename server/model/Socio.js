@@ -25,12 +25,10 @@ class Socio extends User_1.default {
         this.data_en = "";
     }
     setOthersDatas(data) {
-        const dataAdmissao = data.data_admissao.toString();
-        const dataNascimento = data.data_nascimento.toString();
-        this.data_admissao = (0, data_1.dateFormat)(new Date(dataAdmissao), 'dd/MM/yyyy');
-        this.data_en = (0, data_1.dateFormat)(new Date(dataAdmissao), 'yyyy-MM-dd');
-        this.data_nascimento = (0, data_1.dateFormat)(new Date(dataNascimento), 'dd/MM/yyyy');
-        this.data_nascimento_en = (0, data_1.dateFormat)(new Date(dataNascimento), 'yyyy-MM-dd');
+        this.data_admissao = data.data_admissao != null ? (0, data_1.dateFormat)(new Date(data.data_admissao.toString()), 'dd/MM/yyyy') : null;
+        this.data_en = data.data_admissao != null ? (0, data_1.dateFormat)(new Date(data.data_admissao.toString()), 'yyyy-MM-dd') : null;
+        this.data_nascimento = data.data_nascimento != null ? (0, data_1.dateFormat)(new Date(data.data_nascimento.toString()), 'dd/MM/yyyy') : null;
+        this.data_nascimento_en = data.data_nascimento != null ? (0, data_1.dateFormat)(new Date(data.data_nascimento.toString()), 'yyyy-MM-dd') : null;
         this.salt = data.salt;
         this.sexo = data.sexo;
         this.estado_civil = data.estado_civil;

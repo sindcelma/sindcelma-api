@@ -98,10 +98,9 @@ class SocioManager {
                  socios_dados_pessoais.telefone,
                  socios_dados_pessoais.estado_civil,
                  user.temp_key
-            FROM 
-                 socios_dados_pessoais
-            JOIN socios ON socios.id = socios_dados_pessoais.socio_id
-            JOIN user   ON user.socio_id = socios.id 
+            FROM socios 
+            JOIN user ON user.socio_id = socios.id 
+            LEFT JOIN socios_dados_pessoais ON socios.id = socios_dados_pessoais.socio_id
             WHERE socios.slug = ?
         `, [slug], (err1, result) => {
 
