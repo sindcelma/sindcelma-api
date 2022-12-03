@@ -124,8 +124,8 @@ class UserManager {
                             'mico-leao-dourado.jpg', 'onca-pintada.jpg',
                             'peixe-boi.jpg', 'tamandua.jpg'
                         ];
-                        const image = (0, path_1.join)(__dirname, `../../../public/images/padroes/${elements[Math.floor(Math.random() * elements.length)]}`);
-                        const copy = (0, path_1.join)(__dirname, `../../../public/images/fav/${email}.jpg`);
+                        const image = (0, path_1.join)(__dirname, `../../public/images/padroes/${elements[Math.floor(Math.random() * elements.length)]}`);
+                        const copy = (0, path_1.join)(__dirname, `../../public/images/fav/${email}.jpg`);
                         (0, fs_1.copyFileSync)(image, copy);
                         conn.query("INSERT INTO user(socio_id, email, senha) VALUES (?,?,?)", [socio_id, email, senha], err => {
                             if (err)
@@ -134,6 +134,7 @@ class UserManager {
                         });
                     }
                     catch (error) {
+                        console.log("Falha ao tentar criar imagem do usuário");
                         (0, response_1.default)(res).error(500, 'Falha ao tentar criar imagem do usuário');
                     }
                 }

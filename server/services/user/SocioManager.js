@@ -372,10 +372,14 @@ class SocioManager {
             if (!req.params.token)
                 return (0, response_1.default)(res).error(400, 'bad request');
             const fulltoken = req.params.token;
+            console.log("TOKEN:");
+            console.log(fulltoken);
             const partstoken = fulltoken.split('.');
             const datasender = Buffer.from(partstoken[0], 'base64').toString('utf-8');
             const strhash256 = partstoken[1];
             try {
+                console.log("DATA TOKEN:");
+                console.log(datasender);
                 const objDataUser = JSON.parse(datasender);
                 if (Date.now() > objDataUser.duration) {
                     return (0, response_1.default)(res).error(403, 'Forbiden - Link Expired');
@@ -400,7 +404,8 @@ class SocioManager {
                 }));
             }
             catch (error) {
-                return (0, response_1.default)(res).error(400, 'bad request');
+                console.log("erro");
+                return (0, response_1.default)(res).error(403, 'Forbiden - Bad Link');
             }
         });
     }
