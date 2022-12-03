@@ -140,10 +140,6 @@ class SocioManager {
             (0, response_1.default)(res).success(result[0]);
         });
     }
-    /**
-     * TESTADO
-     * informações basicas
-     */
     static update_dados_socio(req, res) {
         // nao pode alterar cpf
         const nome = req.body.nome;
@@ -188,10 +184,6 @@ class SocioManager {
             });
         });
     }
-    /**
-     *  TESTADO
-     * informações profissionais
-     */
     static update_dados_profissionais(req, res) {
         const slug = req.body.slug;
         const empresa_id = req.body.empresa_id;
@@ -352,8 +344,8 @@ class SocioManager {
                     return (0, response_1.default)(res).error(500, 'Este email já está cadastrado');
                 }
                 try {
-                    const newF = `../../../public/images/fav/${email}.jpg`;
-                    const oldF = `../../../public/images/fav/${result[0].email}.jpg`;
+                    const newF = `../../public/images/fav/${email}.jpg`;
+                    const oldF = `../../public/images/fav/${result[0].email}.jpg`;
                     const fileN = (0, path_1.join)(__dirname, newF);
                     const fileO = (0, path_1.join)(__dirname, oldF);
                     (0, fs_1.renameSync)(fileO, fileN);
@@ -372,14 +364,10 @@ class SocioManager {
             if (!req.params.token)
                 return (0, response_1.default)(res).error(400, 'bad request');
             const fulltoken = req.params.token;
-            console.log("TOKEN:");
-            console.log(fulltoken);
             const partstoken = fulltoken.split('.');
             const datasender = Buffer.from(partstoken[0], 'base64').toString('utf-8');
             const strhash256 = partstoken[1];
             try {
-                console.log("DATA TOKEN:");
-                console.log(datasender);
                 const objDataUser = JSON.parse(datasender);
                 if (Date.now() > objDataUser.duration) {
                     return (0, response_1.default)(res).error(403, 'Forbiden - Link Expired');
@@ -404,7 +392,6 @@ class SocioManager {
                 }));
             }
             catch (error) {
-                console.log("erro");
                 return (0, response_1.default)(res).error(403, 'Forbiden - Bad Link');
             }
         });

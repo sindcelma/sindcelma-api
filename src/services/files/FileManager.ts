@@ -25,7 +25,7 @@ class FileManager {
             [user_id, slug, type, ext], err => {
             
             if(err) return response(res).error(500, err.message);
-            const fileStr = `../../../public/images/${type}/${slug}.${ext}.ghost`;
+            const fileStr = `../../public/images/${type}/${slug}.${ext}.ghost`;
             const file    = join(__dirname, fileStr);
        
             try {
@@ -63,7 +63,7 @@ class FileManager {
             if(fileSel.user_id != user_id) return response(res).error(401, 'Unauthorized')
             
             const buff    =  Buffer.from(data, "base64")
-            const fileStr = `../../../public/images/${fileSel.type}/${slug}.${fileSel.ext}.ghost`;
+            const fileStr = `../../public/images/${fileSel.type}/${slug}.${fileSel.ext}.ghost`;
             const file    = join(__dirname, fileStr);
             
             try {
@@ -94,7 +94,7 @@ class FileManager {
             const fileSel = result[0];
             if(fileSel.user_id != user_id) return response(res).error(401, 'Unauthorized')
             
-            const newF    = `../../../public/images/${fileSel.type}/${slug}.${fileSel.ext}`;
+            const newF    = `../../public/images/${fileSel.type}/${slug}.${fileSel.ext}`;
             const oldF    = `${newF}.ghost`;
             const fileN   = join(__dirname, newF);
             const fileO   = join(__dirname, oldF);
@@ -104,12 +104,11 @@ class FileManager {
                 renameSync(fileO, fileN)
                 
                 if(fileSel.type == 'nodoc' || fileSel.type == 'fav'){
-                    let fileFav   = `../../../public/images/fav/${email}.${fileSel.ext}`
+                    let fileFav   = `../../public/images/fav/${email}.${fileSel.ext}`
                     const copy    = join(__dirname, fileFav)
                     copyFileSync(fileN, copy)
                     if(fileSel.ext != "jpg"){
-                        console.log("salvou em jpg");
-                        let to = `../../../public/images/fav/${email}.jpg`
+                        let to = `../../public/images/fav/${email}.jpg`
                         FileManager.__save_fav_jpg(copy, to)
                     }
                 }

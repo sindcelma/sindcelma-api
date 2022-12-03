@@ -162,10 +162,7 @@ class SocioManager {
 
     }
 
-    /**
-     * TESTADO
-     * informações basicas
-     */
+
     public static update_dados_socio(req:Request, res:Response){
         // nao pode alterar cpf
         const nome      = req.body.nome 
@@ -221,10 +218,7 @@ class SocioManager {
 
     }
 
-    /**
-     *  TESTADO
-     * informações profissionais
-     */
+
     public static update_dados_profissionais(req:Request, res:Response){
 
         const slug = req.body.slug
@@ -423,8 +417,8 @@ class SocioManager {
                 }
 
                 try {
-                    const newF    = `../../../public/images/fav/${email}.jpg`
-                    const oldF    = `../../../public/images/fav/${result[0].email}.jpg`
+                    const newF    = `../../public/images/fav/${email}.jpg`
+                    const oldF    = `../../public/images/fav/${result[0].email}.jpg`
                 
                     const fileN   = join(__dirname, newF)
                     const fileO   = join(__dirname, oldF)
@@ -449,17 +443,13 @@ class SocioManager {
         if(!req.params.token) return response(res).error(400, 'bad request')
         
         const fulltoken  = req.params.token
-        console.log("TOKEN:");
-        console.log(fulltoken);
         
         const partstoken = fulltoken.split('.')
         const datasender = Buffer.from(partstoken[0], 'base64').toString('utf-8')
         const strhash256 = partstoken[1]
 
         try {
-            console.log("DATA TOKEN:");
-            console.log(datasender);
-            
+
             const objDataUser:{slug:String, duration:Number} = JSON.parse(datasender);
             
             if(Date.now() > objDataUser.duration){
@@ -492,7 +482,6 @@ class SocioManager {
             
 
         } catch (error) {
-            console.log("erro")
             return response(res).error(403, 'Forbiden - Bad Link')
         }
     
