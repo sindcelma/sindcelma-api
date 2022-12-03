@@ -2,6 +2,9 @@
 public/images/doc/*.jpg
 public/images/fav/*.jpg
 public/images/nodoc/*.jpg
+server/public/images/doc/*.jpg
+server/public/images/fav/*.jpg
+server/public/images/nodoc/*.jpg
 *.production.json
 logs
 *.log
