@@ -12,6 +12,42 @@ import { join } from 'path';
 class SocioManager {
 
 
+    public static update_doc_by_np(req:Request, res:Response){
+        
+        const np  = req.body.np
+        const cpf = Socio.transformCpf(req.body.cpf)
+
+        if(!np || !cpf) return response(res).error(400, 'bad request');
+
+        const conn = mysqli();
+        conn.query(`
+            SELECT 
+                  cpf
+            FROM  socios 
+            WHERE np = ?
+        `, [np], (err, result) => {
+
+            if(err) {
+                return response(res).error(500, "Este CPF já está cadastrado com outro usuário.")
+            }
+
+            if(result.length == 0){
+                return response(res).error(404, 'Not Found')
+            }
+
+            if(result[0].cpf != null){
+                return response(res).error(403, 'Seu CPF já está cadastrado')
+            }
+
+            conn.query("UPDATE socios SET cpf = ? WHERE np = ?", [cpf, np], err => {
+                if(err) return response(res).error(500, err)
+                response(res).success()
+            })
+
+        });
+
+    }
+
     public static get_dados_profissionais(req:Request, res:Response){
 
         const slug = req.body.slug

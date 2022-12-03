@@ -21,6 +21,34 @@ const crypto_1 = __importDefault(require("crypto"));
 const fs_1 = require("fs");
 const path_1 = require("path");
 class SocioManager {
+    static update_doc_by_np(req, res) {
+        const np = req.body.np;
+        const cpf = Socio_1.default.transformCpf(req.body.cpf);
+        if (!np || !cpf)
+            return (0, response_1.default)(res).error(400, 'bad request');
+        const conn = (0, mysqli_1.default)();
+        conn.query(`
+            SELECT 
+                  cpf
+            FROM  socios 
+            WHERE np = ?
+        `, [np], (err, result) => {
+            if (err) {
+                return (0, response_1.default)(res).error(500, "Este CPF já está cadastrado com outro usuário.");
+            }
+            if (result.length == 0) {
+                return (0, response_1.default)(res).error(404, 'Not Found');
+            }
+            if (result[0].cpf != null) {
+                return (0, response_1.default)(res).error(403, 'Seu CPF já está cadastrado');
+            }
+            conn.query("UPDATE socios SET cpf = ? WHERE np = ?", [cpf, np], err => {
+                if (err)
+                    return (0, response_1.default)(res).error(500, err);
+                (0, response_1.default)(res).success();
+            });
+        });
+    }
     static get_dados_profissionais(req, res) {
         const slug = req.body.slug;
         const empresa_id = req.body.empresa_id;

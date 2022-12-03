@@ -23,18 +23,20 @@ class UserManager {
         conn.query(`
             SELECT 
             socios.cpf,
-            user.email 
+            socios.np,
+            user.email
             FROM socios
             LEFT JOIN user ON user.socio_id = socios.id 
-            WHERE user.email = ? OR socios.cpf = ?
-        `, [doc, cpfq], (err, result) => {
+            WHERE user.email = ? OR socios.cpf = ? OR socios.np = ?
+        `, [doc, cpfq, doc], (err, result) => {
 
             if(err) return response(res).error(500, 'Internal Error');
 
             if(result.length > 0){
                 return response(res).success({
                     email: result[0].email ? result[0].email : false,
-                    cpf: result[0].cpf
+                    np: result[0].np ? result[0].np : false,
+                    cpf: result[0].cpf ? result[0].cpf : false
                 })
             }
 
