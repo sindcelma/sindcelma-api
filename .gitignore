@@ -1,11 +1,16 @@
-# Logs
-public/images/doc/*.jpg
-public/images/fav/*.jpg
-public/images/nodoc/*.jpg
+
+# ignore imagens de usuários
+src/public/images/doc/*.jpg
+src/public/images/fav/*.jpg
+src/public/images/nodoc/*.jpg
 server/public/images/doc/*.jpg
 server/public/images/fav/*.jpg
 server/public/images/nodoc/*.jpg
+
+# ignore arquivos de dados de produção
 *.production.json
+
+# Logs
 logs
 *.log
 npm-debug.log*
