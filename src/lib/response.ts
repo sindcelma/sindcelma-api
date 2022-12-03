@@ -24,7 +24,7 @@ export default (res:Response) => {
         html: (path:string, vars:{[k: string]: any} = {}, code:number = 200) => {
 
             var html = readFileSync(join(__dirname, `../html/${path}.html`)).toString();
-            
+        
             const ks = Object.keys(vars);
 
             for (let i = 0; i < ks.length; i++) {
