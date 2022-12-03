@@ -164,6 +164,9 @@ class UserManager {
                     })
                     
                 } catch (error) {
+                    
+                    console.log("Falha ao tentar criar imagem do usuário");
+                    
                     response(res).error(500, 'Falha ao tentar criar imagem do usuário')
                 }
                 
