@@ -150,10 +150,10 @@ class UserManager {
 
                     const image =  join(
                         __dirname, 
-                        `../../../public/images/padroes/${elements[Math.floor(Math.random() * elements.length)]}`
+                        `../../public/images/padroes/${elements[Math.floor(Math.random() * elements.length)]}`
                     );
 
-                    const copy  = join(__dirname, `../../../public/images/fav/${email}.jpg`)
+                    const copy  = join(__dirname, `../../public/images/fav/${email}.jpg`)
                     copyFileSync(image, copy)
                     
                     conn.query("INSERT INTO user(socio_id, email, senha) VALUES (?,?,?)", [socio_id, email, senha], err => {
