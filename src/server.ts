@@ -1,3 +1,4 @@
+import { join } from 'path';
 import express, { Express, Response, Request } from "express";
 import Config from "./lib/config"
 import routes from "./routes";
@@ -26,7 +27,7 @@ const config:Config = Config.instance()
 
 const PORT = config.type() == "production" ? process.env.PORT || 80 : config.json().port;
 
-app.use(express.static('public'))
+app.use(express.static(join(__dirname,'public')))
 app.use(express.json())
 // inserir rotas publicas aqui
 app.get('/socio_verify/:token', SocioManager.verify_by_qrcode_token)

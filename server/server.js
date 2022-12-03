@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const path_1 = require("path");
 const express_1 = __importDefault(require("express"));
 const config_1 = __importDefault(require("./lib/config"));
 const routes_1 = __importDefault(require("./routes"));
@@ -11,7 +12,7 @@ const SocioManager_1 = __importDefault(require("./services/user/SocioManager"));
 const app = (0, express_1.default)();
 const config = config_1.default.instance();
 const PORT = config.type() == "production" ? process.env.PORT || 80 : config.json().port;
-app.use(express_1.default.static('public'));
+app.use(express_1.default.static((0, path_1.join)(__dirname, 'public')));
 app.use(express_1.default.json());
 // inserir rotas publicas aqui
 app.get('/socio_verify/:token', SocioManager_1.default.verify_by_qrcode_token);
