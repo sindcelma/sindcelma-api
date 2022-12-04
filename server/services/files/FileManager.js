@@ -23,6 +23,8 @@ class FileManager {
                 return (0, response_1.default)(res).error(500, err.message);
             const fileStr = `../../public/images/${type}/${slug}.${ext}.ghost`;
             const file = (0, path_1.join)(__dirname, fileStr);
+            console.log("Criando o ghost...");
+            console.log(fileStr);
             try {
                 (0, fs_1.writeFileSync)(file, "", {
                     flag: 'w',
@@ -32,6 +34,7 @@ class FileManager {
                 });
             }
             catch (e) {
+                console.log("erro ghost...");
                 (0, response_1.default)(res).error(500, e);
             }
         });
@@ -54,11 +57,14 @@ class FileManager {
             const buff = Buffer.from(data, "base64");
             const fileStr = `../../public/images/${fileSel.type}/${slug}.${fileSel.ext}.ghost`;
             const file = (0, path_1.join)(__dirname, fileStr);
+            console.log("append...");
+            console.log(fileStr);
             try {
                 (0, fs_1.appendFileSync)(file, buff);
                 (0, response_1.default)(res).success();
             }
             catch (e) {
+                console.log("erro append...");
                 (0, response_1.default)(res).error(500, 'Este arquivo não existe');
             }
         });
@@ -82,9 +88,12 @@ class FileManager {
             const oldF = `${newF}.ghost`;
             const fileN = (0, path_1.join)(__dirname, newF);
             const fileO = (0, path_1.join)(__dirname, oldF);
+            console.log("commit...");
+            console.log(fileN);
             try {
                 (0, fs_1.renameSync)(fileO, fileN);
                 if (fileSel.type == 'nodoc' || fileSel.type == 'fav') {
+                    console.log("salvando fav...");
                     let fileFav = `../../public/images/fav/${email}.${fileSel.ext}`;
                     const copy = (0, path_1.join)(__dirname, fileFav);
                     (0, fs_1.copyFileSync)(fileN, copy);
@@ -100,6 +109,7 @@ class FileManager {
                 });
             }
             catch (e) {
+                console.log("erro commit...");
                 (0, response_1.default)(res).error(404, 'Este arquivo não existe');
             }
         });
