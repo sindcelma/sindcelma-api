@@ -27,7 +27,10 @@ class FileManager {
             if(err) return response(res).error(500, err.message);
             const fileStr = `../../public/images/${type}/${slug}.${ext}.ghost`;
             const file    = join(__dirname, fileStr);
-       
+
+            console.log("Criando o ghost...");
+            console.log(fileStr);
+            
             try {
                 writeFileSync(file, "", {
                     flag: 'w',
@@ -36,6 +39,7 @@ class FileManager {
                     slug:slug
                 })
             } catch (e) {
+                console.log("erro ghost...");
                 response(res).error(500, e)
             }
 
@@ -65,11 +69,16 @@ class FileManager {
             const buff    =  Buffer.from(data, "base64")
             const fileStr = `../../public/images/${fileSel.type}/${slug}.${fileSel.ext}.ghost`;
             const file    = join(__dirname, fileStr);
+
+            
+            console.log("append...");
+            console.log(fileStr);
             
             try {
                 appendFileSync(file, buff)
                 response(res).success()
             } catch (e) {
+                console.log("erro append...");
                 response(res).error(500, 'Este arquivo não existe')
             }
         })
@@ -98,12 +107,16 @@ class FileManager {
             const oldF    = `${newF}.ghost`;
             const fileN   = join(__dirname, newF);
             const fileO   = join(__dirname, oldF);
+
+            console.log("commit...");
+            console.log(fileN);
             
             try {
 
                 renameSync(fileO, fileN)
                 
                 if(fileSel.type == 'nodoc' || fileSel.type == 'fav'){
+                    console.log("salvando fav...");
                     let fileFav   = `../../public/images/fav/${email}.${fileSel.ext}`
                     const copy    = join(__dirname, fileFav)
                     copyFileSync(fileN, copy)
@@ -120,6 +133,7 @@ class FileManager {
 
                 
             } catch (e) {
+                console.log("erro commit...");
                 response(res).error(404, 'Este arquivo não existe')
             }
 
