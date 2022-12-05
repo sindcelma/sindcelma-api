@@ -58,7 +58,7 @@ class FileManager {
             const fileStr = `../../public/images/${fileSel.type}/${slug}.${fileSel.ext}.ghost`;
             const file = (0, path_1.join)(__dirname, fileStr);
             console.log("append...");
-            console.log(fileStr);
+            console.log(data);
             try {
                 (0, fs_1.appendFileSync)(file, buff);
                 (0, response_1.default)(res).success();

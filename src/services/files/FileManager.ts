@@ -29,7 +29,7 @@ class FileManager {
             const file    = join(__dirname, fileStr);
 
             console.log("Criando o ghost...");
-            console.log(fileStr);
+            console.log(file);
             
             try {
                 writeFileSync(file, "", {
@@ -72,7 +72,7 @@ class FileManager {
 
             
             console.log("append...");
-            console.log(fileStr);
+            console.log(data);
             
             try {
                 appendFileSync(file, buff)
