@@ -24,7 +24,7 @@ class FileManager {
             const fileStr = `../../public/images/${type}/${slug}.${ext}.ghost`;
             const file = (0, path_1.join)(__dirname, fileStr);
             console.log("Criando o ghost...");
-            console.log(fileStr);
+            console.log(file);
             try {
                 (0, fs_1.writeFileSync)(file, "", {
                     flag: 'w',
