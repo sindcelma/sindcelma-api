@@ -127,8 +127,8 @@ const getSocio = (email:String, senha:string, fn:(user:User, error:Boolean, msg:
                     version:res.version
                 } 
 
-                if(res.status > 3){
-                    return fn(new Visitante, true, "Sócio Bloqueado")                    
+                if(res.status > 4){
+                    return fn(new Visitante, true, "Sócio Inativo")                    
                 }
 
                 const socio = new Socio(user)
@@ -214,7 +214,7 @@ const getSocioByRememberme = (remembermetk:String, fn:(user:User, error:Boolean,
                     version:res.version
                 } 
     
-                if(res.status > 3){
+                if(res.status > 4){
                     return fn(new Visitante, true, 2, "Sócio Bloqueado")                    
                 }
 

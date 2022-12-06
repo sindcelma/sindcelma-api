@@ -373,7 +373,7 @@ class SocioManager {
                     return (0, response_1.default)(res).error(403, 'Forbiden - Link Expired');
                 }
                 const conn = (0, mysqli_1.default)();
-                conn.query("SELECT salt, nome, sobrenome FROM socios WHERE slug = ?", [objDataUser.slug], (err, result) => __awaiter(this, void 0, void 0, function* () {
+                conn.query("SELECT salt, nome, sobrenome, status FROM socios WHERE slug = ?", [objDataUser.slug], (err, result) => __awaiter(this, void 0, void 0, function* () {
                     if (err)
                         return (0, response_1.default)(res).error(500, 'internal error');
                     if (result.length == 0)
@@ -386,9 +386,41 @@ class SocioManager {
                     if (hashBuffer != strhash256) {
                         return (0, response_1.default)(res).error(401, 'Unauthorized');
                     }
+                    let bg = "#72CF83";
+                    let st = "ativo";
+                    let tx = "white";
+                    let code = 200;
+                    switch (socio.status) {
+                        case 2:
+                            bg = "#FFA200";
+                            st = "aguardando aprovação";
+                            code = 403;
+                            break;
+                        case 3:
+                            bg = "#72CF83";
+                            st = "ativo";
+                            tx = "success";
+                            code = 200;
+                            break;
+                        case 4:
+                            bg = "#c92e42";
+                            st = "bloqueado";
+                            code = 401;
+                            break;
+                        case 0:
+                        case 1:
+                        default:
+                            bg = "#c92e42";
+                            st = "inativo";
+                            code = 404;
+                            break;
+                    }
                     (0, response_1.default)(res).html('socio_view', {
-                        nome: socio.nome + " " + socio.sobrenome
-                    });
+                        nome: socio.nome + " " + socio.sobrenome,
+                        bg: bg,
+                        status: st,
+                        text: tx
+                    }, code);
                 }));
             }
             catch (error) {
@@ -399,14 +431,16 @@ class SocioManager {
     static check_status(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             const conn = (0, mysqli_1.default)();
+            //console.log(req.user);
             conn.query(`
             SELECT 
                   socios.id,
                   socios.status
             FROM  socios
-            JOIN  user ON user.socio_id 
+            JOIN  user ON user.socio_id = socios.id
             WHERE user.id = ?
         `, [req.user.getId()], (err, result) => {
+                console.log(result);
                 if (err)
                     return (0, response_1.default)(res).error(500, 'Internal Error 1');
                 if (result.length == 0)

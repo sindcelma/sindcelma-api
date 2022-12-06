@@ -23,8 +23,6 @@ class FileManager {
                 return (0, response_1.default)(res).error(500, err.message);
             const fileStr = `../../public/images/${type}/${slug}.${ext}.ghost`;
             const file = (0, path_1.join)(__dirname, fileStr);
-            console.log("Criando o ghost...");
-            console.log(file);
             try {
                 (0, fs_1.writeFileSync)(file, "", {
                     flag: 'w',
@@ -57,8 +55,6 @@ class FileManager {
             const buff = Buffer.from(data, "base64");
             const fileStr = `../../public/images/${fileSel.type}/${slug}.${fileSel.ext}.ghost`;
             const file = (0, path_1.join)(__dirname, fileStr);
-            console.log("append...");
-            console.log(data);
             try {
                 (0, fs_1.appendFileSync)(file, buff);
                 (0, response_1.default)(res).success();
@@ -88,8 +84,6 @@ class FileManager {
             const oldF = `${newF}.ghost`;
             const fileN = (0, path_1.join)(__dirname, newF);
             const fileO = (0, path_1.join)(__dirname, oldF);
-            console.log("commit...");
-            console.log(fileN);
             try {
                 (0, fs_1.renameSync)(fileO, fileN);
                 if (fileSel.type == 'nodoc' || fileSel.type == 'fav') {

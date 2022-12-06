@@ -111,8 +111,8 @@ const getSocio = (email, senha, fn, remember) => {
                     email: res.email,
                     version: res.version
                 };
-                if (res.status > 3) {
-                    return fn(new Visitante_1.default, true, "Sócio Bloqueado");
+                if (res.status > 4) {
+                    return fn(new Visitante_1.default, true, "Sócio Inativo");
                 }
                 const socio = new Socio_1.default(user);
                 return fn(setDataSocio(res, socio), false, "");
@@ -185,7 +185,7 @@ const getSocioByRememberme = (remembermetk, fn) => {
                     email: res.email,
                     version: res.version
                 };
-                if (res.status > 3) {
+                if (res.status > 4) {
                     return fn(new Visitante_1.default, true, 2, "Sócio Bloqueado");
                 }
                 const socio = new Socio_1.default(user);

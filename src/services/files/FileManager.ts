@@ -28,9 +28,6 @@ class FileManager {
             const fileStr = `../../public/images/${type}/${slug}.${ext}.ghost`;
             const file    = join(__dirname, fileStr);
 
-            console.log("Criando o ghost...");
-            console.log(file);
-            
             try {
                 writeFileSync(file, "", {
                     flag: 'w',
@@ -69,10 +66,6 @@ class FileManager {
             const buff    =  Buffer.from(data, "base64")
             const fileStr = `../../public/images/${fileSel.type}/${slug}.${fileSel.ext}.ghost`;
             const file    = join(__dirname, fileStr);
-
-            
-            console.log("append...");
-            console.log(data);
             
             try {
                 appendFileSync(file, buff)
@@ -107,9 +100,6 @@ class FileManager {
             const oldF    = `${newF}.ghost`;
             const fileN   = join(__dirname, newF);
             const fileO   = join(__dirname, oldF);
-
-            console.log("commit...");
-            console.log(fileN);
             
             try {
 
