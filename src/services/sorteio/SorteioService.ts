@@ -70,7 +70,7 @@ class SorteioService {
                 `, [sorteio_id, socio_id], (err3, result3) => {
 
                     if(err3) return response(res).error(500, err3)
-                    if(result3.length > 0) return response(res).error(403, 'Você já está incrito neste sorteio')
+                    if(result3.length > 0) return response(res).error(500, 'Você já está incrito neste sorteio')
 
                     conn.query(`
                         INSERT INTO sorteio_participantes (sorteio_id, socio_id)

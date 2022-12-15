@@ -12,6 +12,29 @@ import { join } from 'path';
 class SocioManager {
 
 
+    public static get_doc_carteirinha(req:Request, res:Response){
+
+        const slug  = req.body.slug
+
+        if(!slug) return response(res).error(400, 'bad request');
+
+        try {
+            assertion()
+            .isAdmin(req.user)
+            .orIsSameSocio(req.user, slug)
+            .assert()
+        } catch (error) {
+            return response(res).error(401, 'Unauthorized')
+        }
+
+        const conn = mysqli();
+        conn.query("SELECT cpf, status FROM socios WHERE slug = ?", [slug], (err, result) => {
+            if(err) return response(res).error(500, err)
+            response(res).success(result)
+        })
+
+    }
+
     public static update_doc_by_np(req:Request, res:Response){
         
         const np  = req.body.np
@@ -36,7 +59,7 @@ class SocioManager {
             }
 
             if(result[0].cpf != null){
-                return response(res).error(403, 'Seu CPF já está cadastrado')
+                return response(res).error(500, 'Seu CPF já está cadastrado')
             }
 
             conn.query("UPDATE socios SET cpf = ? WHERE np = ?", [cpf, np], err => {

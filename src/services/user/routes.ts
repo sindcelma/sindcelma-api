@@ -28,6 +28,7 @@ export default () => {
 
     // socios
 
+    router.post('/socios/get_doc_carteirinha', SocioManager.get_doc_carteirinha)
     router.post('/socios/update_doc_by_np', SocioManager.update_doc_by_np)
     router.post('/socios/check_status', SocioManager.check_status)
     router.post('/socios/cadastrar_full_socio', SocioManager.cadastrar_full_socio)
