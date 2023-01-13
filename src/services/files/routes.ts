@@ -1,13 +1,22 @@
 import { Router } from "express";
-import FileManager from "./FileManager";
+import FileUserManager from "./FileUserManager";
+import FileAdminManager from "./FileAdminManager";
 
 const router = Router()
 
 export default () => {
 
-    router.post('/create', FileManager.create_ghost)
-    router.post('/append', FileManager.append)
-    router.post('/commit', FileManager.commit)
+    /**
+     * TESTAR
+     */
+    router.post('/admin/create', FileAdminManager.create_ghost)
+    router.post('/admin/append', FileAdminManager.append)
+    router.post('/admin/commit', FileAdminManager.commit)
+
+    router.post('/create', FileUserManager.create_ghost)
+    router.post('/append', FileUserManager.append)
+    router.post('/commit', FileUserManager.commit)
+
     return router
 
 }

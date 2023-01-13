@@ -4,7 +4,7 @@
     "description": "API dos serviços SINDCELMA",
     "main": "server/server.js",
     "scripts": {
-        "start":"node server/server.js",
+        "start": "node server/server.js",
         "dev": "nodemon src/server.ts",
         "build": "tsc",
         "test": "echo \"Error: no test specified\" && exit 1"
@@ -12,9 +12,10 @@
     "devDependencies": {
         "@types/bcrypt": "^5.0.0",
         "@types/body-parser": "^1.19.2",
+        "@types/cors": "^2.8.13",
         "@types/express-validator": "^3.0.0",
         "@types/mysql": "^2.15.21",
-        "sucrase": "^3.25.0",
+        "sucrase": "^3.29.0",
         "typescript": "^4.8.2"
     },
     "dependencies": {
@@ -24,6 +25,7 @@
         "@types/node": "^18.7.15",
         "bcrypt": "^5.1.0",
         "body-parser": "^1.20.0",
+        "cors": "^2.8.5",
         "ejs": "^3.1.8",
         "express": "^4.18.1",
         "express-validator": "^6.14.2",

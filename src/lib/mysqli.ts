@@ -1,9 +1,9 @@
 import Config from "./config";
-import { createConnection } from "mysql";
+import { createPool } from "mysql";
 
 const database = Config.instance().getDatabase()
 
-const mysqli   = createConnection({
+const mysqli   = createPool({
     host:database.host,
     user:database.user,
     password:database.pass,
@@ -11,6 +11,5 @@ const mysqli   = createConnection({
     database:database.name
 })
 
-mysqli.connect()
 export default () => mysqli
 

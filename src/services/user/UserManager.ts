@@ -3,7 +3,7 @@ import { hashPass } from "../../lib/jwt";
 import mysqli from "../../lib/mysqli";
 import response from "../../lib/response";
 import Socio from '../../model/Socio';
-import {  copyFileSync } from 'fs';
+import { copyFileSync } from 'fs';
 import { join } from 'path';
 
 class UserManager {

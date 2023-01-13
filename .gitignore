@@ -9,6 +9,7 @@ server/public/images/nodoc/*.jpg
 
 # ignore arquivos de dados de produção
 *.production.json
+*.production.txt
 
 # Logs
 logs

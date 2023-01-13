@@ -33,7 +33,8 @@ interface Token {
 interface header {
     alg:string,
     typ:string,
-    tim:number
+    lim:number,
+    cat:number
 }
 
  // const limit = Date.now() + (1000 * 60 * 15)  // 15 minutos de duração
@@ -57,8 +58,9 @@ const generateToken = function(type:string, body:DataUser):String{
         
     const header:header = {
         alg:"sha256",
-        tim: limit,
-        typ:type
+        lim: limit,
+        typ:type,
+        cat: Date.now()
     }
 
     const h = Buffer.from(JSON.stringify(header)).toString('base64')

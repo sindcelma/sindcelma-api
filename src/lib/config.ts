@@ -1,25 +1,42 @@
 import {readFileSync} from 'fs';
 import { join } from 'path'
 
+interface conf {
+    app_version:string,
+    api_version:string,
+    package:string
+}
+
 class Config {
     
     private static config:Config;
     private values;
     private database;
     private typeinstance;
+    private configurate;
+    private config_data:conf;
     public static path = process.env.PATH || process.cwd();
 
     private constructor(){
 
-        let res:Buffer = readFileSync(join(__dirname, `../../config.json`))
-        const type = JSON.parse(res.toString()).type;
-        this.typeinstance = type;
+        let res:Buffer    = readFileSync(join(__dirname, `../../config.json`))
+        const conf        = JSON.parse(res.toString());
+        
+        this.typeinstance = conf.type;
+        this.configurate  = conf.config
+        this.config_data  = conf
 
-        let dat:Buffer = readFileSync(join(__dirname, `../../database.${type}.json`))
-        this.database = JSON.parse(dat.toString())
+        this.config_data  = {
+            app_version:conf.app_version,
+            api_version:conf.api_version,
+            package:conf.package
+        }
 
-        let con:Buffer = readFileSync(join(__dirname, `../../config.${type}.json`))
-        this.values = JSON.parse(con.toString())
+        let dat:Buffer    = readFileSync(join(__dirname, `../../database.${this.typeinstance}.json`))
+        this.database     = JSON.parse(dat.toString())
+
+        let con:Buffer    = readFileSync(join(__dirname, `../../config.${this.typeinstance}.json`))
+        this.values       = JSON.parse(con.toString())
 
     }
 
@@ -28,6 +45,10 @@ class Config {
             Config.config = new Config()
         }
         return Config.config;
+    }
+
+    public info(){
+        return this.config_data
     }
 
     public json(){
@@ -40,6 +61,10 @@ class Config {
 
     public type(){
         return this.typeinstance;
+    }
+
+    public hasConfig(){
+        return this.configurate;
     }
 
 }

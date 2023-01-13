@@ -34,14 +34,14 @@ const getAdmin = (email:String, senha:string, fn:(user:User, error:Boolean, msg:
                     user.id,
                     user.email,
                     user.version,
+                    user.senha,
                     admin.slug
                 FROM user 
                 JOIN admin ON admin.user_id = user.id
                     WHERE user.email = ?
-                    AND   user.senha = ?
                 `;
 
-        conn.query(query, [email, senha], (err, result) => {
+        conn.query(query, [email, senha], async (err, result) => {
             
             if(err){
                 return fn(new Visitante, true, "Internal Error")
@@ -49,8 +49,11 @@ const getAdmin = (email:String, senha:string, fn:(user:User, error:Boolean, msg:
 
             if(result.length > 0){
                 
-                const res:{id:Number, email:String, version:Number} = result[0]
-
+                const res:{id:Number, email:String, version:Number, senha:string} = result[0]
+                const status = await comparePass(senha, res.senha);
+                if(!status){
+                    return fn(new Visitante, true, "Não autorizado")
+                }
                 const user = {
                     id:res.id,
                     email:res.email,
@@ -312,9 +315,10 @@ const middleware = async function(req:Request, res:Response, next?:any){
     
     const user = req.body.session != null ? setUserBySessionToken(String(req.body.session)) : new Visitante()
     
+    const conn = mysqli();
+
     if(user instanceof Socio){
         
-        const conn = mysqli();
         conn.query(`
             SELECT 
                 user.id,
@@ -327,9 +331,7 @@ const middleware = async function(req:Request, res:Response, next?:any){
             WHERE user.id = ? AND user.version = ?
         `, [user.getId(), user.getVersion()], (err, result) => {
 
-            if(err){
-                console.log(err);
-            }
+            if(err) console.log(err)
 
             if(result.length == 0){
                 req.user = new Visitante()
@@ -350,13 +352,36 @@ const middleware = async function(req:Request, res:Response, next?:any){
 
     } 
     else if(user instanceof Admin) {
-        // injetar administrador
+        conn.query(
+            `SELECT 
+                user.id, admin.slug, admin.nome 
+            FROM user 
+            JOIN admin ON admin.user_id = user.id
+            WHERE user.id = ? AND user.version = ?
+            `, [user.getId(), user.getVersion()], (err, result) => {
+                if(err) console.log(err)
+
+                if(result.length == 0){
+                    req.user = new Visitante()
+                } else {
+                    const userres:{
+                        id:number, 
+                        slug:string, 
+                        nome:string, 
+                        sobrenome:string, 
+                        status:number
+                    } = result[0];
+
+                    req.user = setDataAdmin(userres, user)
+                    res.user = req.user
+                }
+                next()
+            })
     }
     else {
         req.user = user
         next()
     }
-
 
 }
 

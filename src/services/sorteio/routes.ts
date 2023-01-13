@@ -1,9 +1,12 @@
 import { Router } from "express";
+import SorteioManager from "./SorteioManager";
 import SorteioService from './SorteioService'
 
 const router = Router()
 
 export default () => {
+
+    router.post('/add', SorteioManager.add)
 
     router.post('/last_by_user', SorteioService.get_last_ativo_by_user)
     router.post('/last', SorteioService.get_last)

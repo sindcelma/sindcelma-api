@@ -124,8 +124,10 @@ class AuthService {
         const remem = req.body.rememberme
         const type  = req.body.type
 
-        getUser(type, email, senha, (user, error, msg) => {
-            
+        getUser(type, email, senha, async (user, error, msg) => {
+
+            await new Promise(r => setTimeout(r, 1500));
+
             if(error){
                 return response(res).error(500, msg)
             }
@@ -322,8 +324,10 @@ class AuthService {
         const remembermeToken = req.body.rememberme
         const type = req.body.type
         
-        getUserByRememberme(type, remembermeToken, (user, error, codeError, msg) => {
+        getUserByRememberme(type, remembermeToken, async (user, error, codeError, msg) => {
            
+            await new Promise(r => setTimeout(r, 1000));
+
             if(error)
             switch (codeError) {
                 case 2: 

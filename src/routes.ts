@@ -4,9 +4,11 @@ import user_routes  from './services/user/routes'
 import tests_routes from './services/tests/routes'
 import files_routes from './services/files/routes'
 import sorteios_routes from './services/sorteio/routes'
+import Info from './services/Info'
 
 export default (app:Express) => {
 
+    app.get('/info', Info.info)
     app.use('/sorteios', sorteios_routes())
     app.use('/test', tests_routes())
     app.use('/cct', cct_routes())
