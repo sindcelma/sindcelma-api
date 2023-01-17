@@ -19,7 +19,7 @@ export default () => {
     router.post('/change_pass_using_code', AuthService.change_pass_using_code)
 
     router.post('/create', UserManager.create_user)
-    router.post('/check_session', AuthService.check_session) // apagar depois
+    router.post('/get_user', AuthService.get_user)
     router.post('/check_email', UserManager.check_email)
     router.post('/rememberme', AuthService.rememberme)
     router.post('/login', AuthService.login)

@@ -1,7 +1,4 @@
 {
     "type":"development",
-    "config":true,
-    "app_version":"1.0.0",
-    "api_version":"2.0.0",
-    "package":""
+    "config":true
 }

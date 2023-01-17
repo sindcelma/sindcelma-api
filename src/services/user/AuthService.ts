@@ -6,7 +6,9 @@ import response from "../../lib/response";
 import Socio from "../../model/Socio";
 import User from "../../model/User";
 import { getUser, getUserByRememberme } from '../../model/UserFactory'
-
+import AwsService from "../../lib/aws";
+import fs from 'fs'
+import { join } from "path";
 
 interface msg { session:String, user:User, remembermetk?:any }
 
@@ -110,11 +112,8 @@ class AuthService {
         })
     }
 
-    // função de teste. apagar depois
-    static check_session(req:Request, res:Response){
-        response(res).success({
-            "status":req.user
-        })
+    static get_user(req:Request, res:Response){
+        response(res).success(req.user)
     }
 
     static login(req:Request, res:Response){
@@ -177,7 +176,7 @@ class AuthService {
         [ 
             `
             SELECT 
-                user.id, user.email, socios_dados_pessoais.telefone 
+                user.id, user.email, socios.nome, socios_dados_pessoais.telefone 
             FROM 
                 socios 
             JOIN user ON socios.id = user.socio_id 
@@ -221,8 +220,19 @@ class AuthService {
                 }
 
                 if(to == 'email') {
-                    // envia por email
-                    console.log(code + " eviado por email");
+                    
+                    new AwsService().ses()
+                    .config({
+                        de:"atendimento@sindcelmatecnologia.com.br",
+                        para:resUser.email,
+                        assunto:"Recuperação de senha",
+                        data:{
+                            nome:resUser.nome ?? '',
+                            codigo:code
+                        }
+                    })
+                    .setTemplate(fs.readFileSync(join(__dirname, '../../html/recover.html')).toString())
+                    .send()
                 }
     
                 if(to == 'phone'){
@@ -249,7 +259,8 @@ class AuthService {
         const codigo = req.body.codigo;
 
         if(!email || !codigo) return response(res).error(400, 'Bad Request')
-
+        
+        
         const conn = mysqli()
         conn.query(`
           SELECT 
@@ -296,7 +307,7 @@ class AuthService {
             JOIN user ON user.id = user_recover.user_id 
            WHERE user_recover.codigo = ?
              AND user.email = ?`, [codigo, email], 
-             async (err, result) => {
+            async (err, result) => {
 
                 if(err) return response(res).error(500, 'Server Error 1')
                 if(result.length == 0) return response(res).error()
@@ -315,7 +326,7 @@ class AuthService {
                 
                 })
 
-             })
+            })
 
     }
 

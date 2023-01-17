@@ -6,6 +6,14 @@ import { dateFormat } from '../../lib/data'
 
 class SorteioManager {
 
+    public static sortear(req:Request, res:Response){
+        // - pegar dados do sorteio
+        // - pegar participantes 
+        // - analisar quantos vencedores possiveis 
+        // - randomizar, salvar no banco de dados e enviar para 
+        //   o firestore até acabar a quantidade de vencedores 
+    }
+
     public static add(req:Request, res:Response){
 
         try {

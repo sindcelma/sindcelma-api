@@ -10,6 +10,9 @@ server/public/images/nodoc/*.jpg
 # ignore arquivos de dados de produção
 *.production.json
 *.production.txt
+pair_production.txt
+awsconfig.json
+firebase-key.json
 
 # Logs
 logs

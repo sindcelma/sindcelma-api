@@ -15,6 +15,8 @@ class Config {
     private typeinstance;
     private configurate;
     private config_data:conf;
+    private pair:string;
+    private awsconfig;
     public static path = process.env.PATH || process.cwd();
 
     private constructor(){
@@ -29,7 +31,7 @@ class Config {
         this.config_data  = {
             app_version:conf.app_version,
             api_version:conf.api_version,
-            package:conf.package
+            package:    conf.package
         }
 
         let dat:Buffer    = readFileSync(join(__dirname, `../../database.${this.typeinstance}.json`))
@@ -37,6 +39,12 @@ class Config {
 
         let con:Buffer    = readFileSync(join(__dirname, `../../config.${this.typeinstance}.json`))
         this.values       = JSON.parse(con.toString())
+
+        let aws:Buffer    = readFileSync(join(__dirname, `../../awsconfig.json`))
+        this.awsconfig    = JSON.parse(aws.toString())
+
+        let pair:Buffer   = readFileSync(join(__dirname, `../../pair_${this.typeinstance}.txt`))
+        this.pair         = pair.toString()
 
     }
 
@@ -65,6 +73,14 @@ class Config {
 
     public hasConfig(){
         return this.configurate;
+    }
+
+    public getPair(){
+        return this.pair
+    }
+
+    public aws(){
+        return this.awsconfig
     }
 
 }
