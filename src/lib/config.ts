@@ -28,10 +28,13 @@ class Config {
         this.configurate  = conf.config
         this.config_data  = conf
 
+        let confd:Buffer  = readFileSync(join(__dirname, `../../app_info.json`))
+        const config_d    = JSON.parse(confd.toString())
+
         this.config_data  = {
-            app_version:conf.app_version,
-            api_version:conf.api_version,
-            package:    conf.package
+            app_version:config_d.app_version,
+            api_version:config_d.api_version,
+            package:    config_d.package
         }
 
         let dat:Buffer    = readFileSync(join(__dirname, `../../database.${this.typeinstance}.json`))

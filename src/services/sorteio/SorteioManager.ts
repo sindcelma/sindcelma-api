@@ -7,11 +7,63 @@ import { dateFormat } from '../../lib/data'
 class SorteioManager {
 
     public static sortear(req:Request, res:Response){
-        // - pegar dados do sorteio
-        // - pegar participantes 
-        // - analisar quantos vencedores possiveis 
-        // - randomizar, salvar no banco de dados e enviar para 
-        //   o firestore até acabar a quantidade de vencedores 
+        
+        if(!req.body.sorteio_id) 
+            return response(res).error(400, 'Bad Request')
+
+        try {
+            assertion()
+            .isAdmin(req.user)
+            .assert()
+        } catch(e){
+            return response(res).error(401, 'Unauthorized')
+        }
+
+        const conn = mysqli();
+        
+        conn.query(
+            `SELECT 
+                    participantes.id,
+                    sorteio.qt_vencedores,
+                    participantes.socio_id,
+                    socio.nome,
+                    socio.cpf
+               FROM sorteio_participantes as participantes
+               JOIN socios as socio ON participantes.socio_id = socio.id 
+               JOIN sorteios as sorteio ON sorteio.id = participantes.sorteio_id 
+              WHERE sorteio.id = ? AND sorteio.ativo = 1`, 
+        [Number(req.body.sorteio_id)], (err, result) => {
+            
+            if(err) return response(res).error(500, 'Server Error')
+            if(result.length == 0) return response(res).error(404, 'Not Found')
+            
+            let qt_vencedores = Number(result[0].qt_vencedores)
+            var vencedores = []
+
+            while(qt_vencedores > vencedores.length){
+
+                let i  = Math.floor(Math.random() * result.length)
+                const vencedor = result.splice(i, 1);
+                vencedores.push(vencedor[0])
+                
+            }
+
+            let insert = `UPDATE sorteio_participantes SET vencedor = 1 WHERE `;
+            
+            for (let z = 0; z < vencedores.length; z++) {
+                const venc = vencedores[z];
+                insert += ` id = ${venc.id} OR `
+            }
+
+            insert = insert.substring(0, insert.length - 3)
+
+            conn.query(insert, err => {
+                if(err) return response(res).error(500, err)
+                response(res).success(vencedores)
+            })
+
+        })
+
     }
 
     public static add(req:Request, res:Response){

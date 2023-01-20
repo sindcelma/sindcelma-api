@@ -3,11 +3,36 @@ import { hashPass } from "../../lib/jwt";
 import mysqli from "../../lib/mysqli";
 import response from "../../lib/response";
 import Socio from '../../model/Socio';
-import { copyFileSync } from 'fs';
-import { join } from 'path';
+import fetch from 'node-fetch'
+import Config from "../../lib/config";
 
 class UserManager {
 
+
+    public static save_token(req:Request, res:Response){
+        
+        const remembermetk = req.body.remembermetk
+        const tokendevice  = req.body.tokendevice
+
+        if(!remembermetk || !tokendevice)
+            return response(res).error(400, 'Bad Request')
+
+        const conn = mysqli();
+
+        conn.query(`SELECT id, code FROM user_devices WHERE rememberme = ?`, [remembermetk], (err, result) => {
+            
+            if(err) return response(res).error(500, 'Server Error')
+            if(result[0]['code'] != null && result[0]['code'].trim() != '') 
+                return response(res).error(500, 'Not permited')
+
+            conn.query(`UPDATE user_devices SET code = ? WHERE id = ?`, [tokendevice, result[0]['id']], err => {
+                if(err) return response(res).error(500, 'Server Error')
+                response(res).success()
+            })
+
+        })
+
+    }
 
     public static check_login(req:Request, res:Response){
 
@@ -130,7 +155,7 @@ class UserManager {
             LEFT JOIN user ON user.socio_id = socios.id 
             WHERE
             socios.cpf = ?
-        `, [doc], (err, result) => {
+        `, [doc], async (err, result) => {
                        
             if(err) return response(res).error(500, 'Internal Error')
             if(result.length == 0) return response(res).error(404, "Não encontramos um sócio com este documento")
@@ -141,30 +166,28 @@ class UserManager {
             if(!socio.email){
                 
                 try {
+                   
+                    let result = await fetch(`${Config.instance().json().asset}/api/server_file/add_random_fav`, {
+                        method:'POST',
+                        body:JSON.stringify({
+                            pair:Config.instance().getPair(),
+                            email:email
+                        })
+                    })
 
-                    const elements = [
-                        'arara-azul.jpg', 'ariranha.jpg',
-                        'mico-leao-dourado.jpg', 'onca-pintada.jpg',
-                        'peixe-boi.jpg', 'tamandua.jpg'
-                    ]
+                    if(result.status != 200)
+                        return response(res).error(500, 'Falha ao tentar criar imagem do usuário')
 
-                    const image =  join(
-                        __dirname, 
-                        `../../public/images/padroes/${elements[Math.floor(Math.random() * elements.length)]}`
-                    );
 
-                    const copy  = join(__dirname, `../../public/images/fav/${email}.jpg`)
-                    copyFileSync(image, copy)
-                    
                     conn.query("INSERT INTO user(socio_id, email, senha) VALUES (?,?,?)", [socio_id, email, senha], err => {
                     
-                        if(err) return response(res).error(500, 'Erro ao tentar gerar usuário');    
+                        if(err) return response(res).error(500, 'Erro ao tentar salvar usuário no banco de dados');    
                         response(res).success();
     
                     })
                     
                 } catch (error) { 
-                    response(res).error(500, 'Falha ao tentar criar imagem do usuário')
+                    response(res).error(500, 'Erro ao tentar gerar usuário')
                 }
                 
             } else {

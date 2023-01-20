@@ -1,7 +1,5 @@
 import { Response } from "express"
-import {readFileSync} from 'fs'
-import { join } from 'path'
-import Config from "./config"
+import template from "./template"
 
 interface resp {
     message:any,
@@ -22,20 +20,8 @@ export default (res:Response) => {
         error: (code:number = 404, message:any = "") => res.status(code).json({ message:message }).end(),
 
         html: (path:string, vars:{[k: string]: any} = {}, code:number = 200) => {
-
-            var html = readFileSync(join(__dirname, `../html/${path}.html`)).toString();
-            
-            const ks = Object.keys(vars);
-
-            for (let i = 0; i < ks.length; i++) {
-                const key = ks[i]
-                const val = vars[key];
-                const reg = new RegExp(`\\$${key}`, 'g');
-                html = html.replace(reg, val)
-            }
-            
-            html = html.replace(/\$url/g, Config.instance().json().url)
-            
+           
+            const html = new template(`html/${path}.html`).replace(vars).content()
             res.setHeader("Content-Type", "text/html")
             res.status(code).send(html)
 

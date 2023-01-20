@@ -180,7 +180,7 @@ class AuthService {
             FROM 
                 socios 
             JOIN user ON socios.id = user.socio_id 
-            JOIN socios_dados_pessoais ON socios_dados_pessoais.socio_id = socios.id 
+            LEFT JOIN socios_dados_pessoais ON socios_dados_pessoais.socio_id = socios.id 
             WHERE socios.cpf = ?
             `, 
             [cpf]
@@ -207,7 +207,7 @@ class AuthService {
             const resUser = result[0]
 
             let data = new Date()
-            data.setHours(data.getHours() + 1)
+            data.setHours(data.getHours() + 4)
             const limite = dateFormat(data, 'yyyy-MM-dd H:i:s')
             const code = generateCode()
 

@@ -7,6 +7,7 @@ const router = Router()
 export default () => {
 
     router.post('/add', SorteioManager.add)
+    router.post('/sortear', SorteioManager.sortear)
 
     router.post('/last_by_user', SorteioService.get_last_ativo_by_user)
     router.post('/last', SorteioService.get_last)

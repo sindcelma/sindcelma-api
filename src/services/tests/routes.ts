@@ -9,6 +9,7 @@ const router = Router()
 export default () => {
 
     //router.post('/gerarSessao', SessionTest.genSessionTest)
+    router.post('/pair', Tests.pair)
     router.get('/saveWinner', FirebaseTest.saveWinner)
     router.get('/sendEmail', EmailTest.sendEmail)
     router.get('/checarSessao', SessionTest.checarTipoDeSessao)

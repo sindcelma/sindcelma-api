@@ -1,5 +1,6 @@
 import AWS from 'aws-sdk'
 import Config from './config'
+import Template from './template'
 
 
 interface emailInfo {accessKeyId:string, secretAccessKey:string, region:string}
@@ -35,20 +36,12 @@ class EmailSender {
         return this;
     }
 
-    private generateTemplate(){
-        let keys = Object.keys(this.data)
-        
-        for (let i = 0; i < keys.length; i++) {
-            const key = keys[i];
-            const res = `\\$\\{${key}\\}`
-            let reg = RegExp(res, 'gi')
-            this.template = this.template.replace(reg, this.data[key])
-        }
-    }
-
     public send(){
         
-        this.generateTemplate()
+        let content = new Template()
+        .setTemplate(this.template)
+        .replace(this.data)
+        .content()
 
         new AWS.SES({
             accessKeyId:this.info.accessKeyId,
@@ -63,7 +56,7 @@ class EmailSender {
             Body: {
                 Html: {
                         Charset: "UTF-8",
-                        Data: this.template
+                        Data: content
                     },
                 },
                 Subject: {
