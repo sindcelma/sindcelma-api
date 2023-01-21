@@ -39,18 +39,22 @@ const getAdmin = (email, senha, fn, remem) => {
                     user.id,
                     user.email,
                     user.version,
+                    user.senha,
                     admin.slug
                 FROM user 
                 JOIN admin ON admin.user_id = user.id
                     WHERE user.email = ?
-                    AND   user.senha = ?
                 `;
-        conn.query(query, [email, senha], (err, result) => {
+        conn.query(query, [email, senha], (err, result) => __awaiter(void 0, void 0, void 0, function* () {
             if (err) {
                 return fn(new Visitante_1.default, true, "Internal Error");
             }
             if (result.length > 0) {
                 const res = result[0];
+                const status = yield (0, jwt_1.comparePass)(senha, res.senha);
+                if (!status) {
+                    return fn(new Visitante_1.default, true, "Não autorizado");
+                }
                 const user = {
                     id: res.id,
                     email: res.email,
@@ -60,7 +64,7 @@ const getAdmin = (email, senha, fn, remem) => {
                 return fn(setDataAdmin(res, admin), false, "");
             }
             fn(new Visitante_1.default, true, "Você digitou e-mail e/ou senha incorretos ou este usuário não existe");
-        });
+        }));
     }
     catch (error) {
         fn(new Visitante_1.default, true, "Internal Error");
@@ -263,8 +267,8 @@ const setUserBySessionToken = (sessionToken) => {
 const middleware = function (req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         const user = req.body.session != null ? setUserBySessionToken(String(req.body.session)) : new Visitante_1.default();
+        const conn = (0, mysqli_1.default)();
         if (user instanceof Socio_1.default) {
-            const conn = (0, mysqli_1.default)();
             conn.query(`
             SELECT 
                 user.id,
@@ -276,9 +280,8 @@ const middleware = function (req, res, next) {
             JOIN socios ON socios.id = user.socio_id
             WHERE user.id = ? AND user.version = ?
         `, [user.getId(), user.getVersion()], (err, result) => {
-                if (err) {
+                if (err)
                     console.log(err);
-                }
                 if (result.length == 0) {
                     req.user = new Visitante_1.default();
                 }
@@ -291,7 +294,24 @@ const middleware = function (req, res, next) {
             });
         }
         else if (user instanceof Admin_1.default) {
-            // injetar administrador
+            conn.query(`SELECT 
+                user.id, admin.slug, admin.nome 
+            FROM user 
+            JOIN admin ON admin.user_id = user.id
+            WHERE user.id = ? AND user.version = ?
+            `, [user.getId(), user.getVersion()], (err, result) => {
+                if (err)
+                    console.log(err);
+                if (result.length == 0) {
+                    req.user = new Visitante_1.default();
+                }
+                else {
+                    const userres = result[0];
+                    req.user = setDataAdmin(userres, user);
+                    res.user = req.user;
+                }
+                next();
+            });
         }
         else {
             req.user = user;

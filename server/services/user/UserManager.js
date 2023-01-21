@@ -16,9 +16,27 @@ const jwt_1 = require("../../lib/jwt");
 const mysqli_1 = __importDefault(require("../../lib/mysqli"));
 const response_1 = __importDefault(require("../../lib/response"));
 const Socio_1 = __importDefault(require("../../model/Socio"));
-const fs_1 = require("fs");
-const path_1 = require("path");
+const node_fetch_1 = __importDefault(require("node-fetch"));
+const config_1 = __importDefault(require("../../lib/config"));
 class UserManager {
+    static save_token(req, res) {
+        const remembermetk = req.body.remembermetk;
+        const tokendevice = req.body.tokendevice;
+        if (!remembermetk || !tokendevice)
+            return (0, response_1.default)(res).error(400, 'Bad Request');
+        const conn = (0, mysqli_1.default)();
+        conn.query(`SELECT id, code FROM user_devices WHERE rememberme = ?`, [remembermetk], (err, result) => {
+            if (err)
+                return (0, response_1.default)(res).error(500, 'Server Error');
+            if (result[0]['code'] != null && result[0]['code'].trim() != '')
+                return (0, response_1.default)(res).error(500, 'Not permited');
+            conn.query(`UPDATE user_devices SET code = ? WHERE id = ?`, [tokendevice, result[0]['id']], err => {
+                if (err)
+                    return (0, response_1.default)(res).error(500, 'Server Error');
+                (0, response_1.default)(res).success();
+            });
+        });
+    }
     static check_login(req, res) {
         const doc = req.body.doc;
         if (!doc)
@@ -110,7 +128,7 @@ class UserManager {
             LEFT JOIN user ON user.socio_id = socios.id 
             WHERE
             socios.cpf = ?
-        `, [doc], (err, result) => {
+        `, [doc], (err, result) => __awaiter(this, void 0, void 0, function* () {
                 if (err)
                     return (0, response_1.default)(res).error(500, 'Internal Error');
                 if (result.length == 0)
@@ -119,28 +137,29 @@ class UserManager {
                 const socio_id = socio['id'];
                 if (!socio.email) {
                     try {
-                        const elements = [
-                            'arara-azul.jpg', 'ariranha.jpg',
-                            'mico-leao-dourado.jpg', 'onca-pintada.jpg',
-                            'peixe-boi.jpg', 'tamandua.jpg'
-                        ];
-                        const image = (0, path_1.join)(__dirname, `../../public/images/padroes/${elements[Math.floor(Math.random() * elements.length)]}`);
-                        const copy = (0, path_1.join)(__dirname, `../../public/images/fav/${email}.jpg`);
-                        (0, fs_1.copyFileSync)(image, copy);
+                        let result = yield (0, node_fetch_1.default)(`${config_1.default.instance().json().asset}/api/server_file/add_random_fav`, {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                pair: config_1.default.instance().getPair(),
+                                email: email
+                            })
+                        });
+                        if (result.status != 200)
+                            return (0, response_1.default)(res).error(500, 'Falha ao tentar criar imagem do usuário');
                         conn.query("INSERT INTO user(socio_id, email, senha) VALUES (?,?,?)", [socio_id, email, senha], err => {
                             if (err)
-                                return (0, response_1.default)(res).error(500, 'Erro ao tentar gerar usuário');
+                                return (0, response_1.default)(res).error(500, 'Erro ao tentar salvar usuário no banco de dados');
                             (0, response_1.default)(res).success();
                         });
                     }
                     catch (error) {
-                        (0, response_1.default)(res).error(500, 'Falha ao tentar criar imagem do usuário');
+                        (0, response_1.default)(res).error(500, 'Erro ao tentar gerar usuário');
                     }
                 }
                 else {
                     (0, response_1.default)(res).error(500, 'Já existe um usuário cadastrado para o sócio');
                 }
-            });
+            }));
         });
     }
 }

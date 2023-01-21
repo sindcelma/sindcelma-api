@@ -18,6 +18,9 @@ const mysqli_1 = __importDefault(require("../../lib/mysqli"));
 const response_1 = __importDefault(require("../../lib/response"));
 const Socio_1 = __importDefault(require("../../model/Socio"));
 const UserFactory_1 = require("../../model/UserFactory");
+const aws_1 = __importDefault(require("../../lib/aws"));
+const fs_1 = __importDefault(require("fs"));
+const path_1 = require("path");
 class AuthService {
     static generate_temp_key(req, res) {
         const senha = req.body.senha;
@@ -91,18 +94,16 @@ class AuthService {
             });
         }));
     }
-    // função de teste. apagar depois
-    static check_session(req, res) {
-        (0, response_1.default)(res).success({
-            "status": req.user
-        });
+    static get_user(req, res) {
+        (0, response_1.default)(res).success(req.user);
     }
     static login(req, res) {
         const email = req.body.email;
         const senha = req.body.senha;
         const remem = req.body.rememberme;
         const type = req.body.type;
-        (0, UserFactory_1.getUser)(type, email, senha, (user, error, msg) => {
+        (0, UserFactory_1.getUser)(type, email, senha, (user, error, msg) => __awaiter(this, void 0, void 0, function* () {
+            yield new Promise(r => setTimeout(r, 1500));
             if (error) {
                 return (0, response_1.default)(res).error(500, msg);
             }
@@ -122,7 +123,7 @@ class AuthService {
                 conn.query("INSERT INTO user_devices (user_id, header, rememberme) VALUES (?,?,?)", [user.getId(), user.getAgent(), message.remembermetk]);
             }
             return (0, response_1.default)(res).success(message);
-        }, remem);
+        }), remem);
     }
     /**
      * testado: false
@@ -139,11 +140,11 @@ class AuthService {
             [
                 `
             SELECT 
-                user.id, user.email, socios_dados_pessoais.telefone 
+                user.id, user.email, socios.nome, socios_dados_pessoais.telefone 
             FROM 
                 socios 
             JOIN user ON socios.id = user.socio_id 
-            JOIN socios_dados_pessoais ON socios_dados_pessoais.socio_id = socios.id 
+            LEFT JOIN socios_dados_pessoais ON socios_dados_pessoais.socio_id = socios.id 
             WHERE socios.cpf = ?
             `,
                 [cpf]
@@ -165,18 +166,29 @@ class AuthService {
             }
             const resUser = result[0];
             let data = new Date();
-            data.setHours(data.getHours() + 1);
+            data.setHours(data.getHours() + 4);
             const limite = (0, data_1.dateFormat)(data, 'yyyy-MM-dd H:i:s');
             const code = (0, jwt_1.generateCode)();
             conn.query(`
                 INSERT INTO user_recover (user_id, data_limite, codigo) VALUES (?,?,?)
             `, [resUser.id, limite, code], (err2) => {
+                var _a;
                 if (err2) {
                     return (0, response_1.default)(res).error(500, 'Internal Error');
                 }
                 if (to == 'email') {
-                    // envia por email
-                    console.log(code + " eviado por email");
+                    new aws_1.default().ses()
+                        .config({
+                        de: "atendimento@sindcelmatecnologia.com.br",
+                        para: resUser.email,
+                        assunto: "Recuperação de senha",
+                        data: {
+                            nome: (_a = resUser.nome) !== null && _a !== void 0 ? _a : '',
+                            codigo: code
+                        }
+                    })
+                        .setTemplate(fs_1.default.readFileSync((0, path_1.join)(__dirname, '../../html/recover.html')).toString())
+                        .send();
                 }
                 if (to == 'phone') {
                     // envia por telefone
@@ -255,7 +267,8 @@ class AuthService {
     static rememberme(req, res) {
         const remembermeToken = req.body.rememberme;
         const type = req.body.type;
-        (0, UserFactory_1.getUserByRememberme)(type, remembermeToken, (user, error, codeError, msg) => {
+        (0, UserFactory_1.getUserByRememberme)(type, remembermeToken, (user, error, codeError, msg) => __awaiter(this, void 0, void 0, function* () {
+            yield new Promise(r => setTimeout(r, 1000));
             if (error)
                 switch (codeError) {
                     case 2:
@@ -274,7 +287,7 @@ class AuthService {
                 user: user
             };
             (0, response_1.default)(res).success(message);
-        });
+        }));
     }
 }
 exports.default = AuthService;

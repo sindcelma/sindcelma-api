@@ -19,53 +19,42 @@ class SorteioService {
         catch (error) {
             return (0, response_1.default)(res).error(401, 'Unauthorized');
         }
+        const sorteio_id = Number(req.body.sorteio_id);
         const socio = req.user;
         const conn = (0, mysqli_1.default)();
         conn.query(`
-            SELECT
-                id
-            FROM socios 
-            WHERE slug = ?
-        `, [socio.getSlug()], (err, result) => {
+            SELECT 
+                    sorteio_participantes.id      as participante_id,
+                    socios.id                     as socio_id,
+                    socios_dados_pessoais.id      as dados_pessoais_id,
+                    socios_dados_profissionais.id as dados_profissionais_id
+            FROM        socios
+            LEFT JOIN   socios_dados_pessoais      ON socios_dados_pessoais.socio_id = socios.id
+            LEFT JOIN   socios_dados_profissionais ON socios_dados_profissionais.socio_id = socios.id
+            LEFT JOIN   sorteio_participantes 
+                ON   sorteio_participantes.socio_id   = socios.id
+                AND   sorteio_participantes.sorteio_id = ?
+            WHERE socios.slug = ? 
+        `, [sorteio_id, socio.getSlug()], (err, result) => {
             if (err)
                 return (0, response_1.default)(res).error(500, err);
             if (result.length == 0)
                 return (0, response_1.default)(res).error(404, 'socio not found');
-            const socio_id = result[0].id;
-            const sorteio_id = Number(req.body.sorteio_id);
+            const socio_id = result[0].socio_id;
+            const partc_id = result[0].participante_id;
+            const pesso_id = result[0].dados_pessoais_id;
+            const proff_id = result[0].dados_profissionais_id;
+            if (pesso_id == null || proff_id == null)
+                return (0, response_1.default)(res).error(405, 'Você precisa cadastrar todas as suas informações para participar do sorteio.');
+            if (partc_id != null)
+                return (0, response_1.default)(res).error(403, 'Sócio já está inscrito');
             conn.query(`
-                SELECT 
-                      sorteios.id
-                FROM  sorteios
-                WHERE sorteios.id = ? 
-            `, [sorteio_id], (err2, result2) => {
-                if (err2)
-                    return (0, response_1.default)(res).error(500, err2);
-                if (result2.length == 0)
-                    return (0, response_1.default)(res).error(404, 'not found');
-                conn.query(`
-                    SELECT 
-                            sorteio_participantes.id
-
-                     FROM   sorteio_participantes
-                     JOIN   socios ON sorteio_participantes.socio_id = socios.id
-                     JOIN   sorteios ON sorteios.id = sorteio_participantes.sorteio_id
-
-                    WHERE   sorteios.id = ? AND sorteio_participantes.socio_id = ?
-                `, [sorteio_id, socio_id], (err3, result3) => {
-                    if (err3)
-                        return (0, response_1.default)(res).error(500, err3);
-                    if (result3.length > 0)
-                        return (0, response_1.default)(res).error(403, 'Você já está incrito neste sorteio');
-                    conn.query(`
-                        INSERT INTO sorteio_participantes (sorteio_id, socio_id)
-                        VALUES (?,?)
-                    `, [sorteio_id, socio_id], err4 => {
-                        if (err4)
-                            return (0, response_1.default)(res).error(500, err4);
-                        (0, response_1.default)(res).success();
-                    });
-                });
+                INSERT INTO sorteio_participantes (sorteio_id, socio_id)
+                VALUES (?,?)
+            `, [sorteio_id, socio_id], err4 => {
+                if (err4)
+                    return (0, response_1.default)(res).error(500, err4);
+                (0, response_1.default)(res).success();
             });
         });
     }

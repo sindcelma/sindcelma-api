@@ -4,12 +4,19 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const FileManager_1 = __importDefault(require("./FileManager"));
+const FileUserManager_1 = __importDefault(require("./FileUserManager"));
+const FileAdminManager_1 = __importDefault(require("./FileAdminManager"));
 const router = (0, express_1.Router)();
 exports.default = () => {
-    router.post('/create', FileManager_1.default.create_ghost);
-    router.post('/append', FileManager_1.default.append);
-    router.post('/commit', FileManager_1.default.commit);
+    /**
+     * TESTAR
+     */
+    router.post('/admin/create', FileAdminManager_1.default.create_ghost);
+    router.post('/admin/append', FileAdminManager_1.default.append);
+    router.post('/admin/commit', FileAdminManager_1.default.commit);
+    router.post('/create', FileUserManager_1.default.create_ghost);
+    router.post('/append', FileUserManager_1.default.append);
+    router.post('/commit', FileUserManager_1.default.commit);
     return router;
 };
 //# sourceMappingURL=routes.js.map

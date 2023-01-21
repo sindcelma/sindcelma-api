@@ -56,8 +56,9 @@ const visitante = {
 const generateToken = function (type, body) {
     const header = {
         alg: "sha256",
-        tim: limit,
-        typ: type
+        lim: limit,
+        typ: type,
+        cat: Date.now()
     };
     const h = Buffer.from(JSON.stringify(header)).toString('base64');
     const b = Buffer.from(JSON.stringify(body)).toString('base64');

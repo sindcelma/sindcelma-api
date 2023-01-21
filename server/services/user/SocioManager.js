@@ -21,6 +21,26 @@ const crypto_1 = __importDefault(require("crypto"));
 const fs_1 = require("fs");
 const path_1 = require("path");
 class SocioManager {
+    static get_doc_carteirinha(req, res) {
+        const slug = req.body.slug;
+        if (!slug)
+            return (0, response_1.default)(res).error(400, 'bad request');
+        try {
+            (0, assertion_1.default)()
+                .isAdmin(req.user)
+                .orIsSameSocio(req.user, slug)
+                .assert();
+        }
+        catch (error) {
+            return (0, response_1.default)(res).error(401, 'Unauthorized');
+        }
+        const conn = (0, mysqli_1.default)();
+        conn.query("SELECT cpf, status FROM socios WHERE slug = ?", [slug], (err, result) => {
+            if (err)
+                return (0, response_1.default)(res).error(500, err);
+            (0, response_1.default)(res).success(result);
+        });
+    }
     static update_doc_by_np(req, res) {
         const np = req.body.np;
         const cpf = Socio_1.default.transformCpf(req.body.cpf);
@@ -40,7 +60,7 @@ class SocioManager {
                 return (0, response_1.default)(res).error(404, 'Not Found');
             }
             if (result[0].cpf != null) {
-                return (0, response_1.default)(res).error(403, 'Seu CPF já está cadastrado');
+                return (0, response_1.default)(res).error(500, 'Seu CPF já está cadastrado');
             }
             conn.query("UPDATE socios SET cpf = ? WHERE np = ?", [cpf, np], err => {
                 if (err)
@@ -73,13 +93,16 @@ class SocioManager {
                 socios_dados_profissionais.data_admissao,
                 socios_dados_profissionais.num_matricula,
                 user.temp_key
-            FROM
-                socios_dados_profissionais
-            JOIN socios ON socios_dados_profissionais.socio_id = socios.id 
-            JOIN user ON user.socio_id = socios.id
-            JOIN empresas ON socios_dados_profissionais.empresa_id = empresas.id 
-            WHERE socios.slug = ? AND socios_dados_profissionais.empresa_id = ?
-        `, [slug, empresa_id], (err1, result) => {
+            
+            FROM socios
+                 JOIN user ON user.socio_id = socios.id
+            LEFT JOIN socios_dados_profissionais 
+                   ON socios_dados_profissionais.socio_id = socios.id 
+                  AND socios_dados_profissionais.empresa_id = ?
+            LEFT JOIN empresas ON socios_dados_profissionais.empresa_id = empresas.id 
+            
+            WHERE socios.slug = ? 
+        `, [empresa_id, slug], (err1, result) => {
             if (err1) {
                 return (0, response_1.default)(res).error(500, err1);
             }
@@ -205,9 +228,10 @@ class SocioManager {
         conn.query(`
             SELECT 
                    socios_dados_profissionais.id,
-                   user.temp_key
-             FROM  socios_dados_profissionais
-             JOIN  socios ON socios.id = socios_dados_profissionais.socio_id
+                   user.temp_key,
+                   socios.id as socio_id
+             FROM  socios
+        LEFT JOIN  socios_dados_profissionais ON socios.id = socios_dados_profissionais.socio_id
              JOIN  user ON user.socio_id = socios.id 
             WHERE  socios.slug = ?
         `, [slug], (err1, result) => {
@@ -215,7 +239,7 @@ class SocioManager {
                 return (0, response_1.default)(res).error(500, err1);
             }
             if (result.length == 0) {
-                return (0, response_1.default)(res).error(404, 'Not Found');
+                return (0, response_1.default)(res).error(404, 'Socio não encontrado');
             }
             if (!req.body.key) {
                 return (0, response_1.default)(res).error(400, 'bad request');
@@ -223,25 +247,35 @@ class SocioManager {
             if (assert.index != 0 && req.body.key != result[0].temp_key) {
                 return (0, response_1.default)(res).error(403, 'need refresh key');
             }
-            const id = result[0].id;
-            conn.query(`
-                UPDATE socios_dados_profissionais 
-                SET    empresa_id = ?
-                ,      cargo = ? 
-                ,      data_admissao = ? 
-                ,      num_matricula = ?
-                WHERE  id = ?
-            `, [empresa_id, cargo, data_admissao, num_matricula, id], err2 => {
-                if (err2) {
-                    return (0, response_1.default)(res).error(500, 'Internal Error');
-                }
-                (0, response_1.default)(res).success();
-            });
+            if (result[0].id == null) {
+                conn.query(`
+                    INSERT INTO socios_dados_profissionais (socio_id, empresa_id, cargo, data_admissao, num_matricula)
+                    VALUES (?,?,?,?,?)
+                `, [result[0].socio_id, empresa_id, cargo, data_admissao, num_matricula], err2 => {
+                    console.log(err2);
+                    if (err2)
+                        return (0, response_1.default)(res).error(500, err2);
+                    (0, response_1.default)(res).success();
+                });
+            }
+            else {
+                const id = result[0].id;
+                conn.query(`
+                    UPDATE socios_dados_profissionais 
+                    SET    empresa_id = ?
+                    ,      cargo = ? 
+                    ,      data_admissao = ? 
+                    ,      num_matricula = ?
+                    WHERE  id = ?
+                `, [empresa_id, cargo, data_admissao, num_matricula, id], err2 => {
+                    if (err2) {
+                        return (0, response_1.default)(res).error(500, 'Internal Error');
+                    }
+                    (0, response_1.default)(res).success();
+                });
+            }
         });
     }
-    /**
-     * TESTADO
-     */
     static update_dados_pessoais(req, res) {
         const slug = req.body.slug;
         const rg = req.body.rg;
@@ -264,9 +298,10 @@ class SocioManager {
         conn.query(`
             SELECT 
                    socios_dados_pessoais.id ,
-                   user.temp_key
-            FROM   socios_dados_pessoais
-            JOIN   socios ON socios.id = socios_dados_pessoais.socio_id
+                   user.temp_key,
+                   socios.id as socio_id
+            FROM   socios
+       LEFT JOIN   socios_dados_pessoais ON socios.id = socios_dados_pessoais.socio_id
             JOIN   user ON user.socio_id = socios.id
             WHERE  socios.slug = ?
         `, [slug], (err1, result) => {
@@ -274,7 +309,7 @@ class SocioManager {
                 return (0, response_1.default)(res).error(500, err1);
             }
             if (result.length == 0) {
-                return (0, response_1.default)(res).error(404, 'Not Found');
+                return (0, response_1.default)(res).error(404, 'Socio não encontrado');
             }
             if (!req.body.key) {
                 return (0, response_1.default)(res).error(400, 'bad request');
@@ -282,21 +317,32 @@ class SocioManager {
             if (assert.index != 0 && req.body.key != result[0].temp_key) {
                 return (0, response_1.default)(res).error(403, 'need refresh key');
             }
-            const id = result[0].id;
-            conn.query(`
-                UPDATE socios_dados_pessoais 
-                SET    rg = ? 
-                ,      sexo = ? 
-                ,      estado_civil = ?
-                ,      data_nascimento = ?
-                ,      telefone = ?
-                WHERE  id = ?
-            `, [rg, sexo, estado_civil, data_nascimento, telefone, id], err2 => {
-                if (err2) {
-                    return (0, response_1.default)(res).error(500, err2);
-                }
-                (0, response_1.default)(res).success();
-            });
+            if (result[0].id == null) {
+                conn.query(`
+                    INSERT INTO socios_dados_pessoais (socio_id, rg, sexo, estado_civil, data_nascimento, telefone)
+                    VALUES (?,?,?,?,?,?)
+                `, [result[0].socio_id, rg, sexo, estado_civil, data_nascimento, telefone], err2 => {
+                    if (err2)
+                        return (0, response_1.default)(res).error(500, err2);
+                    (0, response_1.default)(res).success();
+                });
+            }
+            else {
+                const id = result[0].id;
+                conn.query(`
+                    UPDATE socios_dados_pessoais 
+                    SET    rg = ? 
+                    ,      sexo = ? 
+                    ,      estado_civil = ?
+                    ,      data_nascimento = ?
+                    ,      telefone = ?
+                    WHERE  id = ?
+                `, [rg, sexo, estado_civil, data_nascimento, telefone, id], err2 => {
+                    if (err2)
+                        return (0, response_1.default)(res).error(500, err2);
+                    (0, response_1.default)(res).success();
+                });
+            }
         });
     }
     /**
@@ -431,7 +477,6 @@ class SocioManager {
     static check_status(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             const conn = (0, mysqli_1.default)();
-            //console.log(req.user);
             conn.query(`
             SELECT 
                   socios.id,
@@ -440,7 +485,6 @@ class SocioManager {
             JOIN  user ON user.socio_id = socios.id
             WHERE user.id = ?
         `, [req.user.getId()], (err, result) => {
-                console.log(result);
                 if (err)
                     return (0, response_1.default)(res).error(500, 'Internal Error 1');
                 if (result.length == 0)

@@ -71,8 +71,7 @@ class ConvencaoColetiva {
         catch (error) {
             return (0, response_1.default)(res).error(401, 'Unauthorized');
         }
-        const conn = (0, mysqli_1.default)();
-        conn.query(`
+        (0, mysqli_1.default)().query(`
             SELECT item, imagem, resumo, texto
               FROM cct_item
              WHERE id = ?
@@ -106,8 +105,7 @@ class ConvencaoColetiva {
                   OR  texto  LIKE ? )
                  AND  cct_id = ?
         `;
-        const conn = (0, mysqli_1.default)();
-        conn.query(q, [`%${search}%`, `%${search}%`, `%${search}%`, cct_id], (err, result) => {
+        (0, mysqli_1.default)().query(q, [`%${search}%`, `%${search}%`, `%${search}%`, cct_id], (err, result) => {
             if (err)
                 return (0, response_1.default)(res).error(500, 'server error');
             (0, response_1.default)(res).success(result);
@@ -188,6 +186,7 @@ class ConvencaoColetiva {
                 id,
                 titulo
             FROM cct 
+            WHERE publico = 1
         `, (err, result) => {
             if (err)
                 return (0, response_1.default)(res).error(500, err);

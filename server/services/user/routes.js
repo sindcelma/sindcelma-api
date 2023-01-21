@@ -11,19 +11,21 @@ const router = (0, express_1.Router)();
 exports.default = () => {
     // admin
     // user
+    router.post('/save_token', UserManager_1.default.save_token);
     router.post('/change_password', AuthService_1.default.change_password);
     router.post('/generate_temp_key', AuthService_1.default.generate_temp_key);
     router.post('/recover', AuthService_1.default.recover);
     router.post('/check_code_recover', AuthService_1.default.check_code_recover);
     router.post('/change_pass_using_code', AuthService_1.default.change_pass_using_code);
     router.post('/create', UserManager_1.default.create_user);
-    router.post('/check_session', AuthService_1.default.check_session); // apagar depois
+    router.post('/get_user', AuthService_1.default.get_user);
     router.post('/check_email', UserManager_1.default.check_email);
     router.post('/rememberme', AuthService_1.default.rememberme);
     router.post('/login', AuthService_1.default.login);
     router.post('/close_all_sessions', UserManager_1.default.close_all_sessions);
     router.post('/check_login', UserManager_1.default.check_login);
     // socios
+    router.post('/socios/get_doc_carteirinha', SocioManager_1.default.get_doc_carteirinha);
     router.post('/socios/update_doc_by_np', SocioManager_1.default.update_doc_by_np);
     router.post('/socios/check_status', SocioManager_1.default.check_status);
     router.post('/socios/cadastrar_full_socio', SocioManager_1.default.cadastrar_full_socio);
