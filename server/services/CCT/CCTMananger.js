@@ -41,10 +41,12 @@ class CCTManager {
             return (0, response_1.default)(res).error(400, 'Bad Request');
         (0, mysqli_1.default)().query(`
             INSERT INTO cct (titulo) VALUES (?)
-        `, [req.body.titulo], err => {
+        `, [req.body.titulo], (err, result) => {
             if (err)
                 return (0, response_1.default)(res).error(500, err);
-            (0, response_1.default)(res).success();
+            (0, response_1.default)(res).success({
+                cct_id: result.insertId
+            });
         });
     }
     static add_item(req, res) {

@@ -21,6 +21,31 @@ const crypto_1 = __importDefault(require("crypto"));
 const fs_1 = require("fs");
 const path_1 = require("path");
 class SocioManager {
+    static save_image(req, res) {
+        const slug = req.body.slug;
+        const link = req.body.link;
+        const type = req.body.type;
+        if (!slug || !link || !type)
+            return (0, response_1.default)(res).error(400, 'bad request');
+        try {
+            (0, assertion_1.default)()
+                .isAdmin(req.user)
+                .orIsSameSocio(req.user, slug)
+                .assert();
+        }
+        catch (error) {
+            return (0, response_1.default)(res).error(401, 'Unauthorized');
+        }
+        (0, mysqli_1.default)().query(`
+            INSERT INTO 
+            user_images (user_id, slug, type, ext, ativo)
+            VALUES (?,?,?,?,?)
+        `, [req.user.getId(), link, type, '', 1], err => {
+            if (err)
+                return (0, response_1.default)(res).error(500, err);
+            return (0, response_1.default)(res).success();
+        });
+    }
     static get_doc_carteirinha(req, res) {
         const slug = req.body.slug;
         if (!slug)

@@ -16,5 +16,7 @@ export default () => {
     router.get('/:sorteio_id', SorteioService.get_sorteio)
     router.get('/:sorteio_id/participantes', SorteioService.get_participantes)
     router.get('/:sorteio_id/vencedores', SorteioService.get_vencedores)
+
     return router;
+    
 }

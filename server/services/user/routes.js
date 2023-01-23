@@ -25,6 +25,7 @@ exports.default = () => {
     router.post('/close_all_sessions', UserManager_1.default.close_all_sessions);
     router.post('/check_login', UserManager_1.default.check_login);
     // socios
+    router.post('/socios/save_image', SocioManager_1.default.save_image);
     router.post('/socios/get_doc_carteirinha', SocioManager_1.default.get_doc_carteirinha);
     router.post('/socios/update_doc_by_np', SocioManager_1.default.update_doc_by_np);
     router.post('/socios/check_status', SocioManager_1.default.check_status);

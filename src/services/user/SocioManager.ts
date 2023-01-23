@@ -12,6 +12,34 @@ import { join } from 'path';
 class SocioManager {
 
 
+    public static save_image(req:Request, res:Response){
+
+        const slug  = req.body.slug
+        const link  = req.body.link
+        const type  = req.body.type
+
+        if(!slug || !link || !type) return response(res).error(400, 'bad request');
+
+        try {
+            assertion()
+            .isAdmin(req.user)
+            .orIsSameSocio(req.user, slug)
+            .assert()
+        } catch (error) {
+            return response(res).error(401, 'Unauthorized')
+        }
+
+        mysqli().query(`
+            INSERT INTO 
+            user_images (user_id, slug, type, ext, ativo)
+            VALUES (?,?,?,?,?)
+        `, [req.user.getId(), link, type, '', 1], err => {
+            if(err) return response(res).error(500, err)
+            return response(res).success()
+        })
+
+    }
+
     public static get_doc_carteirinha(req:Request, res:Response){
 
         const slug  = req.body.slug

@@ -41,9 +41,11 @@ class CCTManager {
 
         mysqli().query(`
             INSERT INTO cct (titulo) VALUES (?)
-        `, [req.body.titulo], err => {
+        `, [req.body.titulo], (err, result) => {
             if(err) return response(res).error(500, err)
-            response(res).success()
+            response(res).success({
+                cct_id:result.insertId
+            })
         })
     }
 
