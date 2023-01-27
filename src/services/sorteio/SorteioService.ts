@@ -45,8 +45,8 @@ class SorteioService {
             LEFT JOIN   socios_dados_pessoais      ON socios_dados_pessoais.socio_id = socios.id
             LEFT JOIN   socios_dados_profissionais ON socios_dados_profissionais.socio_id = socios.id
             LEFT JOIN   sorteio_participantes 
-                ON   sorteio_participantes.socio_id   = socios.id
-                AND   sorteio_participantes.sorteio_id = ?
+                   ON   sorteio_participantes.socio_id   = socios.id
+                  AND   sorteio_participantes.sorteio_id = ?
             WHERE socios.slug = ? 
         `, [sorteio_id, socio.getSlug()], (err, result) => {
 
@@ -154,7 +154,7 @@ class SorteioService {
                 FROM   sorteio_participantes 
                 JOIN   socios ON sorteio_participantes.socio_id = socios.id  
                 JOIN   user   ON user.socio_id = socios.id
-                WHERE  user.id = 54
+                WHERE  user.id = ?
                 
             ) as sp ON sp.sorteio_id = sorteios.id 
             ORDER BY 

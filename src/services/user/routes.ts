@@ -43,6 +43,7 @@ export default () => {
     router.post('/socios/mudar_status', SocioManager.mudar_status)
 
     router.post('/socios/get_socio_por_login', SocioManager.get_socio_by_login)
+    router.post('/socios/get_socio_por_id', SocioManager.get_socio_por_id)
     router.post('/socios/get_dados_profissionais', SocioManager.get_dados_profissionais)
     router.post('/socios/get_dados_pessoais', SocioManager.get_dados_pessoais)
     

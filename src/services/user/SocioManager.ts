@@ -771,6 +771,66 @@ class SocioManager {
         
     }
 
+    public static get_socio_por_id(req:Request, res:Response){
+        
+        try {
+            assertion()
+            .isAdmin(req.user)
+            .assert()
+        } catch (error) {
+            return response(res).error(401, 'Unauthorized')
+        }
+
+        let id = req.body.id
+
+        if(!id){
+            return response(res).error(400, 'Bad Request')
+        }
+
+        let conn = mysqli()
+
+        conn.query(
+            `SELECT 
+                user.id,
+                user.email,
+                socios.nome,
+                socios.sobrenome,
+                socios.np,
+                socios.cpf,
+                socios.slug,
+                socios.status
+            FROM socios 
+            LEFT JOIN user ON socios.id = user.socio_id 
+            WHERE
+                socios.id = ?`, 
+        [id], (err, result) => {
+            
+            if(err) return response(res).error(500, 'Interal Error')
+            if(result.length == 0) return response(res).error(404, 'Not Found')
+            
+            let data:any = result[0]
+        
+            if(data.id == null) {
+                data['images'] = []
+                return response(res).success(data)
+            }
+
+            conn.query(
+                `SELECT 
+                        slug
+                    FROM user_images
+                WHERE (type = 'doc' OR type = 'nodoc')
+                AND user_id = ?
+            `, [data.id], (err, result) => {
+                if(err) return response(res).error(500, 'Interal Error 2')
+                data['images'] = result
+                return response(res).success(data)
+            });
+
+        })
+
+    }
+
     public static get_socio_by_login(req:Request, res:Response){
 
         let email = req.body.email 
@@ -1049,6 +1109,7 @@ class SocioManager {
         const snome = req.body.nome
         const ssobr = req.body.sobrenome
         const scpf  = req.body.cpf
+        const snp   = req.body.np
 
         let more = ' '
         let vars:Array<any> = []
@@ -1065,8 +1126,13 @@ class SocioManager {
         }
 
         if(scpf){
-            more += ' AND cpf = ? '
-            vars.push(scpf)
+            more += ' AND cpf LIKE ? '
+            vars.push(`%${scpf}%`)
+        }
+
+        if(snp){
+            more += ' AND np = ? '
+            vars.push(snp)
         }
 
         const conn = mysqli()
@@ -1075,10 +1141,12 @@ class SocioManager {
 
         const q = `
             SELECT
+                socios.id,
                 socios.nome,
                 socios.sobrenome,
                 socios.slug,
-                socios.cpf 
+                socios.cpf,
+                socios.np
             FROM socios
             WHERE status = ?
             ${more}
