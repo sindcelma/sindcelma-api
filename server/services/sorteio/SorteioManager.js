@@ -7,6 +7,7 @@ const assertion_1 = __importDefault(require("../../lib/assertion"));
 const mysqli_1 = __importDefault(require("../../lib/mysqli"));
 const response_1 = __importDefault(require("../../lib/response"));
 const data_1 = require("../../lib/data");
+const firebase_1 = __importDefault(require("../../lib/firebase"));
 class SorteioManager {
     static sortear(req, res) {
         if (!req.body.sorteio_id)
@@ -25,7 +26,8 @@ class SorteioManager {
                     sorteio.qt_vencedores,
                     participantes.socio_id,
                     socio.nome,
-                    socio.cpf
+                    socio.cpf,
+                    socio.id as socio_id
                FROM sorteio_participantes as participantes
                JOIN socios as socio ON participantes.socio_id = socio.id 
                JOIN sorteios as sorteio ON sorteio.id = participantes.sorteio_id 
@@ -42,14 +44,33 @@ class SorteioManager {
                 vencedores.push(vencedor[0]);
             }
             let insert = `UPDATE sorteio_participantes SET vencedor = 1 WHERE `;
-            for (let z = 0; z < vencedores.length; z++) {
-                const venc = vencedores[z];
-                insert += ` id = ${venc.id} OR `;
-            }
+            for (let z = 0; z < vencedores.length; z++)
+                insert += ` id = ${vencedores[z].id} OR `;
             insert = insert.substring(0, insert.length - 3);
             conn.query(insert, err => {
                 if (err)
                     return (0, response_1.default)(res).error(500, err);
+                let listQ = "";
+                for (let i = 0; i < vencedores.length; i++)
+                    listQ += ` socios.id = ${vencedores[i].socio_id} OR `;
+                listQ = listQ.substring(0, listQ.length - 3);
+                let quryDevices = `
+                    SELECT 
+                          user_devices.code
+                    FROM  socios 
+                    JOIN  user         ON user.socio_id = socios.id 
+                    JOIN  user_devices ON user.id = user_devices.user_id 
+                    WHERE (${listQ}) AND NOT user_devices.code IS null
+                `;
+                conn.query(quryDevices, (err2, result2) => {
+                    if (err2)
+                        console.log(err2);
+                    ;
+                    let devices = [];
+                    for (let i = 0; i < result2.length; i++)
+                        devices.push(result2[i].code);
+                    firebase_1.default.sendNotification(`PARABÉNS!`, "Você foi um dos ganhadores do sorteio! Confira!", devices);
+                });
                 (0, response_1.default)(res).success(vencedores);
             });
         });

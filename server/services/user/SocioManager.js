@@ -20,6 +20,7 @@ const Socio_1 = __importDefault(require("../../model/Socio"));
 const crypto_1 = __importDefault(require("crypto"));
 const fs_1 = require("fs");
 const path_1 = require("path");
+const firebase_1 = __importDefault(require("../../lib/firebase"));
 class SocioManager {
     static save_image(req, res) {
         const slug = req.body.slug;
@@ -632,6 +633,55 @@ class SocioManager {
             }
         });
     }
+    static get_socio_por_id(req, res) {
+        try {
+            (0, assertion_1.default)()
+                .isAdmin(req.user)
+                .assert();
+        }
+        catch (error) {
+            return (0, response_1.default)(res).error(401, 'Unauthorized');
+        }
+        let id = req.body.id;
+        if (!id) {
+            return (0, response_1.default)(res).error(400, 'Bad Request');
+        }
+        let conn = (0, mysqli_1.default)();
+        conn.query(`SELECT 
+                user.id,
+                user.email,
+                socios.nome,
+                socios.sobrenome,
+                socios.np,
+                socios.cpf,
+                socios.slug,
+                socios.status
+            FROM socios 
+            LEFT JOIN user ON socios.id = user.socio_id 
+            WHERE
+                socios.id = ?`, [id], (err, result) => {
+            if (err)
+                return (0, response_1.default)(res).error(500, 'Interal Error');
+            if (result.length == 0)
+                return (0, response_1.default)(res).error(404, 'Not Found');
+            let data = result[0];
+            if (data.id == null) {
+                data['images'] = [];
+                return (0, response_1.default)(res).success(data);
+            }
+            conn.query(`SELECT 
+                        slug
+                    FROM user_images
+                WHERE (type = 'doc' OR type = 'nodoc')
+                AND user_id = ?
+            `, [data.id], (err, result) => {
+                if (err)
+                    return (0, response_1.default)(res).error(500, 'Interal Error 2');
+                data['images'] = result;
+                return (0, response_1.default)(res).success(data);
+            });
+        });
+    }
     static get_socio_by_login(req, res) {
         let email = req.body.email;
         let doc = Socio_1.default.transformCpf(req.body.doc);
@@ -850,6 +900,7 @@ class SocioManager {
         const snome = req.body.nome;
         const ssobr = req.body.sobrenome;
         const scpf = req.body.cpf;
+        const snp = req.body.np;
         let more = ' ';
         let vars = [];
         vars.push(status);
@@ -862,17 +913,23 @@ class SocioManager {
             vars.push(`%${ssobr}%`);
         }
         if (scpf) {
-            more += ' AND cpf = ? ';
-            vars.push(scpf);
+            more += ' AND cpf LIKE ? ';
+            vars.push(`%${scpf}%`);
+        }
+        if (snp) {
+            more += ' AND np = ? ';
+            vars.push(snp);
         }
         const conn = (0, mysqli_1.default)();
         vars.push(pagina, limite);
         const q = `
             SELECT
+                socios.id,
                 socios.nome,
                 socios.sobrenome,
                 socios.slug,
-                socios.cpf 
+                socios.cpf,
+                socios.np
             FROM socios
             WHERE status = ?
             ${more}
@@ -907,6 +964,25 @@ class SocioManager {
         `, [status, req.body.slug], err => {
             if (err)
                 return (0, response_1.default)(res).error(500, 'Internal Error');
+            if (status == 3) {
+                conn.query(`
+                    SELECT 
+                          socios.nome,
+                          user_devices.code
+                    FROM  socios 
+                     JOIN user         ON user.socio_id = socios.id 
+                     JOIN user_devices ON user.id = user_devices.user_id 
+                    WHERE socios.slug = ? AND NOT user_devices.code IS null
+                `, [req.body.slug], (err2, result) => {
+                    if (err2)
+                        return;
+                    const nome = result[0].nome;
+                    let devices = [];
+                    for (let i = 0; i < result.length; i++)
+                        devices.push(result[i].code);
+                    firebase_1.default.sendNotification(`Parabéns ${nome}!`, "Você está ativo e pode aproveitar todos os serviços do APP", devices);
+                });
+            }
             (0, response_1.default)(res).success();
         });
     }

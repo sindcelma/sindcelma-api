@@ -4,8 +4,9 @@ import { join } from 'path'
 
 const serviceAccount = JSON.parse(fs.readFileSync(join(__dirname, '../../firebase-key.json')).toString());
 
-firebase.initializeApp({
-    credential: firebase.credential.cert(serviceAccount)
+const app = firebase.initializeApp({
+    credential: firebase.credential.cert(serviceAccount),
+    projectId:"sindcelma-app-1f97d"
 });
 
 export default {
@@ -15,10 +16,15 @@ export default {
             socio_id,
             sorteio_id
         })
-    },
+    }, 
 
-    sendNotification: () => {
-
+    sendNotification: (title:string, message:string, devices:string[]) => {
+        firebase.messaging(app).sendToDevice(devices, {
+            notification:{
+                title:title,
+                body:message,
+            },
+        })
     }
 
 }

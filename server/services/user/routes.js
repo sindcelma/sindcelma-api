@@ -38,6 +38,7 @@ exports.default = () => {
     router.post('/socios/listar', SocioManager_1.default.listar);
     router.post('/socios/mudar_status', SocioManager_1.default.mudar_status);
     router.post('/socios/get_socio_por_login', SocioManager_1.default.get_socio_by_login);
+    router.post('/socios/get_socio_por_id', SocioManager_1.default.get_socio_por_id);
     router.post('/socios/get_dados_profissionais', SocioManager_1.default.get_dados_profissionais);
     router.post('/socios/get_dados_pessoais', SocioManager_1.default.get_dados_pessoais);
     router.post('/socios/update_email', SocioManager_1.default.update_email);

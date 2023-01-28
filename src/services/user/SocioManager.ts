@@ -8,6 +8,7 @@ import crypto from 'crypto'
 
 import { renameSync } from 'fs';
 import { join } from 'path';
+import firebase from "../../lib/firebase";
 
 class SocioManager {
 
@@ -1183,6 +1184,32 @@ class SocioManager {
             UPDATE socios SET status = ? WHERE slug = ?
         `, [status, req.body.slug], err => {
             if(err) return response(res).error(500, 'Internal Error')
+
+            if(status == 3){
+                conn.query(`
+                    SELECT 
+                          socios.nome,
+                          user_devices.code
+                    FROM  socios 
+                     JOIN user         ON user.socio_id = socios.id 
+                     JOIN user_devices ON user.id = user_devices.user_id 
+                    WHERE socios.slug = ? AND NOT user_devices.code IS null
+                `, [req.body.slug], (err2, result) => {
+                    
+                    if(err2) return;
+                    
+                    const nome = result[0].nome
+                    let devices:string[] = []
+                    
+                    for (let i = 0; i < result.length; i++)
+                        devices.push(result[i].code)
+                    
+                    firebase.sendNotification(`Parabéns ${nome}!`, "Você está ativo e pode aproveitar todos os serviços do APP", devices)
+                
+                })
+
+            }
+
             response(res).success()
         })
         

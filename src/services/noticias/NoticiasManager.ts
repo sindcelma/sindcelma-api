@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 import assertion from '../../lib/assertion'
 import response from '../../lib/response'
 import mysqli from '../../lib/mysqli'
+import firebase from '../../lib/firebase'
 
 class NoticiasManager {
 
@@ -16,19 +17,35 @@ class NoticiasManager {
         }
 
         const titulo = req.body.titulo
+        const subtt  = req.body.subtitulo
         const imagem = req.body.imagem 
         const text   = req.body.text
 
         if(!titulo || !imagem || !text)
             return response(res).error(400, 'Bad Request')
 
-        mysqli().query(`
+        const conn = mysqli()
+
+        conn.query(`
             INSERT INTO 
             noticias (titulo, imagem, subtitulo, text, data_created) 
-            VALUES (?,?,?, now())`,
-            [titulo, imagem, text], (err, result) => {
+            VALUES (?,?,?,?, now())`,
+            [titulo, imagem, subtt, text], (err, result) => {
+                
                 if(err) return response(res).error(500, 'Server Error')
-                response(res).success(result.insertId)
+
+                conn.query("SELECT code FROM user_devices WHERE NOT code IS null", (err2, result2) => {
+                    
+                    if(!err2){
+                        let codes:string[] = []
+                        for (let i = 0; i < result2.length; i++)
+                            codes.push(result2[i].code)
+                        firebase.sendNotification("Noticias", titulo, codes)
+                    }
+    
+                    response(res).success(result.insertId)
+                })
+                
             }
         )
 
