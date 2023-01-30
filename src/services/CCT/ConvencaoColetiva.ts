@@ -88,13 +88,20 @@ class ConvencaoColetiva {
             return response(res).error(401, 'Unauthorized')
         }
 
-        mysqli().query(`
+
+        const conn = mysqli()
+
+        conn.query(`
             SELECT item, imagem, resumo, texto
               FROM cct_item
              WHERE id = ?
         `, [item_id], (err, result) => {
 
             if(err) return response(res).error(500, 'server error')
+            if(result.length == 0) return response(res).error(404, 'not found')
+
+            conn.query(`INSERT INTO cct_stats (cct_item_id, data) VALUES (?,now())`, [item_id])
+
             response(res).success(result)
 
         })
@@ -194,7 +201,8 @@ class ConvencaoColetiva {
             SELECT 
                 id,
                 titulo
-            FROM cct 
+            FROM  cct 
+            WHERE publico = 1
             ORDER BY id DESC LIMIT 1
         `, (err, result) => {
             if(err) return response(res).error(500, err)

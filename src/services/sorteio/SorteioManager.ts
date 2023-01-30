@@ -7,6 +7,129 @@ import firebase from '../../lib/firebase'
 
 class SorteioManager {
 
+    public static changeStatus(req:Request, res:Response){
+
+        try {
+            assertion()
+            .isAdmin(req.user)
+            .assert()
+        } catch(e){
+            return response(res).error(401, 'Unauthorized')
+        }
+
+        const status     = Number(req.body.status)
+        const sorteio_id = Number(req.body.sorteio_id)
+        
+        if(!sorteio_id) return response(res).error(400, 'Bad request')
+
+        const conn = mysqli();
+        conn.query(`
+            UPDATE sorteios 
+            SET ativo = ?
+            WHERE id = ?
+        `, [status, sorteio_id], err => {
+            if(err) return response(res).error(500, 'Server error')
+
+            if(status == 1){
+                let quryDevices = `
+                    SELECT 
+                            user_devices.code
+                    FROM  socios 
+                    JOIN  user         ON user.socio_id = socios.id 
+                    JOIN  user_devices ON user.id = user_devices.user_id 
+                    WHERE NOT user_devices.code IS null
+                `;
+
+                conn.query(quryDevices, (err2, result2) => {
+
+                    if(err2) return console.log(err2);
+
+                    let devices:string[] = []                    
+                    for (let i = 0; i < result2.length; i++)
+                        devices.push(result2[i].code)
+
+                    firebase.sendNotification(`SORTEIO ATIVO!`, "Inscreva-se! Você pode ser o próximo ganhador!", devices)
+                
+                })
+            }
+
+            response(res).success()
+        })
+        
+    }
+
+    public static list(req:Request, res:Response){
+
+        try {
+            assertion()
+            .isAdmin(req.user)
+            .assert()
+        } catch(e){
+            return response(res).error(401, 'Unauthorized')
+        }
+
+        const conn = mysqli();
+        
+        conn.query(`
+            SELECT 
+                sorteios.id as sorteio_id,
+                sorteios.titulo,
+                sorteios.premios,
+                sorteios.qt_vencedores,
+                sorteios.data_sorteio,
+                sorteios.ativo,
+                sp.status_sorteio
+            FROM   sorteios
+            LEFT JOIN(
+                SELECT 
+                    sorteio_participantes.sorteio_id,
+                    (CASE 
+                        WHEN sorteio_participantes.id IS NULL THEN 0
+                        WHEN sorteio_participantes.vencedor > 0 THEN 2
+                        ELSE 1
+                    END)  as status_sorteio
+                FROM   sorteio_participantes 
+                JOIN   socios ON sorteio_participantes.socio_id = socios.id  
+                JOIN   user   ON user.socio_id = socios.id
+                
+            ) as sp ON sp.sorteio_id = sorteios.id 
+            ORDER BY 
+                sorteios.id DESC,
+                (
+                    CASE 
+                        WHEN sorteios.ativo = 1
+                            THEN sorteios.data_sorteio
+                    END
+                ) ASC,
+                (
+                    CASE 
+                        WHEN sorteios.ativo = 2
+                            THEN sorteios.data_sorteio
+                    END
+                ) DESC
+
+            ;
+
+        `, (err, result) => {
+
+            if(err) return response(res).error(500, err)
+            if(result.length == 0) return response(res).success([]);
+
+            let sorteios = [];
+            
+            for (let i = 0; i < result.length; i++) {
+                const data       = dateFormat(new Date(result[i].data_sorteio), 'dd-MM-yyyy')            
+                const sorteio    = result[i];
+                sorteio.data     = data
+                sorteios.push(sorteio)
+            }
+            
+            response(res).success(sorteios);
+            
+        })
+        
+    }
+
     public static sortear(req:Request, res:Response){
         
         if(!req.body.sorteio_id) 
@@ -37,9 +160,11 @@ class SorteioManager {
         [Number(req.body.sorteio_id)], (err, result) => {
             
             if(err) return response(res).error(500, 'Server Error')
-            if(result.length == 0) return response(res).error(404, 'Not Found')
+            if(result.length == 0) return response(res).error(404, 'Não é possível realizar o sorteio pois não há participantes suficientes')
             
             let qt_vencedores = Number(result[0].qt_vencedores)
+            if(result.length < qt_vencedores) return response(res).error(404, 'Não é possível realizar o sorteio pois não há participantes suficientes')
+
             var vencedores = []
 
             while(qt_vencedores > vencedores.length){
@@ -108,7 +233,7 @@ class SorteioManager {
               data_so = dateFormat(req.body.data_so, 'yyyy-MM-dd H:i:s'),
               data_in = dateFormat(req.body.data_in, 'yyyy-MM-dd H:i:s')
         
-        if(new Date(data_so.toString()) > new Date(data_in.toString()))
+        if((new Date(data_so.toString())).getTime() < (new Date(data_in.toString())).getTime())
             return response(res).error(400, 'Bad Request - A data de inscrição não pode ser maior que a data do sorteio')
         
 
@@ -139,9 +264,9 @@ class SorteioManager {
               data_so   = dateFormat(req.body.data_so, 'yyyy-MM-dd H:i:s'),
               data_in   = dateFormat(req.body.data_in, 'yyyy-MM-dd H:i:s')
     
-        if(new Date(data_so.toString()) > new Date(data_in.toString()))
+        if((new Date(data_so.toString())).getTime() < (new Date(data_in.toString())).getTime())
             return response(res).error(400, 'Bad Request - A data de inscrição não pode ser maior que a data do sorteio')
-  
+          
         mysqli().query(`
             UPDATE sorteios SET 
             titulo = ?,

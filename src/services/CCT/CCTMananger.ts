@@ -123,7 +123,7 @@ class CCTManager {
                 item = ?,
                 resumo = ?,
                 texto = ?
-            WHERE id = ?
+            WHERE id = ? 
         `, [imagem, item, resumo, texto, cct_item_id], err => {
             if(err) return response(res).error(500, err)
             response(res).success()
