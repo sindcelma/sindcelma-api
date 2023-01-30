@@ -25,6 +25,7 @@ class CCTManager {
             if(err) return response(res).error(500, err)
             response(res).success(result)
         })
+        
     }
 
     public static add_cct(req:Request, res:Response){

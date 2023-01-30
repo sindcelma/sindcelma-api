@@ -64,6 +64,8 @@ class SorteioService {
         const conn = (0, mysqli_1.default)();
         conn.query(`
           SELECT 
+                    socios.id as socio_id,
+                    socios.slug,
                     socios.nome,
                     socios.sobrenome,
                     sorteio_participantes.vencedor
@@ -111,6 +113,7 @@ class SorteioService {
                 sorteios.premios,
                 sorteios.qt_vencedores,
                 sorteios.data_sorteio,
+                sorteios.ativo,
                 sp.status_sorteio
             FROM   sorteios
             LEFT JOIN(
@@ -127,8 +130,9 @@ class SorteioService {
                 WHERE  user.id = ?
                 
             ) as sp ON sp.sorteio_id = sorteios.id 
+            WHERE sorteios.ativo > 0
             ORDER BY 
-                sorteios.ativo DESC,
+                sorteios.id DESC,
                 (
                     CASE 
                         WHEN sorteios.ativo = 1
@@ -137,7 +141,7 @@ class SorteioService {
                 ) ASC,
                 (
                     CASE 
-                        WHEN sorteios.ativo = 0
+                        WHEN sorteios.ativo = 2
                             THEN sorteios.data_sorteio
                     END
                 ) DESC
@@ -167,11 +171,13 @@ class SorteioService {
         const conn = (0, mysqli_1.default)();
         conn.query(`
           SELECT 
+                    sorteios.ativo,
                     sorteios.id,
                     sorteios.titulo,
                     sorteios.premios,
                     sorteios.qt_vencedores,
-                    sorteios.data_sorteio
+                    sorteios.data_sorteio,
+                    sorteios.data_inscricao
 
              FROM   sorteios 
             WHERE   id = ?
@@ -182,7 +188,11 @@ class SorteioService {
             if (result.length == 0)
                 return (0, response_1.default)(res).error(404, 'not found');
             const data = (0, data_1.dateFormat)(new Date(result[0].data_sorteio), 'yyyy-MM-dd H:i:s');
+            const data_inp = (0, data_1.dateFormat)(new Date(result[0].data_sorteio), 'yyyy-MM-dd');
+            const data_insc = (0, data_1.dateFormat)(new Date(result[0].data_inscricao), 'yyyy-MM-dd');
             result[0]['data'] = data;
+            result[0]['data_br'] = data_inp;
+            result[0]['data_insc'] = data_insc;
             (0, response_1.default)(res).success(result);
         });
     }

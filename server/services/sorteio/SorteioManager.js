@@ -9,6 +9,85 @@ const response_1 = __importDefault(require("../../lib/response"));
 const data_1 = require("../../lib/data");
 const firebase_1 = __importDefault(require("../../lib/firebase"));
 class SorteioManager {
+    static changeStatus(req, res) {
+        try {
+            (0, assertion_1.default)()
+                .isAdmin(req.user)
+                .assert();
+        }
+        catch (e) {
+            return (0, response_1.default)(res).error(401, 'Unauthorized');
+        }
+        const status = Number(req.body.status);
+        const sorteio_id = Number(req.body.sorteio_id);
+        if (!sorteio_id)
+            return (0, response_1.default)(res).error(400, 'Bad request');
+        const conn = (0, mysqli_1.default)();
+        conn.query(`
+            UPDATE sorteios 
+            SET ativo = ?
+            WHERE id = ?
+        `, [status, sorteio_id], err => {
+            if (err)
+                return (0, response_1.default)(res).error(500, 'Server error');
+            if (status == 1) {
+                let quryDevices = `
+                    SELECT 
+                            user_devices.code
+                    FROM  socios 
+                    JOIN  user         ON user.socio_id = socios.id 
+                    JOIN  user_devices ON user.id = user_devices.user_id 
+                    WHERE NOT user_devices.code IS null
+                `;
+                conn.query(quryDevices, (err2, result2) => {
+                    if (err2)
+                        return console.log(err2);
+                    let devices = [];
+                    for (let i = 0; i < result2.length; i++)
+                        devices.push(result2[i].code);
+                    firebase_1.default.sendNotification(`SORTEIO ATIVO!`, "Inscreva-se! Você pode ser o próximo ganhador!", devices);
+                });
+            }
+            (0, response_1.default)(res).success();
+        });
+    }
+    static list(req, res) {
+        try {
+            (0, assertion_1.default)()
+                .isAdmin(req.user)
+                .assert();
+        }
+        catch (e) {
+            return (0, response_1.default)(res).error(401, 'Unauthorized');
+        }
+        const conn = (0, mysqli_1.default)();
+        conn.query(`
+            SELECT 
+                sorteios.id as sorteio_id,
+                sorteios.titulo,
+                sorteios.premios,
+                sorteios.qt_vencedores,
+                sorteios.data_sorteio,
+                sorteios.ativo
+            FROM   sorteios
+            ORDER BY 
+                sorteios.id DESC
+
+        `, (err, result) => {
+            if (err)
+                return (0, response_1.default)(res).error(500, err);
+            if (result.length == 0)
+                return (0, response_1.default)(res).success([]);
+            let sorteios = [];
+            for (let i = 0; i < result.length; i++) {
+                const data = (0, data_1.dateFormat)(new Date(result[i].data_sorteio), 'dd-MM-yyyy');
+                const sorteio = result[i];
+                sorteio.data = data;
+                sorteios.push(sorteio);
+            }
+            (0, response_1.default)(res).success(sorteios);
+        });
+    }
     static sortear(req, res) {
         if (!req.body.sorteio_id)
             return (0, response_1.default)(res).error(400, 'Bad Request');
@@ -35,8 +114,10 @@ class SorteioManager {
             if (err)
                 return (0, response_1.default)(res).error(500, 'Server Error');
             if (result.length == 0)
-                return (0, response_1.default)(res).error(404, 'Not Found');
+                return (0, response_1.default)(res).error(404, 'Não é possível realizar o sorteio pois não há participantes suficientes');
             let qt_vencedores = Number(result[0].qt_vencedores);
+            if (result.length < qt_vencedores)
+                return (0, response_1.default)(res).error(404, 'Não é possível realizar o sorteio pois não há participantes suficientes');
             var vencedores = [];
             while (qt_vencedores > vencedores.length) {
                 let i = Math.floor(Math.random() * result.length);
@@ -85,7 +166,7 @@ class SorteioManager {
             return (0, response_1.default)(res).error(401, 'Unauthorized');
         }
         const titulo = req.body.titulo, premios = req.body.premios, qt_venc = Number(req.body.qt_venc), data_so = (0, data_1.dateFormat)(req.body.data_so, 'yyyy-MM-dd H:i:s'), data_in = (0, data_1.dateFormat)(req.body.data_in, 'yyyy-MM-dd H:i:s');
-        if (new Date(data_so.toString()) > new Date(data_in.toString()))
+        if ((new Date(data_so.toString())).getTime() < (new Date(data_in.toString())).getTime())
             return (0, response_1.default)(res).error(400, 'Bad Request - A data de inscrição não pode ser maior que a data do sorteio');
         (0, mysqli_1.default)().query(`
             INSERT INTO sorteios (titulo, premios, qt_vencedores, data_sorteio, data_inscricao, ativo)
@@ -106,7 +187,7 @@ class SorteioManager {
             return (0, response_1.default)(res).error(401, 'Unauthorized');
         }
         const titulo = req.body.titulo, premios = req.body.premios, soteio_id = Number(req.body.soteio_id), qt_venc = Number(req.body.qt_venc), data_so = (0, data_1.dateFormat)(req.body.data_so, 'yyyy-MM-dd H:i:s'), data_in = (0, data_1.dateFormat)(req.body.data_in, 'yyyy-MM-dd H:i:s');
-        if (new Date(data_so.toString()) > new Date(data_in.toString()))
+        if ((new Date(data_so.toString())).getTime() < (new Date(data_in.toString())).getTime())
             return (0, response_1.default)(res).error(400, 'Bad Request - A data de inscrição não pode ser maior que a data do sorteio');
         (0, mysqli_1.default)().query(`
             UPDATE sorteios SET 

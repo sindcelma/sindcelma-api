@@ -77,38 +77,10 @@ class SorteioManager {
                 sorteios.premios,
                 sorteios.qt_vencedores,
                 sorteios.data_sorteio,
-                sorteios.ativo,
-                sp.status_sorteio
+                sorteios.ativo
             FROM   sorteios
-            LEFT JOIN(
-                SELECT 
-                    sorteio_participantes.sorteio_id,
-                    (CASE 
-                        WHEN sorteio_participantes.id IS NULL THEN 0
-                        WHEN sorteio_participantes.vencedor > 0 THEN 2
-                        ELSE 1
-                    END)  as status_sorteio
-                FROM   sorteio_participantes 
-                JOIN   socios ON sorteio_participantes.socio_id = socios.id  
-                JOIN   user   ON user.socio_id = socios.id
-                
-            ) as sp ON sp.sorteio_id = sorteios.id 
             ORDER BY 
-                sorteios.id DESC,
-                (
-                    CASE 
-                        WHEN sorteios.ativo = 1
-                            THEN sorteios.data_sorteio
-                    END
-                ) ASC,
-                (
-                    CASE 
-                        WHEN sorteios.ativo = 2
-                            THEN sorteios.data_sorteio
-                    END
-                ) DESC
-
-            ;
+                sorteios.id DESC
 
         `, (err, result) => {
 

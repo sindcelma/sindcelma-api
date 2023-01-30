@@ -114,7 +114,7 @@ class CCTManager {
                 item = ?,
                 resumo = ?,
                 texto = ?
-            WHERE id = ?
+            WHERE id = ? 
         `, [imagem, item, resumo, texto, cct_item_id], err => {
             if (err)
                 return (0, response_1.default)(res).error(500, err);

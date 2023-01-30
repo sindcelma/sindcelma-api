@@ -71,13 +71,17 @@ class ConvencaoColetiva {
         catch (error) {
             return (0, response_1.default)(res).error(401, 'Unauthorized');
         }
-        (0, mysqli_1.default)().query(`
+        const conn = (0, mysqli_1.default)();
+        conn.query(`
             SELECT item, imagem, resumo, texto
               FROM cct_item
              WHERE id = ?
         `, [item_id], (err, result) => {
             if (err)
                 return (0, response_1.default)(res).error(500, 'server error');
+            if (result.length == 0)
+                return (0, response_1.default)(res).error(404, 'not found');
+            conn.query(`INSERT INTO cct_stats (cct_item_id, data) VALUES (?,now())`, [item_id]);
             (0, response_1.default)(res).success(result);
         });
     }
@@ -162,7 +166,8 @@ class ConvencaoColetiva {
             SELECT 
                 id,
                 titulo
-            FROM cct 
+            FROM  cct 
+            WHERE publico = 1
             ORDER BY id DESC LIMIT 1
         `, (err, result) => {
             if (err)
