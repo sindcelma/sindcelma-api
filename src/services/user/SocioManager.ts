@@ -649,12 +649,15 @@ class SocioManager {
     
     public static async cadastrar_full_socio(req:Request, res:Response){
 
+        const pass = req.body.senha.trim()
+        if(pass == "") return response(res).error(400, 'Bad Request 1') 
+        
         const empresa_id = 1
         const nome       = req.body.nome 
         const sobrenome  = req.body.sobrenome 
         const cpf        = Socio.transformCpf(req.body.cpf);
         const email      = req.body.email 
-        const senha      = await hashPass(req.body.senha)
+        const senha      = await hashPass(pass)
         const rg         = req.body.rg
         const sexo       = req.body.sexo[0]
         const civil      = req.body.estado_civil
@@ -673,63 +676,73 @@ class SocioManager {
         const slug = generateSlug(cpf + String(new Date().getMilliseconds())+String(Math.random()))
         const salt = generateSlug(slug+ String(new Date().getMilliseconds())+String(Math.random()))
 
-        conn.query(`
-            INSERT INTO socios (nome, sobrenome, cpf, slug, salt, status)
-            VALUES (?,?,?,?,?,0)
-        `,[nome, sobrenome, cpf, slug, salt], (err, result) => {
+        conn.query('SELECT id FROM user WHERE email = ?', [email], (err, resultemail) => {
             
-            if(err) {
-                return response(res).error(500, "Já existe um sócio cadastrado com este documento")
-            }
-
-            const socio_id = result.insertId
-
+            if(err) return response(res).error(500, "Já existe um sócio cadastrado com este documento")
+            if(resultemail.length > 0) return response(res).error(400, 'Este e-mail já está em uso');
+            
             conn.query(`
-                INSERT INTO user (email, senha, socio_id) VALUES (?,?,?)
-            `, [email, senha, socio_id], (err, result2) => {
+                INSERT INTO socios (nome, sobrenome, cpf, slug, salt, status)
+                VALUES (?,?,?,?,?,0)
+            `,[nome, sobrenome, cpf, slug, salt], (err, result) => {
                 
-                const user_id = result2.insertId
-
                 if(err) {
-                    return response(res).error(500, 'Este e-mail já está cadastrado')
+                    return response(res).error(500, "Já existe um sócio cadastrado com este documento")
                 }
-                
-                conn.query(`
-                    INSERT INTO socios_dados_profissionais
-                    (empresa_id, socio_id, cargo, data_admissao, num_matricula)
-                    VALUES (?,?,?,?,?)
-                `,[empresa_id, socio_id, cargo, admissao, ''])
+
+                const socio_id = result.insertId
 
                 conn.query(`
-                    INSERT INTO socios_dados_pessoais
-                    (socio_id, rg, sexo, estado_civil, data_nascimento, telefone)
-                    VALUES (?,?,?,?,?,?)
-                `,[socio_id, rg, sexo, civil, nascimento, telefone], err2 => {
-                    if(err2){
-                        return response(res).error(500, err2.message)
+                    INSERT INTO user (email, senha, socio_id) VALUES (?,?,?)
+                `, [email, senha, socio_id], (err) => {
+                    
+                    if(err) return response(res).error(400, 'Este e-mail já está em uso');
+
+                    if(err) {
+                        return response(res).error(500, 'Este e-mail já está cadastrado')
                     }
                     
-                    conn.query("UPDATE socios SET status = 1 WHERE id = ?", [socio_id], 
-                        (err4)=> {
+                    conn.query(`
+                        INSERT INTO socios_dados_profissionais
+                        (empresa_id, socio_id, cargo, data_admissao, num_matricula)
+                        VALUES (?,?,?,?,?)
+                    `,[empresa_id, socio_id, cargo, admissao, ''])
 
-                            if(err4){
-                                return response(res).error(500, err4.message)
-                            }
-                            
-                            response(res).success({
-                                cpf:cpf,
-                                slug:slug,
-                                salt:salt
-                            })
+                    conn.query(`
+                        INSERT INTO socios_dados_pessoais
+                        (socio_id, rg, sexo, estado_civil, data_nascimento, telefone)
+                        VALUES (?,?,?,?,?,?)
+                    `,[socio_id, rg, sexo, civil, nascimento, telefone], err2 => {
+                        if(err2){
+                            return response(res).error(500, err2.message)
+                        }
+                        
+                        conn.query("UPDATE socios SET status = 1 WHERE id = ?", [socio_id], 
+                            (err4)=> {
 
-                        } 
-                    )
-                    
+                                if(err4){
+                                    return response(res).error(500, err4.message)
+                                }
+                                
+                                response(res).success({
+                                    cpf:cpf,
+                                    slug:slug,
+                                    salt:salt
+                                })
+
+                            } 
+                        )
+                        
+                    })
+
                 })
 
             })
 
+
         })
+
+        
     
     }
 
@@ -762,7 +775,7 @@ class SocioManager {
             let data:any = result[0]
 
             if(data.status > 0){
-                return response(res).error(401, 'Unauthorized')
+                return response(res).error(400, 'Este documento já está em uso')
             } else {
                 conn.query("DELETE FROM socios WHERE id = ?", [data.id], () => {})
                 return response(res).success()

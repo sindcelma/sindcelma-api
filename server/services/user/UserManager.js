@@ -100,7 +100,7 @@ class UserManager {
                     conn.query("DELETE FROM user WHERE email = ?", [email]);
                     return (0, response_1.default)(res).success(email);
                 }
-                return (0, response_1.default)(res).error(401, 'Este email já está em uso');
+                return (0, response_1.default)(res).error(400, 'Este email já está em uso');
             }
             return (0, response_1.default)(res).success(email);
         });

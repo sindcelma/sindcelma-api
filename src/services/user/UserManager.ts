@@ -118,7 +118,7 @@ class UserManager {
                     conn.query("DELETE FROM user WHERE email = ?", [email])
                     return response(res).success(email)
                 }
-                return response(res).error(401, 'Este email já está em uso')
+                return response(res).error(400, 'Este email já está em uso')
             }
 
             return response(res).success(email)
