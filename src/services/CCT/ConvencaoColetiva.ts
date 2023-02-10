@@ -186,15 +186,6 @@ class ConvencaoColetiva {
 
     public static get_last_cct(req:Request, res:Response){
 
-        try {
-            assertion()
-            .isAdmin(req.user)
-            .orIsSocio(req.user)
-            .assert()
-        } catch (error) {
-            return response(res).error(401, 'Unauthorized')
-        }
-
         const conn = mysqli()
 
         conn.query(`
@@ -212,15 +203,6 @@ class ConvencaoColetiva {
     }
     
     public static list(req:Request, res:Response){
-
-        try {
-            assertion()
-            .isAdmin(req.user)
-            .orIsSocio(req.user)
-            .assert()
-        } catch (error) {
-            return response(res).error(401, 'Unauthorized')
-        }
 
         const conn = mysqli()
 

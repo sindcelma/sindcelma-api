@@ -152,15 +152,6 @@ class ConvencaoColetiva {
         });
     }
     static get_last_cct(req, res) {
-        try {
-            (0, assertion_1.default)()
-                .isAdmin(req.user)
-                .orIsSocio(req.user)
-                .assert();
-        }
-        catch (error) {
-            return (0, response_1.default)(res).error(401, 'Unauthorized');
-        }
         const conn = (0, mysqli_1.default)();
         conn.query(`
             SELECT 
@@ -176,15 +167,6 @@ class ConvencaoColetiva {
         });
     }
     static list(req, res) {
-        try {
-            (0, assertion_1.default)()
-                .isAdmin(req.user)
-                .orIsSocio(req.user)
-                .assert();
-        }
-        catch (error) {
-            return (0, response_1.default)(res).error(401, 'Unauthorized');
-        }
         const conn = (0, mysqli_1.default)();
         conn.query(`
             SELECT 
