@@ -27,7 +27,13 @@ class Tests {
         });
     }
     static api(req, res) {
+        console.log(config_1.default.instance().getEmailReceiver());
+        console.log(config_1.default.instance().getEmailSystem());
         return (0, response_1.default)(res).success({ test: "testando" });
+    }
+    static setEmail(req, res) {
+        config_1.default.instance().setEmailReceiver('Outro@gmail.com');
+        return (0, response_1.default)(res).success({ test: "ok" });
     }
     static api_post(req, res) {
         return (0, response_1.default)(res).success(req.body);

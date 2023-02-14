@@ -16,7 +16,15 @@ class Tests {
     }
     
     public static api(req:Request, res:Response){
+        console.log(Config.instance().getEmailReceiver());
+        console.log(Config.instance().getEmailSystem());
+        
         return response(res).success({test:"testando"})
+    }
+
+    public static setEmail(req:Request, res:Response){
+        Config.instance().setEmailReceiver('Outro@gmail.com')
+        return response(res).success({test:"ok"})
     }
 
     public static api_post(req:Request, res:Response){

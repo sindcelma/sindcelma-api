@@ -17,6 +17,9 @@ class Config {
     private config_data:conf;
     private pair:string;
     private awsconfig;
+    private email_system:string;
+    private email_receiver:string;
+
     public static path = process.env.PATH || process.cwd();
 
     private constructor(){
@@ -56,6 +59,22 @@ class Config {
             Config.config = new Config()
         }
         return Config.config;
+    }
+
+    public setEmailReceiver(email:string){
+        this.email_receiver = email
+    }
+
+    public getEmailReceiver(){
+        return this.email_receiver
+    }
+
+    public setEmailSystem(email:string){
+        this.email_system = email
+    }
+
+    public getEmailSystem(){
+        return this.email_system
     }
 
     public info(){

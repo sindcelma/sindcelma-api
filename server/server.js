@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const path_1 = require("path");
 const cors_1 = __importDefault(require("cors"));
 const express_1 = __importDefault(require("express"));
+const mysqli_1 = __importDefault(require("./lib/mysqli"));
 const config_1 = __importDefault(require("./lib/config"));
 const routes_1 = __importDefault(require("./routes"));
 const UserFactory_1 = require("./model/UserFactory");
@@ -13,6 +14,16 @@ const SocioManager_1 = __importDefault(require("./services/user/SocioManager"));
 const auto_config_1 = __importDefault(require("./auto_config"));
 const app = (0, express_1.default)();
 const config = config_1.default.instance();
+(0, mysqli_1.default)().query(`SELECT * FROM config WHERE id = 1`, (err, result) => {
+    if (err)
+        return;
+    if (result.length == 0) {
+        console.log("aqui");
+        return;
+    }
+    config.setEmailReceiver(result[0].email_receiver);
+    config.setEmailSystem(result[0].email_system);
+});
 const PORT = config.type() == "production" ? process.env.PORT || 80 : config.json().port;
 const cors_options = {
     origin: "*"

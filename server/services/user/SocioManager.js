@@ -21,6 +21,8 @@ const crypto_1 = __importDefault(require("crypto"));
 const fs_1 = require("fs");
 const path_1 = require("path");
 const firebase_1 = __importDefault(require("../../lib/firebase"));
+const aws_1 = __importDefault(require("../../lib/aws"));
+const config_1 = __importDefault(require("../../lib/config"));
 class SocioManager {
     static save_image(req, res) {
         const slug = req.body.slug;
@@ -506,7 +508,8 @@ class SocioManager {
             conn.query(`
             SELECT 
                   socios.id,
-                  socios.status
+                  socios.status,
+                  socios.nome
             FROM  socios
             JOIN  user ON user.socio_id = socios.id
             WHERE user.id = ?
@@ -517,6 +520,7 @@ class SocioManager {
                     return (0, response_1.default)(res).error();
                 if (result[0].status == 1) {
                     const socio_id = result[0].id;
+                    const socio_nm = result[0].nome;
                     conn.query(`
                     SELECT 
                           id
@@ -530,6 +534,19 @@ class SocioManager {
                         conn.query("UPDATE socios SET status = 2 WHERE id = ? ", [socio_id], err => {
                             if (err)
                                 return (0, response_1.default)(res).error(500, 'Internal Error 3');
+                            new aws_1.default().ses()
+                                .config({
+                                de: config_1.default.instance().getEmailSystem(),
+                                para: config_1.default.instance().getEmailReceiver(),
+                                assunto: `O Sócio ${socio_nm} aguarda aprovação`,
+                                data: {}
+                            })
+                                .setContent(`
+                            <h3>O Sócio ${socio_nm} enviou as imagens e aguarda sua aprovação para utilizar os serviços do aplicativo Sindcelma</h3>
+
+                            <p><a href="http://adminsindcelma.com.br">Abra o sistema</a> clique em sócios e mude de 'sócios ativos' para 'novos sócios'.</p>
+                        `)
+                                .send();
                             (0, response_1.default)(res).success();
                         });
                     });
@@ -587,11 +604,6 @@ class SocioManager {
                             return (0, response_1.default)(res).error(500, 'Este e-mail já está cadastrado');
                         }
                         conn.query(`
-                        INSERT INTO socios_dados_profissionais
-                        (empresa_id, socio_id, cargo, data_admissao, num_matricula)
-                        VALUES (?,?,?,?,?)
-                    `, [empresa_id, socio_id, cargo, admissao, '']);
-                        conn.query(`
                         INSERT INTO socios_dados_pessoais
                         (socio_id, rg, sexo, estado_civil, data_nascimento, telefone)
                         VALUES (?,?,?,?,?,?)
@@ -599,6 +611,11 @@ class SocioManager {
                             if (err2) {
                                 return (0, response_1.default)(res).error(500, err2.message);
                             }
+                            conn.query(`
+                            INSERT INTO socios_dados_profissionais
+                            (empresa_id, socio_id, cargo, data_admissao, num_matricula)
+                            VALUES (?,?,?,?,?)
+                        `, [empresa_id, socio_id, cargo, admissao, '']);
                             conn.query("UPDATE socios SET status = 1 WHERE id = ?", [socio_id], (err4) => {
                                 if (err4) {
                                     return (0, response_1.default)(res).error(500, err4.message);

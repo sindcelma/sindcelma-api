@@ -9,6 +9,7 @@ import { getUser, getUserByRememberme } from '../../model/UserFactory'
 import AwsService from "../../lib/aws";
 import fs from 'fs'
 import { join } from "path";
+import Config from '../../lib/config';
 
 interface msg { session:String, user:User, remembermetk?:any }
 
@@ -223,7 +224,7 @@ class AuthService {
                     
                     new AwsService().ses()
                     .config({
-                        de:"atendimento@sindcelmatecnologia.com.br",
+                        de:Config.instance().getEmailSystem(),
                         para:resUser.email,
                         assunto:"Recuperação de senha",
                         data:{

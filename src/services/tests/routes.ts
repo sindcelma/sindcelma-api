@@ -7,15 +7,21 @@ import FirebaseTest from './FirebaseTest'
 const router = Router()
 
 export default () => {
+    
+    if(Config.instance().type() == 'developement'){
 
-    //router.post('/gerarSessao', SessionTest.genSessionTest)
-    router.post('/pair', Tests.pair)
-    router.get('/saveWinner', FirebaseTest.saveWinner)
-    router.get('/sendEmail', EmailTest.sendEmail)
-    router.get('/checarSessao', SessionTest.checarTipoDeSessao)
-    router.get('/api/',Tests.api)
-    router.post('/api/',Tests.api_post)
-    router.get('/401/',Tests.logout)
+        //router.post('/gerarSessao', SessionTest.genSessionTest)
+        router.post('/pair', Tests.pair)
+        router.get('/saveWinner', FirebaseTest.saveWinner)
+        router.get('/sendEmail', EmailTest.sendEmail)
+        router.get('/checarSessao', SessionTest.checarTipoDeSessao)
+        router.get('/api/',Tests.api)
+        router.get('/set/',Tests.setEmail)
+        router.post('/api/',Tests.api_post)
+        router.get('/401/',Tests.logout)
+
+    }    
+    
     return router
 
 }

@@ -21,6 +21,7 @@ const UserFactory_1 = require("../../model/UserFactory");
 const aws_1 = __importDefault(require("../../lib/aws"));
 const fs_1 = __importDefault(require("fs"));
 const path_1 = require("path");
+const config_1 = __importDefault(require("../../lib/config"));
 class AuthService {
     static generate_temp_key(req, res) {
         const senha = req.body.senha;
@@ -179,7 +180,7 @@ class AuthService {
                 if (to == 'email') {
                     new aws_1.default().ses()
                         .config({
-                        de: "atendimento@sindcelmatecnologia.com.br",
+                        de: config_1.default.instance().getEmailSystem(),
                         para: resUser.email,
                         assunto: "Recuperação de senha",
                         data: {

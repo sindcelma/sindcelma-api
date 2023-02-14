@@ -31,6 +31,18 @@ class Config {
         }
         return Config.config;
     }
+    setEmailReceiver(email) {
+        this.email_receiver = email;
+    }
+    getEmailReceiver() {
+        return this.email_receiver;
+    }
+    setEmailSystem(email) {
+        this.email_system = email;
+    }
+    getEmailSystem() {
+        return this.email_system;
+    }
     info() {
         return this.config_data;
     }

@@ -9,6 +9,8 @@ const template_1 = __importDefault(require("./template"));
 class EmailSender {
     constructor(info) {
         this.apiversion = '2010-12-01';
+        this.template = "";
+        this.content = "";
         this.info = info;
     }
     config(config) {
@@ -23,11 +25,15 @@ class EmailSender {
         this.template = template;
         return this;
     }
+    setContent(content) {
+        this.content = content;
+        return this;
+    }
     send() {
-        let content = new template_1.default()
+        let content = this.template != "" ? new template_1.default()
             .setTemplate(this.template)
             .replace(this.data)
-            .content();
+            .content() : this.content;
         new aws_sdk_1.default.SES({
             accessKeyId: this.info.accessKeyId,
             secretAccessKey: this.info.secretAccessKey,

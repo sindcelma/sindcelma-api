@@ -1,6 +1,7 @@
 import { join } from 'path';
 import cors from 'cors';
-import express, { Express, Response, Request } from "express";
+import express, { Express } from "express";
+import mysqli from './lib/mysqli';
 import Config from "./lib/config"
 import routes from "./routes";
 import User from './model/User';
@@ -26,6 +27,17 @@ declare global{
 
 const app:Express = express()
 const config:Config = Config.instance()
+
+mysqli().query(`SELECT * FROM config WHERE id = 1`, (err, result) => {
+    if(err) return;
+    if(result.length == 0) {
+        console.log("aqui");
+        
+        return;
+    }
+    config.setEmailReceiver(result[0].email_receiver)
+    config.setEmailSystem(result[0].email_system)
+})
 
 const PORT = config.type() == "production" ? process.env.PORT || 80 : config.json().port;
 

@@ -17,7 +17,8 @@ class EmailSender {
 
     private data:{}
 
-    private template:string
+    private template:string = ""
+    private content:string = ""
 
     constructor(info:emailInfo){
         this.info = info
@@ -36,12 +37,17 @@ class EmailSender {
         return this;
     }
 
+    public setContent(content:string){
+        this.content = content
+        return this;
+    }
+
     public send(){
         
-        let content = new Template()
+        let content = this.template != "" ? new Template()
         .setTemplate(this.template)
         .replace(this.data)
-        .content()
+        .content() : this.content;
 
         new AWS.SES({
             accessKeyId:this.info.accessKeyId,
