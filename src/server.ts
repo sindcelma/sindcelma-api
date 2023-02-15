@@ -30,11 +30,7 @@ const config:Config = Config.instance()
 
 mysqli().query(`SELECT * FROM config WHERE id = 1`, (err, result) => {
     if(err) return;
-    if(result.length == 0) {
-        console.log("aqui");
-        
-        return;
-    }
+    if(result.length == 0) return;
     config.setEmailReceiver(result[0].email_receiver)
     config.setEmailSystem(result[0].email_system)
 })

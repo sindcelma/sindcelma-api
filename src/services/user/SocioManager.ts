@@ -15,6 +15,30 @@ import Config from '../../lib/config';
 class SocioManager {
 
 
+    public static set_diretor(req:Request, res:Response){
+
+        try {
+            assertion()
+            .isAdmin(req.user)
+            .assert()
+        } catch (error) {
+            return response(res).error(401, 'Unauthorized')
+        }
+
+        const diretor  = parseInt(req.body.diretor);
+        const socio_id = parseInt(req.body.socio_id);
+
+        if(![0,1].includes(diretor)) return response(res).error(400, 'bad request'); 
+
+        mysqli().query(`
+            UPDATE socios SET diretor = ? WHERE id = ?
+        `, [diretor, socio_id], err => {
+            if(err) return response(res).error(500, err)
+            response(res).success()
+        })
+
+    }
+
     public static save_image(req:Request, res:Response){
 
         const slug  = req.body.slug

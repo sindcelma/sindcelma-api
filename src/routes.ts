@@ -5,6 +5,7 @@ import tests_routes from './services/tests/routes'
 import files_routes from './services/files/routes'
 import sorteios_routes from './services/sorteio/routes'
 import noticias_routes from './services/noticias/routes'
+import comunicados_routes from './services/comunicados/routes'
 import Info from './services/Info'
 
 export default (app:Express) => {
@@ -16,6 +17,7 @@ export default (app:Express) => {
     app.use('/user', user_routes())
     app.use('/files', files_routes())
     app.use('/noticias', noticias_routes())
+    app.use('/comunicados', comunicados_routes())
     app.use('/', (req:Request, res:Response) => res.send("BAD REQUEST"))
 
 }
