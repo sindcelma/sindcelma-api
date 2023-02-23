@@ -10,7 +10,7 @@ class NoticiasManager {
         
         try {
             assertion()
-            .isAdmin(req.user)
+            .isAdmin(req.user, 'noticias')
             .assert()
         } catch (error) {
             return response(res).error(401, 'Unauthorized')
@@ -55,7 +55,7 @@ class NoticiasManager {
         
         try {
             assertion()
-            .isAdmin(req.user)
+            .isAdmin(req.user, 'noticias')
             .assert()
         } catch (error) {
             return response(res).error(401, 'Unauthorized')
@@ -90,7 +90,7 @@ class NoticiasManager {
 
         try {
             assertion()
-            .isAdmin(req.user)
+            .isAdmin(req.user, 'noticias')
             .assert()
         } catch (error) {
             return response(res).error(401, 'Unauthorized')

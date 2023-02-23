@@ -9,6 +9,14 @@ class Admin extends User_1.default {
         super("Admin", user);
         this.slug = "";
         this.nome = "";
+        this.master = false;
+        this.access = [];
+    }
+    setMaster(num) {
+        this.master = num == 1;
+    }
+    setAccess(access) {
+        this.access = access;
     }
     setSlug(slug) {
         this.slug = slug;
@@ -21,6 +29,12 @@ class Admin extends User_1.default {
     }
     getNome() {
         return this.nome;
+    }
+    hasAccess(service_slug) {
+        return this.access.includes(service_slug);
+    }
+    isMaster() {
+        return this.master;
     }
 }
 exports.default = Admin;

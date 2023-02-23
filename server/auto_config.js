@@ -31,9 +31,8 @@ function setAdminMaster() {
                     return false;
                 }
                 let lastId = result.insertId;
-                conn.query("INSERT INTO admin (nome, user_id, slug) VALUES ('Master', ?, 'admin-master')", [lastId], err => {
+                conn.query("INSERT INTO admin (nome, user_id, slug, master) VALUES ('Master', ?, 'admin-master', 1)", [lastId], err => {
                     if (err) {
-                        console.log(err);
                         return false;
                     }
                     return true;

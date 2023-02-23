@@ -24,6 +24,27 @@ const firebase_1 = __importDefault(require("../../lib/firebase"));
 const aws_1 = __importDefault(require("../../lib/aws"));
 const config_1 = __importDefault(require("../../lib/config"));
 class SocioManager {
+    static set_diretor(req, res) {
+        try {
+            (0, assertion_1.default)()
+                .isAdmin(req.user, 'socios')
+                .assert();
+        }
+        catch (error) {
+            return (0, response_1.default)(res).error(401, 'Unauthorized');
+        }
+        const diretor = parseInt(req.body.diretor);
+        const socio_id = parseInt(req.body.socio_id);
+        if (![0, 1].includes(diretor))
+            return (0, response_1.default)(res).error(400, 'bad request');
+        (0, mysqli_1.default)().query(`
+            UPDATE socios SET diretor = ? WHERE id = ?
+        `, [diretor, socio_id], err => {
+            if (err)
+                return (0, response_1.default)(res).error(500, err);
+            (0, response_1.default)(res).success();
+        });
+    }
     static save_image(req, res) {
         const slug = req.body.slug;
         const link = req.body.link;
@@ -32,7 +53,7 @@ class SocioManager {
             return (0, response_1.default)(res).error(400, 'bad request');
         try {
             (0, assertion_1.default)()
-                .isAdmin(req.user)
+                .isAdmin(req.user, 'socios')
                 .orIsSameSocio(req.user, slug)
                 .assert();
         }
@@ -55,7 +76,7 @@ class SocioManager {
             return (0, response_1.default)(res).error(400, 'bad request');
         try {
             (0, assertion_1.default)()
-                .isAdmin(req.user)
+                .isAdmin(req.user, 'socios')
                 .orIsSameSocio(req.user, slug)
                 .assert();
         }
@@ -106,7 +127,7 @@ class SocioManager {
         try {
             assert =
                 (0, assertion_1.default)()
-                    .isAdmin(req.user)
+                    .isAdmin(req.user, 'socios')
                     .orIsSameSocio(req.user, req.body.slug)
                     .assert();
         }
@@ -154,7 +175,7 @@ class SocioManager {
         try {
             assert =
                 (0, assertion_1.default)()
-                    .isAdmin(req.user)
+                    .isAdmin(req.user, 'socios')
                     .orIsSameSocio(req.user, req.body.slug)
                     .assert();
         }
@@ -200,7 +221,7 @@ class SocioManager {
         try {
             assert =
                 (0, assertion_1.default)()
-                    .isAdmin(req.user)
+                    .isAdmin(req.user, 'socios')
                     .orIsSameSocio(req.user, req.body.slug)
                     .assert();
         }
@@ -245,7 +266,7 @@ class SocioManager {
         try {
             assert =
                 (0, assertion_1.default)()
-                    .isAdmin(req.user)
+                    .isAdmin(req.user, 'socios')
                     .orIsSameSocio(req.user, req.body.slug)
                     .assert();
         }
@@ -315,7 +336,7 @@ class SocioManager {
         try {
             assert =
                 (0, assertion_1.default)()
-                    .isAdmin(req.user)
+                    .isAdmin(req.user, 'socios')
                     .orIsSameSocio(req.user, req.body.slug)
                     .assert();
         }
@@ -388,7 +409,7 @@ class SocioManager {
         try {
             assert =
                 (0, assertion_1.default)()
-                    .isAdmin(user)
+                    .isAdmin(user, 'socios')
                     .orIsSameSocio(user, slug)
                     .assert();
         }
@@ -663,7 +684,7 @@ class SocioManager {
     static get_socio_por_id(req, res) {
         try {
             (0, assertion_1.default)()
-                .isAdmin(req.user)
+                .isAdmin(req.user, 'socios')
                 .assert();
         }
         catch (error) {
@@ -806,7 +827,7 @@ class SocioManager {
         let user = req.user;
         try {
             (0, assertion_1.default)()
-                .isAdmin(user)
+                .isAdmin(user, 'socios')
                 .assert();
         }
         catch (error) {
@@ -914,7 +935,7 @@ class SocioManager {
     static listar(req, res) {
         try {
             (0, assertion_1.default)()
-                .isAdmin(req.user)
+                .isAdmin(req.user, 'socios')
                 .assert();
         }
         catch (error) {
@@ -978,7 +999,7 @@ class SocioManager {
          */
         try {
             (0, assertion_1.default)()
-                .isAdmin(req.user)
+                .isAdmin(req.user, 'socios')
                 .assert();
         }
         catch (error) {
@@ -986,12 +1007,13 @@ class SocioManager {
         }
         const status = parseInt(req.body.status);
         const conn = (0, mysqli_1.default)();
+        const aprovado = status == 3;
         conn.query(`
-            UPDATE socios SET status = ? WHERE slug = ?
+            UPDATE socios SET status = ? ${aprovado ? ', data_filiacao = now()' : ''} WHERE slug = ?
         `, [status, req.body.slug], err => {
             if (err)
                 return (0, response_1.default)(res).error(500, 'Internal Error');
-            if (status == 3) {
+            if (aprovado) {
                 conn.query(`
                     SELECT 
                           socios.nome,

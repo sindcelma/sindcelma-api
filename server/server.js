@@ -17,10 +17,8 @@ const config = config_1.default.instance();
 (0, mysqli_1.default)().query(`SELECT * FROM config WHERE id = 1`, (err, result) => {
     if (err)
         return;
-    if (result.length == 0) {
-        console.log("aqui");
+    if (result.length == 0)
         return;
-    }
     config.setEmailReceiver(result[0].email_receiver);
     config.setEmailSystem(result[0].email_system);
 });

@@ -8,6 +8,10 @@ const mysqli_1 = __importDefault(require("../../lib/mysqli"));
 const response_1 = __importDefault(require("../../lib/response"));
 const jwt_1 = require("../../lib/jwt");
 class AdminManager {
+    static list(req, res) {
+    }
+    static add_access(req, res) {
+    }
     static update(req, res) {
     }
     static add(req, res) {

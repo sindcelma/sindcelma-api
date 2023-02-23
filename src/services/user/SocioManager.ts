@@ -19,7 +19,7 @@ class SocioManager {
 
         try {
             assertion()
-            .isAdmin(req.user)
+            .isAdmin(req.user, 'socios')
             .assert()
         } catch (error) {
             return response(res).error(401, 'Unauthorized')
@@ -49,7 +49,7 @@ class SocioManager {
 
         try {
             assertion()
-            .isAdmin(req.user)
+            .isAdmin(req.user, 'socios')
             .orIsSameSocio(req.user, slug)
             .assert()
         } catch (error) {
@@ -75,7 +75,7 @@ class SocioManager {
 
         try {
             assertion()
-            .isAdmin(req.user)
+            .isAdmin(req.user, 'socios')
             .orIsSameSocio(req.user, slug)
             .assert()
         } catch (error) {
@@ -138,7 +138,7 @@ class SocioManager {
         try {
             assert = 
             assertion()
-            .isAdmin(req.user)
+            .isAdmin(req.user, 'socios')
             .orIsSameSocio(req.user, req.body.slug)
             .assert()
         } catch (error) {
@@ -199,7 +199,7 @@ class SocioManager {
         try {
             assert = 
             assertion()
-            .isAdmin(req.user)
+            .isAdmin(req.user, 'socios')
             .orIsSameSocio(req.user, req.body.slug)
             .assert()
         } catch (error) {
@@ -256,7 +256,7 @@ class SocioManager {
         try {
             assert = 
             assertion()
-            .isAdmin(req.user)
+            .isAdmin(req.user, 'socios')
             .orIsSameSocio(req.user, req.body.slug)
             .assert()
         } catch (error) {
@@ -314,7 +314,7 @@ class SocioManager {
         try {
             assert = 
             assertion()
-            .isAdmin(req.user)
+            .isAdmin(req.user, 'socios')
             .orIsSameSocio(req.user, req.body.slug)
             .assert()
         } catch (error) {
@@ -398,7 +398,7 @@ class SocioManager {
         try {
             assert = 
             assertion()
-            .isAdmin(req.user)
+            .isAdmin(req.user, 'socios')
             .orIsSameSocio(req.user, req.body.slug)
             .assert()
         } catch (error) {
@@ -488,7 +488,7 @@ class SocioManager {
         try {
             assert = 
             assertion()
-            .isAdmin(user)
+            .isAdmin(user, 'socios')
             .orIsSameSocio(user, slug)
             .assert()
         } catch (error) {
@@ -831,7 +831,7 @@ class SocioManager {
         
         try {
             assertion()
-            .isAdmin(req.user)
+            .isAdmin(req.user, 'socios')
             .assert()
         } catch (error) {
             return response(res).error(401, 'Unauthorized')
@@ -1012,7 +1012,7 @@ class SocioManager {
 
         try {
             assertion()
-            .isAdmin(user)
+            .isAdmin(user, 'socios')
             .assert()
         } catch (error) {
             return response(res).error(401, 'Unauthorized')
@@ -1152,7 +1152,7 @@ class SocioManager {
 
         try {
             assertion()
-            .isAdmin(req.user)
+            .isAdmin(req.user, 'socios')
             .assert()
         } catch (error) {
             return response(res).error(401, 'Unauthorized')
@@ -1226,7 +1226,7 @@ class SocioManager {
         
         try {
             assertion()
-            .isAdmin(req.user)
+            .isAdmin(req.user, 'socios')
             .assert()
         } catch (error) {
             return response(res).error(401, 'Unauthorized')
@@ -1235,12 +1235,15 @@ class SocioManager {
         const status = parseInt(req.body.status)
         const conn   = mysqli()
 
+        const aprovado = status == 3
+
         conn.query(`
-            UPDATE socios SET status = ? WHERE slug = ?
+            UPDATE socios SET status = ? ${aprovado ? ', data_filiacao = now()': ''} WHERE slug = ?
         `, [status, req.body.slug], err => {
+            
             if(err) return response(res).error(500, 'Internal Error')
 
-            if(status == 3){
+            if(aprovado){
                 conn.query(`
                     SELECT 
                           socios.nome,

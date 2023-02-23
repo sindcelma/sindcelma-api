@@ -27,19 +27,22 @@ class SorteioService {
                     sorteio_participantes.id      as participante_id,
                     socios.id                     as socio_id,
                     socios_dados_pessoais.id      as dados_pessoais_id,
-                    socios_dados_profissionais.id as dados_profissionais_id
+                    socios_dados_profissionais.id as dados_profissionais_id,
+                    socios.diretor
             FROM        socios
             LEFT JOIN   socios_dados_pessoais      ON socios_dados_pessoais.socio_id = socios.id
             LEFT JOIN   socios_dados_profissionais ON socios_dados_profissionais.socio_id = socios.id
             LEFT JOIN   sorteio_participantes 
                    ON   sorteio_participantes.socio_id   = socios.id
                   AND   sorteio_participantes.sorteio_id = ?
-            WHERE socios.slug = ? 
+            WHERE socios.slug = ?
         `, [sorteio_id, socio.getSlug()], (err, result) => {
             if (err)
                 return (0, response_1.default)(res).error(500, err);
             if (result.length == 0)
                 return (0, response_1.default)(res).error(404, 'socio not found');
+            if (result[0].diretor == 1)
+                return (0, response_1.default)(res).error(400, 'Diretores não podem ser inscritos em sorteios');
             const socio_id = result[0].socio_id;
             const partc_id = result[0].participante_id;
             const pesso_id = result[0].dados_pessoais_id;

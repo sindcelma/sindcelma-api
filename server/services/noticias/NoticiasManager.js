@@ -11,7 +11,7 @@ class NoticiasManager {
     static add(req, res) {
         try {
             (0, assertion_1.default)()
-                .isAdmin(req.user)
+                .isAdmin(req.user, 'noticias')
                 .assert();
         }
         catch (error) {
@@ -44,7 +44,7 @@ class NoticiasManager {
     static edit(req, res) {
         try {
             (0, assertion_1.default)()
-                .isAdmin(req.user)
+                .isAdmin(req.user, 'noticias')
                 .assert();
         }
         catch (error) {
@@ -73,7 +73,7 @@ class NoticiasManager {
     static delete(req, res) {
         try {
             (0, assertion_1.default)()
-                .isAdmin(req.user)
+                .isAdmin(req.user, 'noticias')
                 .assert();
         }
         catch (error) {

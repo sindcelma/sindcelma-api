@@ -10,6 +10,8 @@ import mysqli from "../lib/mysqli";
 const setDataAdmin = (data:any, admin:Admin):Admin => {
     admin.setSlug(data.slug)
     admin.setNome(data.nome)
+    admin.setAccess(data.access)
+    admin.setMaster(data.master)
     return admin
 }
 
@@ -237,15 +239,22 @@ const getSocioByRememberme = (remembermetk:String, fn:(user:User, error:Boolean,
 const getAdminByRememberme = (remembermetk:String, fn:(user:User, error:Boolean, codeError:Number, msg:String) => void) => {
     
     let query:string = `
-        SELECT 
-            user.id,
-            user.email,
-            user.version,
-            admin.slug
+        SELECT user.id
+             , user.email
+             , user.version
+             , admin.slug
+             , admin.nome
+             , admin.master
+             , admin_service.slug as slug_service
         FROM user 
             JOIN admin ON admin.user_id = user.id
             JOIN user_devices ON user_devices.user_id = user.id
-                    WHERE user_devices.rememberme = ?
+                LEFT JOIN 
+                    admin_service_access ON admin.id = admin_service_access.admin_id
+                LEFT JOIN 
+                    admin_service ON admin_service.id = admin_service_access.admin_service_id
+            WHERE user_devices.rememberme = ?
+            ORDER BY admin_service.id ASC
                     `
 
     const conn = mysqli() 
@@ -259,7 +268,25 @@ const getAdminByRememberme = (remembermetk:String, fn:(user:User, error:Boolean,
         
             if(result.length > 0){
                     
-                const res:{id:Number, email:string, version:Number} = result[0]
+                const res:{
+                    id:number, 
+                    email:string, 
+                    version:number,
+                    slug:string, 
+                    nome:string, 
+                    sobrenome:string, 
+                    status:number,
+                    access:string[]
+                } = result[0]
+
+                res.access = []
+
+                for (let i = 0; i < result.length; i++) {
+                    if(result[i].slug_service != null){
+                        res.access.push(result[i].slug_service)
+                    }
+                }
+
                 const user = {
                     id:res.id,
                     email:res.email,
@@ -321,7 +348,7 @@ const middleware = async function(req:Request, res:Response, next?:any){
         
         conn.query(`
             SELECT 
-                user.id,
+                user.id, 
                 socios.slug,
                 socios.nome,
                 socios.sobrenome,
@@ -353,11 +380,19 @@ const middleware = async function(req:Request, res:Response, next?:any){
     } 
     else if(user instanceof Admin) {
         conn.query(
-            `SELECT 
-                user.id, admin.slug, admin.nome 
-            FROM user 
-            JOIN admin ON admin.user_id = user.id
+            `SELECT user.id
+                  , admin.slug
+                  , admin.nome
+                  , admin.master
+                  , admin_service.slug as slug_service
+             FROM user 
+             JOIN admin ON admin.user_id = user.id
+             LEFT JOIN 
+                   admin_service_access ON admin.id = admin_service_access.admin_id
+             LEFT JOIN 
+                   admin_service ON admin_service.id = admin_service_access.admin_service_id
             WHERE user.id = ? AND user.version = ?
+            ORDER BY admin_service.id ASC
             `, [user.getId(), user.getVersion()], (err, result) => {
                 if(err) console.log(err)
 
@@ -369,8 +404,17 @@ const middleware = async function(req:Request, res:Response, next?:any){
                         slug:string, 
                         nome:string, 
                         sobrenome:string, 
-                        status:number
+                        status:number,
+                        access:string[]
                     } = result[0];
+
+                    userres.access = []
+
+                    for (let i = 0; i < result.length; i++) {
+                        if(result[i].slug_service != null){
+                            userres.access.push(result[i].slug_service)
+                        }
+                    }
 
                     req.user = setDataAdmin(userres, user)
                     res.user = req.user

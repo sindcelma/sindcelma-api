@@ -6,6 +6,14 @@ import { generateSlug } from '../../lib/jwt'
 
 class AdminManager {
 
+    public static list(req:Request, res:Response){
+        
+    }
+
+    public static add_access(req:Request, res:Response){
+
+    }
+
     public static update(req:Request, res:Response){
 
     }

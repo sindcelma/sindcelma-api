@@ -21,6 +21,8 @@ const mysqli_1 = __importDefault(require("../lib/mysqli"));
 const setDataAdmin = (data, admin) => {
     admin.setSlug(data.slug);
     admin.setNome(data.nome);
+    admin.setAccess(data.access);
+    admin.setMaster(data.master);
     return admin;
 };
 const setDataSocio = (data, socio, full = true) => {
@@ -204,15 +206,22 @@ const getSocioByRememberme = (remembermetk, fn) => {
 };
 const getAdminByRememberme = (remembermetk, fn) => {
     let query = `
-        SELECT 
-            user.id,
-            user.email,
-            user.version,
-            admin.slug
+        SELECT user.id
+             , user.email
+             , user.version
+             , admin.slug
+             , admin.nome
+             , admin.master
+             , admin_service.slug as slug_service
         FROM user 
             JOIN admin ON admin.user_id = user.id
             JOIN user_devices ON user_devices.user_id = user.id
-                    WHERE user_devices.rememberme = ?
+                LEFT JOIN 
+                    admin_service_access ON admin.id = admin_service_access.admin_id
+                LEFT JOIN 
+                    admin_service ON admin_service.id = admin_service_access.admin_service_id
+            WHERE user_devices.rememberme = ?
+            ORDER BY admin_service.id ASC
                     `;
     const conn = (0, mysqli_1.default)();
     try {
@@ -222,6 +231,12 @@ const getAdminByRememberme = (remembermetk, fn) => {
             }
             if (result.length > 0) {
                 const res = result[0];
+                res.access = [];
+                for (let i = 0; i < result.length; i++) {
+                    if (result[i].slug_service != null) {
+                        res.access.push(result[i].slug_service);
+                    }
+                }
                 const user = {
                     id: res.id,
                     email: res.email,
@@ -271,7 +286,7 @@ const middleware = function (req, res, next) {
         if (user instanceof Socio_1.default) {
             conn.query(`
             SELECT 
-                user.id,
+                user.id, 
                 socios.slug,
                 socios.nome,
                 socios.sobrenome,
@@ -294,11 +309,19 @@ const middleware = function (req, res, next) {
             });
         }
         else if (user instanceof Admin_1.default) {
-            conn.query(`SELECT 
-                user.id, admin.slug, admin.nome 
-            FROM user 
-            JOIN admin ON admin.user_id = user.id
+            conn.query(`SELECT user.id
+                  , admin.slug
+                  , admin.nome
+                  , admin.master
+                  , admin_service.slug as slug_service
+             FROM user 
+             JOIN admin ON admin.user_id = user.id
+             LEFT JOIN 
+                   admin_service_access ON admin.id = admin_service_access.admin_id
+             LEFT JOIN 
+                   admin_service ON admin_service.id = admin_service_access.admin_service_id
             WHERE user.id = ? AND user.version = ?
+            ORDER BY admin_service.id ASC
             `, [user.getId(), user.getVersion()], (err, result) => {
                 if (err)
                     console.log(err);
@@ -307,6 +330,12 @@ const middleware = function (req, res, next) {
                 }
                 else {
                     const userres = result[0];
+                    userres.access = [];
+                    for (let i = 0; i < result.length; i++) {
+                        if (result[i].slug_service != null) {
+                            userres.access.push(result[i].slug_service);
+                        }
+                    }
                     req.user = setDataAdmin(userres, user);
                     res.user = req.user;
                 }
