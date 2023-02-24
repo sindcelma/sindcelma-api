@@ -11,7 +11,7 @@ exports.default = () => {
         index: 0,
         isAdmin: (user, access) => {
             obj.status = user instanceof Admin_1.default;
-            if (access) {
+            if (obj.status && access) {
                 const adm = user;
                 if (!adm.isMaster()) {
                     obj.status = adm.hasAccess(access);
@@ -25,7 +25,7 @@ exports.default = () => {
             if (obj.status)
                 return obj;
             obj.status = user instanceof Admin_1.default;
-            if (access) {
+            if (obj.status && access) {
                 const adm = user;
                 if (!adm.isMaster()) {
                     obj.status = adm.hasAccess(access);
@@ -50,12 +50,8 @@ exports.default = () => {
             return obj;
         },
         isSameSocio: (user, slug) => {
-            if (user instanceof Socio_1.default) {
-                obj.status = user.getSlug() == slug;
-            }
-            else {
-                obj.status = false;
-            }
+            let socio = user;
+            obj.status = socio.getSlug().trim() == slug.trim();
             if (!obj.status)
                 obj.index++;
             return obj;
@@ -63,12 +59,8 @@ exports.default = () => {
         orIsSameSocio: (user, slug) => {
             if (obj.status)
                 return obj;
-            if (user instanceof Socio_1.default) {
-                obj.status = user.getSlug() == slug;
-            }
-            else {
-                obj.status = false;
-            }
+            let socio = user;
+            obj.status = socio.getSlug().trim() == slug.trim();
             if (!obj.status)
                 obj.index++;
             return obj;

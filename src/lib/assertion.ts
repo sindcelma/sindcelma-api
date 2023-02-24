@@ -12,7 +12,7 @@ export default () => {
 
         isAdmin: (user:User, access?:string) => {
             obj.status = user instanceof Admin
-            if(access){
+            if(obj.status && access){
                 const adm = user as Admin
                 if(!adm.isMaster()){
                     obj.status = adm.hasAccess(access)
@@ -25,7 +25,7 @@ export default () => {
         orIsAdmin: (user:User, access?:string) => {
             if(obj.status) return obj
             obj.status = user instanceof Admin
-            if(access){
+            if(obj.status && access){
                 const adm = user as Admin
                 if(!adm.isMaster()){
                     obj.status = adm.hasAccess(access)
@@ -49,22 +49,16 @@ export default () => {
         },
 
         isSameSocio: (user:User, slug:String) => {
-            if( user instanceof Socio ){
-                obj.status = user.getSlug() == slug
-            } else {
-                obj.status = false
-            }
+            let socio = user as Socio
+            obj.status = socio.getSlug().trim() == slug.trim()
             if(!obj.status) obj.index++;
             return obj
         },
 
         orIsSameSocio: (user:User, slug:String) => {
             if(obj.status) return obj
-            if( user instanceof Socio ){
-                obj.status = user.getSlug() == slug
-            } else {
-                obj.status = false
-            }
+            let socio = user as Socio
+            obj.status = socio.getSlug().trim() == slug.trim()
             if(!obj.status) obj.index++;
             return obj
         },
