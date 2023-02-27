@@ -15,6 +15,59 @@ import Config from '../../lib/config';
 class SocioManager {
 
 
+    public static ghosts(req:Request, res:Response){
+        
+        try {
+            assertion()
+            .isMaster(req.user)
+            .assert()
+        } catch (error) {
+            return response(res).error(401, 'Unauthorized')
+        }
+
+        mysqli().query(`
+            SELECT
+                socios.id,
+                socios.nome,
+                socios.sobrenome,
+                socios.slug,
+                socios.cpf,
+                socios.np,
+                socios.status
+            FROM socios
+            WHERE ghost = 1
+            ORDER BY id ASC
+        `, (err, result) => {
+            if(err) return response(res).error(500, err)
+            response(res).success(result)
+        })
+
+    }
+
+    public static set_ghost(req:Request, res:Response){
+
+        try {
+            assertion()
+            .isMaster(req.user)
+            .assert()
+        } catch (error) {
+            return response(res).error(401, 'Unauthorized')
+        }
+        
+        const isGhost  = parseInt(req.body.isGhost);
+        const socio_id = parseInt(req.body.socio_id);
+
+        if(![0,1].includes(isGhost)) return response(res).error(400, 'bad request'); 
+
+        mysqli().query(`
+            UPDATE socios SET ghost = ? WHERE id = ?
+        `, [isGhost, socio_id], err => {
+            if(err) return response(res).error(500, err)
+            response(res).success()
+        })
+
+    }
+
     public static set_diretor(req:Request, res:Response){
 
         try {
@@ -129,9 +182,8 @@ class SocioManager {
     public static get_dados_profissionais(req:Request, res:Response){
 
         const slug = req.body.slug
-        const empresa_id = req.body.empresa_id
         
-        if(!slug || !empresa_id) return response(res).error(400, 'bad request');
+        if(!slug) return response(res).error(400, 'bad request');
 
         var assert = assertion();
 
@@ -159,11 +211,10 @@ class SocioManager {
                  JOIN user ON user.socio_id = socios.id
             LEFT JOIN socios_dados_profissionais 
                    ON socios_dados_profissionais.socio_id = socios.id 
-                  AND socios_dados_profissionais.empresa_id = ?
             LEFT JOIN empresas ON socios_dados_profissionais.empresa_id = empresas.id 
             
             WHERE socios.slug = ? 
-        `, [empresa_id, slug], (err1, result) => {
+        `, [slug], (err1, result) => {
             
             
             if(err1) {
@@ -174,7 +225,7 @@ class SocioManager {
                 return response(res).error(404, 'Not Found')
             }
 
-            if(!req.body.key){
+            if(assert.index != 0 && !req.body.key){
                 return response(res).error(400, 'bad request')
             }
             
@@ -200,7 +251,7 @@ class SocioManager {
             assert = 
             assertion()
             .isAdmin(req.user, 'socios')
-            .orIsSameSocio(req.user, req.body.slug)
+            .orIsSameSocio(req.user, slug)
             .assert()
         } catch (error) {
             return response(res).error(401, 'Unauthorized')
@@ -230,7 +281,7 @@ class SocioManager {
                 return response(res).error(404, 'Not Found')
             }
 
-            if(!req.body.key){
+            if(assert.index != 0 && !req.body.key){
                 return response(res).error(400, 'bad request')
             }
             
@@ -854,7 +905,9 @@ class SocioManager {
                 socios.np,
                 socios.cpf,
                 socios.slug,
-                socios.status
+                socios.status,
+                socios.ghost,
+                socios.diretor
             FROM socios 
             LEFT JOIN user ON socios.id = user.socio_id 
             WHERE
@@ -1204,7 +1257,7 @@ class SocioManager {
                 socios.cpf,
                 socios.np
             FROM socios
-            WHERE status = ?
+            WHERE status = ? AND ghost = 0
             ${more}
             ORDER BY id ASC LIMIT ?,?; 
         ` 

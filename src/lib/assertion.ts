@@ -10,6 +10,16 @@ export default () => {
         status: false,
         index:0,
 
+        isMaster: (user:User) => {
+            if(!(user instanceof Admin)){
+                obj.status = false
+            } else {
+                const adm  = user as Admin
+                obj.status = adm.isMaster()
+            }
+            return obj
+        },
+
         isAdmin: (user:User, access?:string) => {
             obj.status = user instanceof Admin
             if(obj.status && access){

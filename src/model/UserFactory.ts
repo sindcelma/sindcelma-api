@@ -301,8 +301,8 @@ const getAdminByRememberme = (remembermetk:String, fn:(user:User, error:Boolean,
     
             fn(new Visitante, true, 3, "Este Token expirou ou não é válido")
         })
-    } catch (error) {
-        fn(new Visitante, true, 4, "Internal Error")
+    } catch (error2) {
+        fn(new Visitante, true, 4, String(error2))
     }
     
 }

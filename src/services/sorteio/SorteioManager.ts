@@ -128,7 +128,7 @@ class SorteioManager {
                FROM sorteio_participantes as participantes
                JOIN socios as socio ON participantes.socio_id = socio.id 
                JOIN sorteios as sorteio ON sorteio.id = participantes.sorteio_id 
-              WHERE sorteio.id = ? AND sorteio.ativo = 1`, 
+              WHERE sorteio.id = ? AND sorteio.ativo = 1 AND ghost = 0`, 
         [Number(req.body.sorteio_id)], (err, result) => {
             
             if(err) return response(res).error(500, 'Server Error')
