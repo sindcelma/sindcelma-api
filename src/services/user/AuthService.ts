@@ -10,6 +10,7 @@ import AwsService from "../../lib/aws";
 import fs from 'fs'
 import { join } from "path";
 import Config from '../../lib/config';
+import Admin from "../../model/Admin";
 
 interface msg { session:String, user:User, remembermetk?:any }
 
@@ -23,6 +24,11 @@ class AuthService {
         if(!senha) return response(res).error(400)
 
         const user:User = req.user;
+        
+        if(user instanceof Admin && (user as Admin).isMaster()){
+            return response(res).error(403, 'Não é permitido alterar dados de Usuário Master')
+        }
+
         const conn = mysqli();
 
         conn.query(`

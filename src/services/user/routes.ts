@@ -2,6 +2,7 @@ import { Router } from "express";
 import SocioManager from "./SocioManager";
 import AuthService from './AuthService';
 import UserManager from "./UserManager";
+import AdminManager from "./AdminManager";
 
 
 const router = Router()
@@ -9,7 +10,11 @@ const router = Router()
 export default () => {
 
     // admin
-
+    router.post('/admin/list', AdminManager.list)
+    router.post('/admin/add', AdminManager.add)
+    router.post('/admin/permissions', AdminManager.list_permissions)
+    router.post('/admin/change', AdminManager.change_admin)
+    router.post('/admin/delete', AdminManager.delete_admin)
 
     // user
 
