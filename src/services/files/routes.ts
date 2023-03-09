@@ -9,6 +9,9 @@ export default () => {
     /**
      * TESTAR
      */
+
+    router.post('/admin/generate_csv', FileAdminManager.generateCSV)
+
     router.post('/admin/create', FileAdminManager.create_ghost)
     router.post('/admin/append', FileAdminManager.append)
     router.post('/admin/commit', FileAdminManager.commit)

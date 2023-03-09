@@ -14,7 +14,6 @@ import Config from '../../lib/config';
 
 class SocioManager {
 
-
     public static ghosts(req:Request, res:Response){
         
         try {
