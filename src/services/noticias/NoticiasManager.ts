@@ -21,7 +21,7 @@ class NoticiasManager {
         const imagem = req.body.imagem 
         const text   = req.body.text
 
-        if(!titulo || !imagem || !text)
+        if(!titulo || !imagem || !text || !imagem )
             return response(res).error(400, 'Bad Request')
 
         const conn = mysqli()
@@ -43,7 +43,7 @@ class NoticiasManager {
                         firebase.sendNotification("Noticias", titulo, codes)
                     }
     
-                    response(res).success(result.insertId)
+                    response(res).success({id:result.insertId})
                 })
                 
             }
@@ -67,7 +67,7 @@ class NoticiasManager {
         const text   = req.body.text
         const subtt  = req.body.subtitulo
 
-        if(!titulo || !imagem || !text || !id)
+        if(!titulo || !imagem || !text || !id || !subtt)
             return response(res).error(400, 'Bad Request')
 
         mysqli().query(`
