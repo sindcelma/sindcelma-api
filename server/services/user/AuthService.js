@@ -22,12 +22,16 @@ const aws_1 = __importDefault(require("../../lib/aws"));
 const fs_1 = __importDefault(require("fs"));
 const path_1 = require("path");
 const config_1 = __importDefault(require("../../lib/config"));
+const Admin_1 = __importDefault(require("../../model/Admin"));
 class AuthService {
     static generate_temp_key(req, res) {
         const senha = req.body.senha;
         if (!senha)
             return (0, response_1.default)(res).error(400);
         const user = req.user;
+        if (user instanceof Admin_1.default && user.isMaster()) {
+            return (0, response_1.default)(res).error(403, 'Não é permitido alterar dados de Usuário Master');
+        }
         const conn = (0, mysqli_1.default)();
         conn.query(`
             SELECT id, senha FROM user WHERE email = ?

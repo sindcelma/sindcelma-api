@@ -12,7 +12,7 @@ class NoticiasService {
             ORDER BY id DESC LIMIT 1`, 
             [], (err, result) => {
                 if(err) return response(res).error(500, err)
-                response(res).success({id:result.insertId})
+                response(res).success(result)
             }
         )
     }

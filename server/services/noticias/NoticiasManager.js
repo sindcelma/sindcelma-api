@@ -21,7 +21,7 @@ class NoticiasManager {
         const subtt = req.body.subtitulo;
         const imagem = req.body.imagem;
         const text = req.body.text;
-        if (!titulo || !imagem || !text)
+        if (!titulo || !imagem || !text || !imagem)
             return (0, response_1.default)(res).error(400, 'Bad Request');
         const conn = (0, mysqli_1.default)();
         conn.query(`
@@ -37,7 +37,7 @@ class NoticiasManager {
                         codes.push(result2[i].code);
                     firebase_1.default.sendNotification("Noticias", titulo, codes);
                 }
-                (0, response_1.default)(res).success(result.insertId);
+                (0, response_1.default)(res).success({ id: result.insertId });
             });
         });
     }
@@ -55,7 +55,7 @@ class NoticiasManager {
         const imagem = req.body.imagem;
         const text = req.body.text;
         const subtt = req.body.subtitulo;
-        if (!titulo || !imagem || !text || !id)
+        if (!titulo || !imagem || !text || !id || !subtt)
             return (0, response_1.default)(res).error(400, 'Bad Request');
         (0, mysqli_1.default)().query(`
             UPDATE noticias 

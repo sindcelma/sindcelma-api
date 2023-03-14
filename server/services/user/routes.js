@@ -7,9 +7,15 @@ const express_1 = require("express");
 const SocioManager_1 = __importDefault(require("./SocioManager"));
 const AuthService_1 = __importDefault(require("./AuthService"));
 const UserManager_1 = __importDefault(require("./UserManager"));
+const AdminManager_1 = __importDefault(require("./AdminManager"));
 const router = (0, express_1.Router)();
 exports.default = () => {
     // admin
+    router.post('/admin/list', AdminManager_1.default.list);
+    router.post('/admin/add', AdminManager_1.default.add);
+    router.post('/admin/permissions', AdminManager_1.default.list_permissions);
+    router.post('/admin/change', AdminManager_1.default.change_admin);
+    router.post('/admin/delete', AdminManager_1.default.delete_admin);
     // user
     router.post('/save_token', UserManager_1.default.save_token);
     router.post('/change_password', AuthService_1.default.change_password);
@@ -25,6 +31,8 @@ exports.default = () => {
     router.post('/close_all_sessions', UserManager_1.default.close_all_sessions);
     router.post('/check_login', UserManager_1.default.check_login);
     // socios
+    router.post('/socios/ghosts', SocioManager_1.default.ghosts);
+    router.post('/socios/set_ghost', SocioManager_1.default.set_ghost);
     router.post('/socios/set_diretor', SocioManager_1.default.set_diretor);
     router.post('/socios/save_image', SocioManager_1.default.save_image);
     router.post('/socios/get_doc_carteirinha', SocioManager_1.default.get_doc_carteirinha);

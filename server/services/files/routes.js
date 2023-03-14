@@ -11,6 +11,7 @@ exports.default = () => {
     /**
      * TESTAR
      */
+    router.post('/admin/generate_csv', FileAdminManager_1.default.generateCSV);
     router.post('/admin/create', FileAdminManager_1.default.create_ghost);
     router.post('/admin/append', FileAdminManager_1.default.append);
     router.post('/admin/commit', FileAdminManager_1.default.commit);

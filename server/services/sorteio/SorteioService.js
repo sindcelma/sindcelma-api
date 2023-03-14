@@ -98,7 +98,7 @@ class SorteioService {
              FROM   sorteio_participantes
              JOIN   socios ON sorteio_participantes.socio_id = socios.id
              JOIN   sorteios ON sorteios.id = sorteio_participantes.sorteio_id
-            WHERE   sorteios.id = ?
+            WHERE   sorteios.id = ? AND socios.ghost = 0
         `, [Number(req.params.sorteio_id)], (err, result) => {
             if (err)
                 return (0, response_1.default)(res).error(500, err);

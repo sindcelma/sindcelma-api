@@ -9,6 +9,16 @@ exports.default = () => {
     const obj = {
         status: false,
         index: 0,
+        isMaster: (user) => {
+            if (!(user instanceof Admin_1.default)) {
+                obj.status = false;
+            }
+            else {
+                const adm = user;
+                obj.status = adm.isMaster();
+            }
+            return obj;
+        },
         isAdmin: (user, access) => {
             obj.status = user instanceof Admin_1.default;
             if (obj.status && access) {

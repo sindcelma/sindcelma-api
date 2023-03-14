@@ -24,6 +24,54 @@ const firebase_1 = __importDefault(require("../../lib/firebase"));
 const aws_1 = __importDefault(require("../../lib/aws"));
 const config_1 = __importDefault(require("../../lib/config"));
 class SocioManager {
+    static ghosts(req, res) {
+        try {
+            (0, assertion_1.default)()
+                .isMaster(req.user)
+                .assert();
+        }
+        catch (error) {
+            return (0, response_1.default)(res).error(401, 'Unauthorized');
+        }
+        (0, mysqli_1.default)().query(`
+            SELECT
+                socios.id,
+                socios.nome,
+                socios.sobrenome,
+                socios.slug,
+                socios.cpf,
+                socios.np,
+                socios.status
+            FROM socios
+            WHERE ghost = 1
+            ORDER BY id ASC
+        `, (err, result) => {
+            if (err)
+                return (0, response_1.default)(res).error(500, err);
+            (0, response_1.default)(res).success(result);
+        });
+    }
+    static set_ghost(req, res) {
+        try {
+            (0, assertion_1.default)()
+                .isMaster(req.user)
+                .assert();
+        }
+        catch (error) {
+            return (0, response_1.default)(res).error(401, 'Unauthorized');
+        }
+        const isGhost = parseInt(req.body.isGhost);
+        const socio_id = parseInt(req.body.socio_id);
+        if (![0, 1].includes(isGhost))
+            return (0, response_1.default)(res).error(400, 'bad request');
+        (0, mysqli_1.default)().query(`
+            UPDATE socios SET ghost = ? WHERE id = ?
+        `, [isGhost, socio_id], err => {
+            if (err)
+                return (0, response_1.default)(res).error(500, err);
+            (0, response_1.default)(res).success();
+        });
+    }
     static set_diretor(req, res) {
         try {
             (0, assertion_1.default)()
@@ -120,8 +168,7 @@ class SocioManager {
     }
     static get_dados_profissionais(req, res) {
         const slug = req.body.slug;
-        const empresa_id = req.body.empresa_id;
-        if (!slug || !empresa_id)
+        if (!slug)
             return (0, response_1.default)(res).error(400, 'bad request');
         var assert = (0, assertion_1.default)();
         try {
@@ -147,18 +194,17 @@ class SocioManager {
                  JOIN user ON user.socio_id = socios.id
             LEFT JOIN socios_dados_profissionais 
                    ON socios_dados_profissionais.socio_id = socios.id 
-                  AND socios_dados_profissionais.empresa_id = ?
             LEFT JOIN empresas ON socios_dados_profissionais.empresa_id = empresas.id 
             
             WHERE socios.slug = ? 
-        `, [empresa_id, slug], (err1, result) => {
+        `, [slug], (err1, result) => {
             if (err1) {
                 return (0, response_1.default)(res).error(500, err1);
             }
             if (result.length == 0) {
                 return (0, response_1.default)(res).error(404, 'Not Found');
             }
-            if (!req.body.key) {
+            if (assert.index != 0 && !req.body.key) {
                 return (0, response_1.default)(res).error(400, 'bad request');
             }
             if (assert.index != 0 && req.body.key != result[0].temp_key) {
@@ -176,7 +222,7 @@ class SocioManager {
             assert =
                 (0, assertion_1.default)()
                     .isAdmin(req.user, 'socios')
-                    .orIsSameSocio(req.user, req.body.slug)
+                    .orIsSameSocio(req.user, slug)
                     .assert();
         }
         catch (error) {
@@ -203,7 +249,7 @@ class SocioManager {
             if (result.length == 0) {
                 return (0, response_1.default)(res).error(404, 'Not Found');
             }
-            if (!req.body.key) {
+            if (assert.index != 0 && !req.body.key) {
                 return (0, response_1.default)(res).error(400, 'bad request');
             }
             if (assert.index != 0 && req.body.key != result[0].temp_key) {
@@ -703,7 +749,9 @@ class SocioManager {
                 socios.np,
                 socios.cpf,
                 socios.slug,
-                socios.status
+                socios.status,
+                socios.ghost,
+                socios.diretor
             FROM socios 
             LEFT JOIN user ON socios.id = user.socio_id 
             WHERE
@@ -979,7 +1027,7 @@ class SocioManager {
                 socios.cpf,
                 socios.np
             FROM socios
-            WHERE status = ?
+            WHERE status = ? AND ghost = 0
             ${more}
             ORDER BY id ASC LIMIT ?,?; 
         `;

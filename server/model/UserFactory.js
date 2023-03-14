@@ -248,8 +248,8 @@ const getAdminByRememberme = (remembermetk, fn) => {
             fn(new Visitante_1.default, true, 3, "Este Token expirou ou não é válido");
         });
     }
-    catch (error) {
-        fn(new Visitante_1.default, true, 4, "Internal Error");
+    catch (error2) {
+        fn(new Visitante_1.default, true, 4, String(error2));
     }
 };
 const getUserByRememberme = (type, remembermetk, fn) => {
