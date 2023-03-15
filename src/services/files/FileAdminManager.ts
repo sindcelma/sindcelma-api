@@ -56,7 +56,7 @@ class FileAdminManager {
 
     }
 
-    public static create_ghost(req:Request, res:Response){
+    public static async create_ghost(req:Request, res:Response){
         
         try {
             assertion()
@@ -68,26 +68,41 @@ class FileAdminManager {
 
         const ext  = req.body.ext;
         const dir  = req.body.dir;
+
         if(!ext || !dir) return response(res).error(400, 'Bad Request')
-        
-        const slug    = generateSlug(`${req.user.getId()}${Date()}`);
-        const fileStr = `../../public/${dir}/${slug}.${ext}.ghost`;
-        const file    = join(__dirname, fileStr);
+
+        const urlAssets = Config.instance().json().asset
 
         try {
-            writeFileSync(file, "", {
-                flag: 'w',
+
+            const resp = await fetch(urlAssets+'/api/admin_file/create', {
+                method: 'POST', 
+                body: JSON.stringify({
+                    pair:Config.instance().getPair(),
+                    ext:ext,
+                    dir:dir,
+                    salt:req.user.getId()
+                })
             })
+
+            const body = await resp.json()
+
+            if(body.code != 200){
+                return response(res).error(body.code, body.message)
+            }
+            
             response(res).success({
-                slug:slug
+                slug: body.message.slug
             })
+        
         } catch (e) {
             response(res).error(500, e)
         }
 
     }
 
-    public static append(req:Request, res:Response){
+    public static async append(req:Request, res:Response){
+
         try {
             assertion()
             .isAdmin(req.user)
@@ -105,19 +120,36 @@ class FileAdminManager {
             return response(res).error(400, 'Bad Request')
         }
 
+        const urlAssets = Config.instance().json().asset
+        
         try {
-            const buff    = Buffer.from(data, "base64")
-            const fileStr = `../../public/${dir}/${slug}.${ext}.ghost`;
-            const file    = join(__dirname, fileStr);
-            appendFileSync(file, buff)
+
+            const resp = await fetch(urlAssets+'/api/admin_file/append', {
+                method: 'POST', 
+                body: JSON.stringify({
+                    pair:Config.instance().getPair(),
+                    ext:ext,
+                    dir:dir,
+                    data:data,
+                    slug:slug
+                })
+            })
+
+            const body = await resp.json()
+
+            if(body.code != 200){
+                return response(res).error(body.code, body.message)
+            }
+            
             response(res).success()
+        
         } catch (e) {
-            response(res).error(500, 'Este arquivo não existe ou os dados enviados estão incorretos')
+            response(res).error(500, e)
         }
 
     }
 
-    public static commit(req:Request, res:Response){
+    public static async commit(req:Request, res:Response){
         try {
             assertion()
             .isAdmin(req.user)
@@ -134,17 +166,29 @@ class FileAdminManager {
             return response(res).error(400, 'Bad Request')
         }
 
-        const newF = `../../public/${dir}/${slug}.${ext}`;
-        const oldF = `${newF}.ghost`;
-        const fileN   = join(__dirname, newF);
-        const fileO   = join(__dirname, oldF);
+        const urlAssets = Config.instance().json().asset
         
         try {
-            renameSync(fileO, fileN)
-            const img = `${Config.instance().json().url+dir}/${slug}.${ext}`;
-            response(res).success(img)
+
+            const resp = await fetch(urlAssets+'/api/admin_file/commit', {
+                method: 'POST', 
+                body: JSON.stringify({
+                    pair:Config.instance().getPair(),
+                    ext:ext,
+                    dir:dir,
+                    slug:slug
+                })
+            })
+
+            const body = await resp.json()
+            if(body.code != 200){
+                return response(res).error(body.code, body.message)
+            }
+            
+            response(res).success(body.message)
+        
         } catch (e) {
-            response(res).error(404, 'Este arquivo não existe')
+            response(res).error(500, e)
         }
 
     }
