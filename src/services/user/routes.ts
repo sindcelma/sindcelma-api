@@ -10,6 +10,7 @@ const router = Router()
 export default () => {
 
     // admin
+    
     router.post('/admin/list', AdminManager.list)
     router.post('/admin/add', AdminManager.add)
     router.post('/admin/permissions', AdminManager.list_permissions)

@@ -7,7 +7,7 @@ class ConveniosService {
 
     static list(req:Request, res:Response){
 
-        mysqli().query("SELECT id, titulo, imagem FROM convenios", (err, result) => {
+        mysqli().query("SELECT id, titulo, imagem, descricao as texto FROM convenios", (err, result) => {
             if(err) return response(res).error(500, err)
             response(res).success(result)
         })

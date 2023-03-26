@@ -152,12 +152,19 @@ class AuthService {
             message.session = token
                     
             if(remem){
+
                 let conn = mysqli()
                 message.remembermetk = user.getRememberMeToken()
-                conn.query(
-                    "INSERT INTO user_devices (user_id, header, rememberme) VALUES (?,?,?)", 
-                    [user.getId(), user.getAgent(), message.remembermetk]
-                )
+                try {
+                    await conn.query(`DELETE FROM user_devices WHERE user_id = ?`, [user.getId()]);
+                    await conn.query(
+                        "INSERT INTO user_devices (user_id, rememberme) VALUES (?,?)", 
+                        [user.getId(), message.remembermetk]
+                    )
+                } catch (error) {
+                    return response(res).error(500, 'Erro no servidor')
+                }
+                
             }
             
             return response(res).success(message)

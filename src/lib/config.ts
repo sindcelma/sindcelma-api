@@ -4,7 +4,8 @@ import { join } from 'path'
 interface conf {
     app_version:string,
     api_version:string,
-    package:string
+    package:string,
+    wp_noticias:boolean
 }
 
 class Config {
@@ -37,6 +38,7 @@ class Config {
         this.config_data  = {
             app_version:config_d.app_version,
             api_version:config_d.api_version,
+            wp_noticias:config_d.wp_noticias,
             package:    config_d.package
         }
 

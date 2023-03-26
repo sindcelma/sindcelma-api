@@ -5,27 +5,34 @@ import response from "../../lib/response";
 import Socio from '../../model/Socio';
 import fetch from 'node-fetch'
 import Config from "../../lib/config";
+import assertion from "../../lib/assertion";
 
 class UserManager {
 
-
     public static save_token(req:Request, res:Response){
         
-        const remembermetk = req.body.remembermetk
-        const tokendevice  = req.body.tokendevice
+        try {
+            assertion()
+            .isSocio(req.user)
+            .assert()
+        } catch (error) {
+            return response(res).error(401, 'Unauthorized')
+        }
 
-        if(!remembermetk || !tokendevice)
+        const tokendevice  = req.body.tokendevice
+        const typedevice   = req.body.typedevice
+
+        if(!tokendevice || !typedevice)
             return response(res).error(400, 'Bad Request')
 
         const conn = mysqli();
 
-        conn.query(`SELECT id, code FROM user_devices WHERE rememberme = ?`, [remembermetk], (err, result) => {
+        conn.query(`SELECT id, code FROM user_devices WHERE user_id = ? ORDER BY id DESC`, [req.user.getId()], (err, result) => {
             
             if(err) return response(res).error(500, 'Server Error')
-            if(result[0]['code'] != null && result[0]['code'].trim() != '') 
-                return response(res).error(500, 'Not permited')
+            if(result.length == 0) return response(res).error(404, 'Not Found')
 
-            conn.query(`UPDATE user_devices SET code = ? WHERE id = ?`, [tokendevice, result[0]['id']], err => {
+            conn.query(`UPDATE user_devices SET code = ?, header = ? WHERE id = ?`, [tokendevice, typedevice, result[0]['id']], err => {
                 if(err) return response(res).error(500, 'Server Error')
                 response(res).success()
             })

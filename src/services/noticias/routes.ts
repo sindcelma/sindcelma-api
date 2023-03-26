@@ -13,6 +13,7 @@ export default () => {
 
     router.get('/last', NoticiasService.last)
     router.post('/list/:page?', NoticiasService.list)
+    router.get('/list/:page?', NoticiasService.list)
     router.get('/get/:id', NoticiasService.get)
 
     return router

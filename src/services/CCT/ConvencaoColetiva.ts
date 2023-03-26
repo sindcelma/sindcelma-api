@@ -48,7 +48,6 @@ class ConvencaoColetiva {
                         `, [id_fav], err3 => {
                             
                             if(err3) return response(res).error(500, 'Erro ao tentar salvar')
-
                             response(res).success()
 
                         })
@@ -67,8 +66,7 @@ class ConvencaoColetiva {
                     }
                     
 
-                })
-           
+                }) 
 
         })
 

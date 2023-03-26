@@ -8,6 +8,7 @@ server/public/images/fav/*.jpg
 server/public/images/nodoc/*.jpg
 
 # ignore arquivos de dados de produção
+firebase-key*
 *.production.json
 *.production.txt
 pair_production.txt
