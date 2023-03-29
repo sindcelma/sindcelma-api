@@ -4,6 +4,8 @@ import response from '../../lib/response';
 import assertion from "../../lib/assertion";
 import Socio from '../../model/Socio';
 import { dateFormat } from '../../lib/data';
+import { Pool } from 'mysql';
+import User from '../../model/User';
 
 interface SorteioSocio {
     id:number,
@@ -51,7 +53,7 @@ class SorteioService {
             WHERE socios.slug = ?
         `, [sorteio_id, socio.getSlug()], (err, result) => {
 
-            if(err) return response(res).error(500, err)
+            if(err) return response(res).error(500, 'Ocorreu um erro ao tentar inscreve-lo')
             if(result.length == 0) return response(res).error(404, 'socio not found')
             if(result[0].diretor == 1) return response(res).error(400, 'Diretores não podem ser inscritos em sorteios')
 
@@ -65,14 +67,30 @@ class SorteioService {
 
             if(partc_id != null) return response(res).error(403, 'Sócio já está inscrito') 
 
-            conn.query(`
-                INSERT INTO sorteio_participantes (sorteio_id, socio_id)
-                VALUES (?,?)
-            `, [sorteio_id, socio_id], err4 => {
+            conn.query(`SELECT header FROM user_devices WHERE user_id = ? ORDER BY id DESC LIMIT 1`, [req.user.getId()], (err2, result2) => {
+                    
+                if(err2) return response(res).error(500, err2.message)
+                
+                conn.query(`SELECT tipo FROM sorteios WHERE id = ?`, [sorteio_id], (err3, result3) => {
 
-                if(err4) return response(res).error(500, err4)
+                    if(err3) return response(res).error(500, err3?.message)
 
-                response(res).success()
+                    if(result3[0].tipo != 'todos' && result2[0].header != result3[0].tipo){
+                        return response(res).error(400, `Apenas aparelhos '${result3[0].tipo}' podem se inscrever neste sorteio`)
+                    }
+    
+                    conn.query(`
+                        INSERT INTO sorteio_participantes (sorteio_id, socio_id)
+                        VALUES (?,?)
+                    `, [sorteio_id, socio_id], err4 => {
+    
+                        if(err4) return response(res).error(500, err4.message)
+    
+                        response(res).success()
+    
+                    })
+
+                })
 
             })
                 
@@ -134,10 +152,10 @@ class SorteioService {
 
     }
 
-    public static list(req:Request, res:Response){
-
-        const conn = mysqli();
+    private static list_filtered(user:User, tipo:string, conn:Pool, res:Response){
         
+        tipo = tipo != "" ? ` AND (sorteios.tipo = 'todos' OR sorteios.tipo = '${tipo}') ` : '';
+
         conn.query(`
             SELECT 
                 sorteios.id as sorteio_id,
@@ -148,6 +166,7 @@ class SorteioService {
                 sorteios.ativo,
                 sp.status_sorteio
             FROM   sorteios
+
             LEFT JOIN(
                 SELECT 
                     sorteio_participantes.sorteio_id,
@@ -160,9 +179,9 @@ class SorteioService {
                 JOIN   socios ON sorteio_participantes.socio_id = socios.id  
                 JOIN   user   ON user.socio_id = socios.id
                 WHERE  user.id = ?
-                
             ) as sp ON sp.sorteio_id = sorteios.id 
-            WHERE sorteios.ativo > 0
+
+            WHERE sorteios.ativo > 0 ${tipo}
             ORDER BY 
                 sorteios.id DESC,
                 (
@@ -180,7 +199,7 @@ class SorteioService {
 
             ;
 
-        `, [req.user.getId()], (err, result) => {
+        `, [user.getId()], (err, result) => {
 
             if(err) return response(res).error(500, err)
             if(result.length == 0) return response(res).success([]);
@@ -199,13 +218,29 @@ class SorteioService {
             response(res).success(sorteios);
             
         })
+
+    }
+
+    public static list(req:Request, res:Response){
+
+        const conn  = mysqli();
+        
+        if(req.user instanceof Socio){
+            conn.query(`SELECT header FROM user_devices WHERE user_id = ? ORDER BY id DESC LIMIT 1`, [req.user.getId()], (err, resp) => {
+                if(err) return response(res).error(500, err)
+                if(resp.length == 0) return response(res).error(404, 'Aparelho não encontrado')
+                return SorteioService.list_filtered(req.user, resp[0].header, conn, res)
+            })
+        } else {
+            SorteioService.list_filtered(req.user, '', conn, res)
+        }
         
     }
 
     public static get_sorteio(req:Request, res:Response){
 
         if(!req.params.sorteio_id) return response(res).error(400, 'bad request')
-        
+
         const conn = mysqli();
         conn.query(`
           SELECT 
@@ -238,9 +273,10 @@ class SorteioService {
 
     }
 
-    public static get_last(req:Request, res:Response){
+    private static get_last_filtered(tipo:string, conn:Pool, res:Response){
 
-        const conn = mysqli();
+        tipo = tipo != "" ? ` AND (sorteios.tipo = 'todos' OR sorteios.tipo = '${tipo}') ` : '';
+
         conn.query(`
           SELECT 
                     sorteios.id,
@@ -250,7 +286,7 @@ class SorteioService {
                     sorteios.data_sorteio
 
              FROM   sorteios 
-            WHERE   ativo = 1
+            WHERE   ativo = 1 ${tipo}
          ORDER BY   id DESC LIMIT 1
 
         `, (err, result) => {
@@ -263,13 +299,29 @@ class SorteioService {
             response(res).success(result[0]);
 
         })
-
+        
     }
 
-    
-    public static get_last_ativo_by_user(req:Request, res:Response){
+    public static get_last(req:Request, res:Response){
+
+        const conn  = mysqli();
         
-        const conn = mysqli();
+        if(req.user instanceof Socio){
+            conn.query(`SELECT header FROM user_devices WHERE user_id = ? ORDER BY id DESC LIMIT 1`, [req.user.getId()], (err, resp) => {
+                if(err) return response(res).error(500, err)
+                if(resp.length == 0) return response(res).error(404, 'Aparelho não encontrado')
+                return SorteioService.get_last_filtered(resp[0].header, conn, res)
+            })
+        } else {
+            SorteioService.get_last_filtered('', conn, res)
+        }
+        
+    }
+
+    private static get_last_ativo_by_user_filtered(user:User, tipo:string, conn:Pool, res:Response){
+
+        tipo = tipo != "" ? ` AND (sorteios.tipo = 'todos' OR sorteios.tipo = '${tipo}') ` : '';
+
         conn.query(`
           SELECT 
                     sorteios.id,
@@ -279,7 +331,7 @@ class SorteioService {
                     sorteios.data_sorteio
 
              FROM   sorteios 
-            WHERE   ativo = 1
+            WHERE   ativo = 1 ${tipo}
          ORDER BY   id DESC LIMIT 1
 
         `, (err, result) => {
@@ -306,7 +358,7 @@ class SorteioService {
               
                WHERE   user.id = ?
                  AND   sorteios.id = ?
-            `, [req.user.getId(), sorteio.id], (err2, result2) => {
+            `, [user.getId(), sorteio.id], (err2, result2) => {
                 
                 if(err2) return response(res).error(500, err2)
                 if(result2.length == 0) return response(res).success(sorteio);
@@ -314,12 +366,27 @@ class SorteioService {
                 sorteio.vencedor = result2[0].vencedor == 1
                 sorteio.inscrito = result2[0].id != null
                 
-
                 response(res).success(sorteio);
 
             })
             
         })
+
+    }
+    
+    public static get_last_ativo_by_user(req:Request, res:Response){
+        
+        const conn  = mysqli();
+        
+        if(req.user instanceof Socio){
+            conn.query(`SELECT header FROM user_devices WHERE user_id = ? ORDER BY id DESC LIMIT 1`, [req.user.getId()], (err, resp) => {
+                if(err) return response(res).error(500, err)
+                if(resp.length == 0) return response(res).error(404, 'Aparelho não encontrado')
+                return SorteioService.get_last_ativo_by_user_filtered(req.user, resp[0].header, conn, res)
+            })
+        } else {
+            SorteioService.get_last_ativo_by_user_filtered(req.user, '', conn, res)
+        }
 
     }
 

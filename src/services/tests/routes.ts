@@ -8,9 +8,10 @@ const router = Router()
 
 export default () => {
     
-    if(Config.instance().type() == 'developement'){
-
+    if(Config.instance().type() == 'development'){
+        
         //router.post('/gerarSessao', SessionTest.genSessionTest)
+        router.post('/change_image', Tests.change_image)
         router.post('/pair', Tests.pair)
         router.get('/saveWinner', FirebaseTest.saveWinner)
         router.get('/sendEmail', EmailTest.sendEmail)

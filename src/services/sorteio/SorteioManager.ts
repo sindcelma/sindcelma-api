@@ -23,35 +23,47 @@ class SorteioManager {
         if(!sorteio_id) return response(res).error(400, 'Bad request')
 
         const conn = mysqli();
+
         conn.query(`
             UPDATE sorteios 
             SET ativo = ?
             WHERE id = ?
         `, [status, sorteio_id], err => {
-            if(err) return response(res).error(500, 'Server error')
 
-            if(status == 1){
-                let quryDevices = `
-                    SELECT 
-                            user_devices.code
-                    FROM  socios 
-                    JOIN  user         ON user.socio_id = socios.id 
-                    JOIN  user_devices ON user.id = user_devices.user_id 
-                    WHERE NOT user_devices.code IS null
-                `;
+            if(err) return response(res).error(500, err)
 
-                conn.query(quryDevices, (err2, result2) => {
-
-                    if(err2) return console.log(err2);
-
-                    let devices:string[] = []                    
-                    for (let i = 0; i < result2.length; i++)
-                        devices.push(result2[i].code)
-
-                    firebase.sendNotification(`SORTEIO ATIVO!`, "Inscreva-se! Você pode ser o próximo ganhador!", devices)
+            conn.query(`SELECT titulo, tipo FROM sorteios WHERE id = ?`, [sorteio_id], (err, result) => {
+                    
+                if(err) return response(res).error(500, 'Internal Error')
                 
-                })
-            }
+                const titulo = result[0].titulo
+                const tipo   = result[0].tipo
+                const where  = tipo != "todos" ? `AND header = '${tipo}'` : ''
+
+                if(status == 1){
+                    let quryDevices = `
+                        SELECT 
+                                user_devices.code
+                        FROM  socios 
+                        JOIN  user         ON user.socio_id = socios.id 
+                        JOIN  user_devices ON user.id = user_devices.user_id 
+                        WHERE NOT user_devices.code IS null ${where}
+                    `;
+    
+                    conn.query(quryDevices, (err2, result2) => {
+    
+                        if(err2) return console.log(err2);
+    
+                        let devices:string[] = []                    
+                        for (let i = 0; i < result2.length; i++)
+                            devices.push(result2[i].code)
+    
+                        firebase.sendNotification(`SORTEIO ATIVO!`, titulo, devices)
+                    
+                    })
+                }
+
+            })
 
             response(res).success()
         })
@@ -201,6 +213,7 @@ class SorteioManager {
 
         const titulo  = req.body.titulo,
               premios = req.body.premios,
+              tipo    = req.body.tipo,
               qt_venc = Number(req.body.qt_venc),
               data_so = dateFormat(req.body.data_so, 'yyyy-MM-dd H:i:s'),
               data_in = dateFormat(req.body.data_in, 'yyyy-MM-dd H:i:s')
@@ -208,12 +221,11 @@ class SorteioManager {
         if((new Date(data_so.toString())).getTime() < (new Date(data_in.toString())).getTime())
             return response(res).error(400, 'Bad Request - A data de inscrição não pode ser maior que a data do sorteio')
         
-
         mysqli().query(`
-            INSERT INTO sorteios (titulo, premios, qt_vencedores, data_sorteio, data_inscricao, ativo)
-            VALUES (?,?,?,?,?,0)
-        `, [titulo, premios, qt_venc, data_so, data_in], err => {
-            if(err) return response(res).error(500, 'Internal Error')
+            INSERT INTO sorteios (tipo, titulo, premios, qt_vencedores, data_sorteio, data_inscricao, ativo)
+            VALUES (?,?,?,?,?,?,0)
+        `, [tipo, titulo, premios, qt_venc, data_so, data_in], err => {
+            if(err) return response(res).error(500, err)
             response(res).success()
         })
 
@@ -230,6 +242,7 @@ class SorteioManager {
         }
 
         const titulo    = req.body.titulo,
+              tipo      = req.body.tipo,
               premios   = req.body.premios,
               soteio_id = Number(req.body.soteio_id),
               qt_venc   = Number(req.body.qt_venc),
@@ -241,13 +254,14 @@ class SorteioManager {
           
         mysqli().query(`
             UPDATE sorteios SET 
+            tipo = ?,
             titulo = ?,
             premios = ?, 
             qt_vencedores = ?, 
             data_sorteio = ?, 
             data_inscricao = ?
             WHERE id = ?
-        `, [titulo, premios, qt_venc, data_so, data_in, soteio_id], err => {
+        `, [tipo, titulo, premios, qt_venc, data_so, data_in, soteio_id], err => {
             if(err) return response(res).error(500, 'Internal Error')
             response(res).success()
         })
@@ -269,12 +283,40 @@ class SorteioManager {
         
         if(ativo > 1) ativo = 1
 
-        mysqli().query(`
+        const conn = mysqli()
+
+        conn.query(`
             UPDATE sorteios SET 
             ativo = ?,
             WHERE id = ?
         `, [ativo, soteio_id], err => {
             if(err) return response(res).error(500, 'Internal Error')
+
+            if(ativo == 1){
+                // selecionar os aparelhos e enviar
+                conn.query(`SELECT titulo, tipo FROM sorteios WHERE id = ?`, [soteio_id], (err, result) => {
+                    
+                    if(err) return response(res).error(500, 'Internal Error')
+                    
+                    const titulo = result[0].titulo
+                    const tipo   = result[0].tipo
+                    const where  = tipo != "todos" ? `AND header = '${tipo}'` : ''
+
+                    conn.query(`SELECT code FROM user_devices WHERE NOT code IS null ${where}`, (err, resultdevs) => {
+                        
+                        if(err) return response(res).error(500, 'Internal Error')
+
+                        let devicesCod  = []
+                        for (let i = 0; i < resultdevs.length; i++)
+                            devicesCod.push(resultdevs[i].code)
+
+                        firebase.sendNotification('Novo Sorteio!', titulo, devicesCod)
+                    })
+
+                })
+
+            }
+            
             response(res).success()
         })
 

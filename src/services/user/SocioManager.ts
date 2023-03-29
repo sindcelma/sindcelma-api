@@ -6,8 +6,7 @@ import response from "../../lib/response";
 import Socio from "../../model/Socio";
 import crypto from 'crypto'
 
-import { renameSync } from 'fs';
-import { join } from 'path';
+import fetch from 'node-fetch';
 import firebase from "../../lib/firebase";
 import AwsService from "../../lib/aws";
 import Config from '../../lib/config';
@@ -490,7 +489,6 @@ class SocioManager {
                     INSERT INTO socios_dados_pessoais (socio_id, rg, sexo, estado_civil, data_nascimento, telefone)
                     VALUES (?,?,?,?,?,?)
                 `, [result[0].socio_id, rg, sexo, estado_civil, data_nascimento, telefone], err2 => {
-                    
                     if(err2) return response(res).error(500, err2)
                     response(res).success()
                 })
@@ -569,27 +567,50 @@ class SocioManager {
                 return response(res).error(403, 'need refresh key')
             }
             
-            conn.query("UPDATE user SET email = ? WHERE id = ?", [email, result[0].id], err2 => {
-                if(err2){
+            conn.query("UPDATE user SET email = ? WHERE id = ?", [email, result[0].id], async err2 => {
+                
+                if(err2)
                     return response(res).error(500, 'Este email já está cadastrado')
-                }
 
                 try {
-                    const newF    = `../../public/images/fav/${email}.jpg`
-                    const oldF    = `../../public/images/fav/${result[0].email}.jpg`
-                
-                    const fileN   = join(__dirname, newF)
-                    const fileO   = join(__dirname, oldF)
+
+                    console.log(Config.instance().getPair());
                     
-                    renameSync(fileO, fileN)
+
+                    let obj = {       
+                        ext : `jpg`,
+                        dir : `images/fav`,
+                        old : result[0].email.trim(),
+                        new : email.trim(),
+                        pair: Config.instance().getPair()
+                    }
+
+                    console.log(obj);
+                    
+
+                    let reqq = await fetch(`${Config.instance().json().asset}/api/admin_file/change_name`, {
+                        method:'POST',
+                        body:JSON.stringify(obj)
+                    })
+                    
+                    const body = await reqq.text()
+                    console.log(body);
+                    
+                    const resp = await JSON.parse(body)
+                    if(resp.code != 200)
+                        return response(res).error(resp.code, resp.message)
+
+                    conn.query("DELETE FROM user_devices WHERE user_id = ?", [result[0].id])
+                    conn.query("UPDATE user SET version = version+1 WHERE id = ?", [result[0].id])
+                    
+                    response(res).success()
                     
                 } catch (error) {
                     console.log(error);
+                    
+                    response(res).error(500, error)
                 }
-
-                conn.query("DELETE FROM user_devices WHERE user_id = ?", [result[0].id])
-                conn.query("UPDATE user SET version = version+1 WHERE id = ?", [result[0].id])
-                response(res).success()
+                
             })
 
         })
