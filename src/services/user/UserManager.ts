@@ -20,9 +20,9 @@ class UserManager {
         }
 
         const tokendevice  = req.body.tokendevice
-        const typedevice   = req.body.typedevice
+        const typedevice   = req.body.typedevice ?? 'android'
 
-        if(!tokendevice || !typedevice)
+        if(!tokendevice)
             return response(res).error(400, 'Bad Request')
 
         const conn = mysqli();

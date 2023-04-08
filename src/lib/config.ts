@@ -1,10 +1,16 @@
 import {readFileSync} from 'fs';
 import { join } from 'path'
 
+interface packages {
+    ios:string,
+    android:string
+}
+
 interface conf {
     app_version:string,
     api_version:string,
     package:string,
+    packages:packages,
     wp_noticias:boolean
 }
 
@@ -39,7 +45,8 @@ class Config {
             app_version:config_d.app_version,
             api_version:config_d.api_version,
             wp_noticias:config_d.wp_noticias,
-            package:    config_d.package
+            package:    config_d.package,
+            packages:   config_d.packages
         }
 
         let dat:Buffer    = readFileSync(join(__dirname, `../../database.${this.typeinstance}.json`))

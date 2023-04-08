@@ -104,7 +104,6 @@ class FileUserManager {
                 renameSync(fileO, fileN)
                 
                 if(fileSel.type == 'nodoc' || fileSel.type == 'fav'){
-                    console.log("salvando fav...");
                     let fileFav   = `../../public/images/fav/${email}.${fileSel.ext}`
                     const copy    = join(__dirname, fileFav)
                     copyFileSync(fileN, copy)

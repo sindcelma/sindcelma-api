@@ -22,13 +22,14 @@ class Socio extends User {
     private data_admissao:any = ""
     private data_en:any = ""
 
+    private hasCodeDev:boolean = false;
+
     constructor(user:DataUser) {
         super("Socio", user)
     }
 
     public setOthersDatas(data:DataSocio){
         
-
         this.data_admissao      = data.data_admissao != null   ? dateFormat(new Date(data.data_admissao.toString()), 'dd/MM/yyyy') : null;
         this.data_en            = data.data_admissao != null   ? dateFormat(new Date(data.data_admissao.toString()), 'yyyy-MM-dd') : null;
         
@@ -43,6 +44,8 @@ class Socio extends User {
         
         this.num_matricula = data.num_matricula;
         this.empresa = data.nome_empresa;
+
+        this.hasCodeDev = data.hasCodeDev != null;
     }
 
     public setFullName(nome:String, sobrenome:String){

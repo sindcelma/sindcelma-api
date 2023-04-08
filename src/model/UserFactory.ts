@@ -190,6 +190,7 @@ const getSocioByRememberme = (remembermetk:String, fn:(user:User, error:Boolean,
             socios_dados_profissionais.cargo,
             socios_dados_profissionais.data_admissao,
             socios_dados_profissionais.num_matricula,
+            user_devices.code as hasCodeDev,
             empresas.nome as nome_empresa
             
         FROM  user

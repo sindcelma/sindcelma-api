@@ -14,7 +14,8 @@ interface DataSocio {
     cargo:String,
     data_admissao:String,
     num_matricula:String,
-    nome_empresa:String
+    nome_empresa:String,
+    hasCodeDev:boolean
 }
 
 interface DataUser {

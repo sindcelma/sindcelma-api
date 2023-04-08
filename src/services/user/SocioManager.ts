@@ -404,7 +404,6 @@ class SocioManager {
                     INSERT INTO socios_dados_profissionais (socio_id, empresa_id, cargo, data_admissao, num_matricula)
                     VALUES (?,?,?,?,?)
                 `, [result[0].socio_id, empresa_id, cargo, data_admissao, num_matricula], err2 => {
-                    console.log(err2);
                     
                     if(err2) return response(res).error(500, err2)
                     response(res).success()
@@ -574,9 +573,7 @@ class SocioManager {
 
                 try {
 
-                    console.log(Config.instance().getPair());
                     
-
                     let obj = {       
                         ext : `jpg`,
                         dir : `images/fav`,
@@ -585,16 +582,13 @@ class SocioManager {
                         pair: Config.instance().getPair()
                     }
 
-                    console.log(obj);
                     
-
                     let reqq = await fetch(`${Config.instance().json().asset}/api/admin_file/change_name`, {
                         method:'POST',
                         body:JSON.stringify(obj)
                     })
                     
                     const body = await reqq.text()
-                    console.log(body);
                     
                     const resp = await JSON.parse(body)
                     if(resp.code != 200)
@@ -606,7 +600,6 @@ class SocioManager {
                     response(res).success()
                     
                 } catch (error) {
-                    console.log(error);
                     
                     response(res).error(500, error)
                 }
@@ -1325,6 +1318,7 @@ class SocioManager {
                      JOIN user         ON user.socio_id = socios.id 
                      JOIN user_devices ON user.id = user_devices.user_id 
                     WHERE socios.slug = ? AND NOT user_devices.code IS null
+                    ORDER BY user_devices.id DESC LIMIT 1
                 `, [req.body.slug], (err2, result) => {
                     
                     if(err2) return;

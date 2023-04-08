@@ -36,7 +36,6 @@ class FileManager {
                     slug:slug
                 })
             } catch (e) {
-                console.log("erro ghost...");
                 response(res).error(500, e)
             }
 
@@ -71,7 +70,6 @@ class FileManager {
                 appendFileSync(file, buff)
                 response(res).success()
             } catch (e) {
-                console.log("erro append...");
                 response(res).error(500, 'Este arquivo não existe')
             }
         })
@@ -106,7 +104,6 @@ class FileManager {
                 renameSync(fileO, fileN)
                 
                 if(fileSel.type == 'nodoc' || fileSel.type == 'fav'){
-                    console.log("salvando fav...");
                     let fileFav   = `../../public/images/fav/${email}.${fileSel.ext}`
                     const copy    = join(__dirname, fileFav)
                     copyFileSync(fileN, copy)
@@ -123,7 +120,6 @@ class FileManager {
 
                 
             } catch (e) {
-                console.log("erro commit...");
                 response(res).error(404, 'Este arquivo não existe')
             }
 
