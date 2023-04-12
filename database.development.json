@@ -1,6 +1,6 @@
 {
-    "host":"localhost",
-    "user":"root",
+    "host":"172.17.0.4",
+    "user":"admin",
     "pass":"password@123",
     "port":"3306",
     "name":"sindcelma"

@@ -11,11 +11,11 @@ class EmailSender {
 
     private info:emailInfo 
 
-    private de:string
-    private para:string 
-    private assunto:string
+    private de:string = ""
+    private para:string = ""
+    private assunto:string = ""
 
-    private data:{}
+    private data:{} = {}
 
     private template:string = ""
     private content:string = ""

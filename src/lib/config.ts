@@ -24,8 +24,8 @@ class Config {
     private config_data:conf;
     private pair:string;
     private awsconfig;
-    private email_system:string;
-    private email_receiver:string;
+    private email_system:string = "";
+    private email_receiver:string = "";
 
     public static path = process.env.PATH || process.cwd();
 

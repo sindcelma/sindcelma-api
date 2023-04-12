@@ -35,7 +35,7 @@ class AuthService {
             SELECT id, senha FROM user WHERE email = ?
         `, [user.getEmail()], async (err, result) => {
             
-            if(err) return response(res).error(500, 'Internal Error')
+            if(err) return response(res).error(500, err)
             if(result.length == 0) return response(res).error(404, 'usuario não encontrado')
             
             const senhaHash = result[0]['senha']

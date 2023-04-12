@@ -114,12 +114,12 @@ const getSocio = (email:String, senha:string, fn:(user:User, error:Boolean, msg:
         conn.query(query, [email], async (err, result) => {
             
             if(err){
-                return fn(new Visitante, true, "Internal Error")
+                return fn(new Visitante, true, err.message)
             }
 
             if(result.length > 0){
                 
-                const res:{id:Number, email:string, status:Number, version:Number, senha:string} = result[0]
+                const res:{id:number, email:string, status:number, version:number, senha:string} = result[0]
 
                 const status = await comparePass(senha, res.senha);
                 if(!status){

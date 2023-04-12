@@ -1,6 +1,6 @@
 {
     "url":"http://192.168.0.11:3050",
-    "asset":"http://192.168.0.11:8904",
+    "asset":"http://172.17.0.2",
     "port":3050,
     "salt":"3e439cd4ffcbe4d20c6232c905be4bfae21c8b9b70a887ee68a5913fd0e1c7e9"
 }
