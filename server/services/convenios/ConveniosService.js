@@ -7,7 +7,7 @@ const response_1 = __importDefault(require("../../lib/response"));
 const mysqli_1 = __importDefault(require("../../lib/mysqli"));
 class ConveniosService {
     static list(req, res) {
-        (0, mysqli_1.default)().query("SELECT id, titulo, imagem FROM convenios", (err, result) => {
+        (0, mysqli_1.default)().query("SELECT id, titulo, imagem, descricao as texto FROM convenios", (err, result) => {
             if (err)
                 return (0, response_1.default)(res).error(500, err);
             (0, response_1.default)(res).success(result);

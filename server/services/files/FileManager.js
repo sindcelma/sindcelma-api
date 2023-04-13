@@ -32,7 +32,6 @@ class FileManager {
                 });
             }
             catch (e) {
-                console.log("erro ghost...");
                 (0, response_1.default)(res).error(500, e);
             }
         });
@@ -60,7 +59,6 @@ class FileManager {
                 (0, response_1.default)(res).success();
             }
             catch (e) {
-                console.log("erro append...");
                 (0, response_1.default)(res).error(500, 'Este arquivo não existe');
             }
         });
@@ -87,7 +85,6 @@ class FileManager {
             try {
                 (0, fs_1.renameSync)(fileO, fileN);
                 if (fileSel.type == 'nodoc' || fileSel.type == 'fav') {
-                    console.log("salvando fav...");
                     let fileFav = `../../public/images/fav/${email}.${fileSel.ext}`;
                     const copy = (0, path_1.join)(__dirname, fileFav);
                     (0, fs_1.copyFileSync)(fileN, copy);
@@ -103,7 +100,6 @@ class FileManager {
                 });
             }
             catch (e) {
-                console.log("erro commit...");
                 (0, response_1.default)(res).error(404, 'Este arquivo não existe');
             }
         });

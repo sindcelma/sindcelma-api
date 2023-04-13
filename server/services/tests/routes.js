@@ -11,8 +11,9 @@ const Tests_1 = __importDefault(require("./Tests"));
 const FirebaseTest_1 = __importDefault(require("./FirebaseTest"));
 const router = (0, express_1.Router)();
 exports.default = () => {
-    if (config_1.default.instance().type() == 'developement') {
+    if (config_1.default.instance().type() == 'development') {
         //router.post('/gerarSessao', SessionTest.genSessionTest)
+        router.post('/change_image', Tests_1.default.change_image);
         router.post('/pair', Tests_1.default.pair);
         router.get('/saveWinner', FirebaseTest_1.default.saveWinner);
         router.get('/sendEmail', EmailTest_1.default.sendEmail);

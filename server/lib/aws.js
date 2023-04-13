@@ -9,6 +9,10 @@ const template_1 = __importDefault(require("./template"));
 class EmailSender {
     constructor(info) {
         this.apiversion = '2010-12-01';
+        this.de = "";
+        this.para = "";
+        this.assunto = "";
+        this.data = {};
         this.template = "";
         this.content = "";
         this.info = info;

@@ -7,10 +7,10 @@ const firebase_admin_1 = __importDefault(require("firebase-admin"));
 const fs_1 = __importDefault(require("fs"));
 const path_1 = require("path");
 const config_1 = __importDefault(require("./config"));
-const serviceAccount = JSON.parse(fs_1.default.readFileSync((0, path_1.join)(__dirname, '../../firebase-key.json')).toString());
+const serviceAccount = JSON.parse(fs_1.default.readFileSync((0, path_1.join)(__dirname, `../../firebase-key.${config_1.default.instance().type()}.json`)).toString());
 const app = firebase_admin_1.default.initializeApp({
     credential: firebase_admin_1.default.credential.cert(serviceAccount),
-    projectId: "sindcelma-app-1f97d"
+    projectId: serviceAccount.project_id
 });
 exports.default = {
     addWinner: (socio_id, sorteio_id) => {
@@ -20,15 +20,23 @@ exports.default = {
         });
     },
     sendNotification: (title, message, devices) => {
-        if (config_1.default.instance().type() == 'development') {
+        /*
+        if(Config.instance().type() == 'development'){
             return console.log("Não foi possível enviar as notificações pois a API está em módulo de desenvolvimento.");
         }
-        firebase_admin_1.default.messaging(app).sendToDevice(devices, {
-            notification: {
-                title: title,
-                body: message,
-            },
-        });
+        */
+        try {
+            firebase_admin_1.default.messaging(app).sendToDevice(devices, {
+                notification: {
+                    title: title,
+                    body: message,
+                },
+            });
+        }
+        catch (err) {
+            console.log(err);
+            /// silencio...
+        }
     }
 };
 //# sourceMappingURL=firebase.js.map

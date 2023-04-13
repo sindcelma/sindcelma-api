@@ -16,13 +16,33 @@ const response_1 = __importDefault(require("../../lib/response"));
 const config_1 = __importDefault(require("../../lib/config"));
 const node_fetch_1 = __importDefault(require("node-fetch"));
 class Tests {
+    static change_image(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let result = yield (0, node_fetch_1.default)(`${config_1.default.instance().json().asset}/api/admin_file/change_name`, {
+                method: 'POST',
+                body: JSON.stringify(req.body)
+            });
+            const body = yield result.text();
+            console.log(body);
+            const resp = yield JSON.parse(body);
+            console.log(resp);
+            if (resp.code != 200) {
+                return (0, response_1.default)(res).error(resp.code, resp.message);
+            }
+            (0, response_1.default)(res).success();
+        });
+    }
     static pair(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             let result = yield (0, node_fetch_1.default)(`${config_1.default.instance().json().asset}/api/server_file/add_random_fav`, {
                 method: 'POST',
                 body: JSON.stringify(req.body)
             });
-            console.log(result);
+            const body = yield result.json();
+            console.log(body);
+            if (body.code != 200) {
+                return (0, response_1.default)(res).error(body.code, body.message);
+            }
             (0, response_1.default)(res).success();
         });
     }

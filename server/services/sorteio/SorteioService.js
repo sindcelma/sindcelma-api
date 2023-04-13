@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mysqli_1 = __importDefault(require("../../lib/mysqli"));
 const response_1 = __importDefault(require("../../lib/response"));
 const assertion_1 = __importDefault(require("../../lib/assertion"));
+const Socio_1 = __importDefault(require("../../model/Socio"));
 const data_1 = require("../../lib/data");
 class SorteioService {
     static inscreverSe(req, res) {
@@ -38,7 +39,7 @@ class SorteioService {
             WHERE socios.slug = ?
         `, [sorteio_id, socio.getSlug()], (err, result) => {
             if (err)
-                return (0, response_1.default)(res).error(500, err);
+                return (0, response_1.default)(res).error(500, 'Ocorreu um erro ao tentar inscreve-lo');
             if (result.length == 0)
                 return (0, response_1.default)(res).error(404, 'socio not found');
             if (result[0].diretor == 1)
@@ -51,13 +52,24 @@ class SorteioService {
                 return (0, response_1.default)(res).error(405, 'Você precisa cadastrar todas as suas informações para participar do sorteio.');
             if (partc_id != null)
                 return (0, response_1.default)(res).error(403, 'Sócio já está inscrito');
-            conn.query(`
-                INSERT INTO sorteio_participantes (sorteio_id, socio_id)
-                VALUES (?,?)
-            `, [sorteio_id, socio_id], err4 => {
-                if (err4)
-                    return (0, response_1.default)(res).error(500, err4);
-                (0, response_1.default)(res).success();
+            conn.query(`SELECT header FROM user_devices WHERE user_id = ? ORDER BY id DESC LIMIT 1`, [req.user.getId()], (err2, result2) => {
+                if (err2)
+                    return (0, response_1.default)(res).error(500, err2.message);
+                conn.query(`SELECT tipo FROM sorteios WHERE id = ?`, [sorteio_id], (err3, result3) => {
+                    if (err3)
+                        return (0, response_1.default)(res).error(500, err3 === null || err3 === void 0 ? void 0 : err3.message);
+                    if (result3[0].tipo != 'todos' && result2[0].header != result3[0].tipo) {
+                        return (0, response_1.default)(res).error(400, `Apenas aparelhos '${result3[0].tipo}' podem se inscrever neste sorteio`);
+                    }
+                    conn.query(`
+                        INSERT INTO sorteio_participantes (sorteio_id, socio_id)
+                        VALUES (?,?)
+                    `, [sorteio_id, socio_id], err4 => {
+                        if (err4)
+                            return (0, response_1.default)(res).error(500, err4.message);
+                        (0, response_1.default)(res).success();
+                    });
+                });
             });
         });
     }
@@ -107,8 +119,8 @@ class SorteioService {
             (0, response_1.default)(res).success(result);
         });
     }
-    static list(req, res) {
-        const conn = (0, mysqli_1.default)();
+    static list_filtered(user, tipo, conn, res) {
+        tipo = tipo != "" ? ` AND (sorteios.tipo = 'todos' OR sorteios.tipo = '${tipo}') ` : '';
         conn.query(`
             SELECT 
                 sorteios.id as sorteio_id,
@@ -119,6 +131,7 @@ class SorteioService {
                 sorteios.ativo,
                 sp.status_sorteio
             FROM   sorteios
+
             LEFT JOIN(
                 SELECT 
                     sorteio_participantes.sorteio_id,
@@ -131,9 +144,9 @@ class SorteioService {
                 JOIN   socios ON sorteio_participantes.socio_id = socios.id  
                 JOIN   user   ON user.socio_id = socios.id
                 WHERE  user.id = ?
-                
             ) as sp ON sp.sorteio_id = sorteios.id 
-            WHERE sorteios.ativo > 0
+
+            WHERE sorteios.ativo > 0 ${tipo}
             ORDER BY 
                 sorteios.id DESC,
                 (
@@ -151,7 +164,7 @@ class SorteioService {
 
             ;
 
-        `, [req.user.getId()], (err, result) => {
+        `, [user.getId()], (err, result) => {
             if (err)
                 return (0, response_1.default)(res).error(500, err);
             if (result.length == 0)
@@ -167,6 +180,21 @@ class SorteioService {
             }
             (0, response_1.default)(res).success(sorteios);
         });
+    }
+    static list(req, res) {
+        const conn = (0, mysqli_1.default)();
+        if (req.user instanceof Socio_1.default) {
+            conn.query(`SELECT header FROM user_devices WHERE user_id = ? ORDER BY id DESC LIMIT 1`, [req.user.getId()], (err, resp) => {
+                if (err)
+                    return (0, response_1.default)(res).error(500, err);
+                if (resp.length == 0)
+                    return (0, response_1.default)(res).error(404, 'Aparelho não encontrado');
+                return SorteioService.list_filtered(req.user, resp[0].header, conn, res);
+            });
+        }
+        else {
+            SorteioService.list_filtered(req.user, '', conn, res);
+        }
     }
     static get_sorteio(req, res) {
         if (!req.params.sorteio_id)
@@ -199,8 +227,8 @@ class SorteioService {
             (0, response_1.default)(res).success(result);
         });
     }
-    static get_last(req, res) {
-        const conn = (0, mysqli_1.default)();
+    static get_last_filtered(tipo, conn, res) {
+        tipo = tipo != "" ? ` AND (sorteios.tipo = 'todos' OR sorteios.tipo = '${tipo}') ` : '';
         conn.query(`
           SELECT 
                     sorteios.id,
@@ -210,7 +238,7 @@ class SorteioService {
                     sorteios.data_sorteio
 
              FROM   sorteios 
-            WHERE   ativo = 1
+            WHERE   ativo = 1 ${tipo}
          ORDER BY   id DESC LIMIT 1
 
         `, (err, result) => {
@@ -223,8 +251,23 @@ class SorteioService {
             (0, response_1.default)(res).success(result[0]);
         });
     }
-    static get_last_ativo_by_user(req, res) {
+    static get_last(req, res) {
         const conn = (0, mysqli_1.default)();
+        if (req.user instanceof Socio_1.default) {
+            conn.query(`SELECT header FROM user_devices WHERE user_id = ? ORDER BY id DESC LIMIT 1`, [req.user.getId()], (err, resp) => {
+                if (err)
+                    return (0, response_1.default)(res).error(500, err);
+                if (resp.length == 0)
+                    return (0, response_1.default)(res).error(404, 'Aparelho não encontrado');
+                return SorteioService.get_last_filtered(resp[0].header, conn, res);
+            });
+        }
+        else {
+            SorteioService.get_last_filtered('', conn, res);
+        }
+    }
+    static get_last_ativo_by_user_filtered(user, tipo, conn, res) {
+        tipo = tipo != "" ? ` AND (sorteios.tipo = 'todos' OR sorteios.tipo = '${tipo}') ` : '';
         conn.query(`
           SELECT 
                     sorteios.id,
@@ -234,7 +277,7 @@ class SorteioService {
                     sorteios.data_sorteio
 
              FROM   sorteios 
-            WHERE   ativo = 1
+            WHERE   ativo = 1 ${tipo}
          ORDER BY   id DESC LIMIT 1
 
         `, (err, result) => {
@@ -259,7 +302,7 @@ class SorteioService {
               
                WHERE   user.id = ?
                  AND   sorteios.id = ?
-            `, [req.user.getId(), sorteio.id], (err2, result2) => {
+            `, [user.getId(), sorteio.id], (err2, result2) => {
                 if (err2)
                     return (0, response_1.default)(res).error(500, err2);
                 if (result2.length == 0)
@@ -269,6 +312,21 @@ class SorteioService {
                 (0, response_1.default)(res).success(sorteio);
             });
         });
+    }
+    static get_last_ativo_by_user(req, res) {
+        const conn = (0, mysqli_1.default)();
+        if (req.user instanceof Socio_1.default) {
+            conn.query(`SELECT header FROM user_devices WHERE user_id = ? ORDER BY id DESC LIMIT 1`, [req.user.getId()], (err, resp) => {
+                if (err)
+                    return (0, response_1.default)(res).error(500, err);
+                if (resp.length == 0)
+                    return (0, response_1.default)(res).error(404, 'Aparelho não encontrado');
+                return SorteioService.get_last_ativo_by_user_filtered(req.user, resp[0].header, conn, res);
+            });
+        }
+        else {
+            SorteioService.get_last_ativo_by_user_filtered(req.user, '', conn, res);
+        }
     }
 }
 exports.default = SorteioService;

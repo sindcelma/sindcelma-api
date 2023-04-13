@@ -18,19 +18,29 @@ const response_1 = __importDefault(require("../../lib/response"));
 const Socio_1 = __importDefault(require("../../model/Socio"));
 const node_fetch_1 = __importDefault(require("node-fetch"));
 const config_1 = __importDefault(require("../../lib/config"));
+const assertion_1 = __importDefault(require("../../lib/assertion"));
 class UserManager {
     static save_token(req, res) {
-        const remembermetk = req.body.remembermetk;
+        var _a;
+        try {
+            (0, assertion_1.default)()
+                .isSocio(req.user)
+                .assert();
+        }
+        catch (error) {
+            return (0, response_1.default)(res).error(401, 'Unauthorized');
+        }
         const tokendevice = req.body.tokendevice;
-        if (!remembermetk || !tokendevice)
+        const typedevice = (_a = req.body.typedevice) !== null && _a !== void 0 ? _a : 'android';
+        if (!tokendevice)
             return (0, response_1.default)(res).error(400, 'Bad Request');
         const conn = (0, mysqli_1.default)();
-        conn.query(`SELECT id, code FROM user_devices WHERE rememberme = ?`, [remembermetk], (err, result) => {
+        conn.query(`SELECT id, code FROM user_devices WHERE user_id = ? ORDER BY id DESC`, [req.user.getId()], (err, result) => {
             if (err)
                 return (0, response_1.default)(res).error(500, 'Server Error');
-            if (result[0]['code'] != null && result[0]['code'].trim() != '')
-                return (0, response_1.default)(res).error(500, 'Not permited');
-            conn.query(`UPDATE user_devices SET code = ? WHERE id = ?`, [tokendevice, result[0]['id']], err => {
+            if (result.length == 0)
+                return (0, response_1.default)(res).error(404, 'Not Found');
+            conn.query(`UPDATE user_devices SET code = ?, header = ? WHERE id = ?`, [tokendevice, typedevice, result[0]['id']], err => {
                 if (err)
                     return (0, response_1.default)(res).error(500, 'Server Error');
                 (0, response_1.default)(res).success();

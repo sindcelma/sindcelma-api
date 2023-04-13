@@ -23,6 +23,7 @@ class Socio extends User_1.default {
         this.data_nascimento_en = "";
         this.data_admissao = "";
         this.data_en = "";
+        this.hasCodeDev = false;
     }
     setOthersDatas(data) {
         this.data_admissao = data.data_admissao != null ? (0, data_1.dateFormat)(new Date(data.data_admissao.toString()), 'dd/MM/yyyy') : null;
@@ -36,6 +37,7 @@ class Socio extends User_1.default {
         this.cargo = data.cargo;
         this.num_matricula = data.num_matricula;
         this.empresa = data.nome_empresa;
+        this.hasCodeDev = data.hasCodeDev != null;
     }
     setFullName(nome, sobrenome) {
         this.nome = nome;

@@ -11,7 +11,7 @@ class NoticiasService {
             SELECT 
                  id, titulo, data_created, subtitulo, imagem 
             FROM noticias 
-            ORDER BY id DESC LIMIT 1`, [], (err, result) => {
+            ORDER BY id DESC LIMIT 1`, (err, result) => {
             if (err)
                 return (0, response_1.default)(res).error(500, err);
             (0, response_1.default)(res).success(result);
@@ -29,32 +29,42 @@ class NoticiasService {
             ssearch += " WHERE titulo LIKE ? OR text LIKE ? ";
         }
         const busca = search ? [search, search] : [];
-        (0, mysqli_1.default)().query(`
-            SELECT 
-                id, titulo, data_created, subtitulo, imagem 
-            FROM noticias
-            ${ssearch}
-            ORDER BY id DESC LIMIT ${limit}`, busca, (err, result) => {
-            if (err)
-                return (0, response_1.default)(res).error(500, err);
-            (0, response_1.default)(res).success(result);
-        });
+        try {
+            (0, mysqli_1.default)().query(`
+                SELECT 
+                    id, titulo, data_created, subtitulo, imagem 
+                FROM noticias
+                ${ssearch}
+                ORDER BY id DESC LIMIT ${limit}`, busca, (err, result) => {
+                if (err)
+                    return (0, response_1.default)(res).error(500, err);
+                (0, response_1.default)(res).success(result);
+            });
+        }
+        catch (error) {
+            return (0, response_1.default)(res).error(500, error);
+        }
     }
     static get(req, res) {
         const id = Number(req.params.id);
         if (!id)
             return (0, response_1.default)(res).error(400, 'Bad Request');
-        (0, mysqli_1.default)().query(`
-            SELECT 
-                id, titulo, text, imagem, data_created, editado
-            FROM noticias 
-           WHERE id  = ? `, [id], (err, result) => {
-            if (err)
-                return (0, response_1.default)(res).error(500, err);
-            if (result.length == 0)
-                return (0, response_1.default)(res).error(404, 'Not Found');
-            (0, response_1.default)(res).success(result);
-        });
+        try {
+            (0, mysqli_1.default)().query(`
+                SELECT 
+                    id, titulo, text, imagem, data_created, editado
+                    FROM noticias 
+                    WHERE id  = ? `, [id], (err, result) => {
+                if (err)
+                    return (0, response_1.default)(res).error(500, err);
+                if (result.length == 0)
+                    return (0, response_1.default)(res).error(404, 'Not Found');
+                (0, response_1.default)(res).success(result);
+            });
+        }
+        catch (error) {
+            return (0, response_1.default)(res).error(500, error);
+        }
     }
 }
 exports.default = NoticiasService;

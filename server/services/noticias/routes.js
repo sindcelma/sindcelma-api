@@ -13,6 +13,7 @@ exports.default = () => {
     router.post('/delete', NoticiasManager_1.default.delete);
     router.get('/last', NoticiasService_1.default.last);
     router.post('/list/:page?', NoticiasService_1.default.list);
+    router.get('/list/:page?', NoticiasService_1.default.list);
     router.get('/get/:id', NoticiasService_1.default.get);
     return router;
 };

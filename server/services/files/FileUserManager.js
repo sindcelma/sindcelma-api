@@ -85,7 +85,6 @@ class FileUserManager {
             try {
                 (0, fs_1.renameSync)(fileO, fileN);
                 if (fileSel.type == 'nodoc' || fileSel.type == 'fav') {
-                    console.log("salvando fav...");
                     let fileFav = `../../public/images/fav/${email}.${fileSel.ext}`;
                     const copy = (0, path_1.join)(__dirname, fileFav);
                     (0, fs_1.copyFileSync)(fileN, copy);

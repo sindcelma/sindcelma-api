@@ -4,6 +4,8 @@ const fs_1 = require("fs");
 const path_1 = require("path");
 class Config {
     constructor() {
+        this.email_system = "";
+        this.email_receiver = "";
         let res = (0, fs_1.readFileSync)((0, path_1.join)(__dirname, `../../config.json`));
         const conf = JSON.parse(res.toString());
         this.typeinstance = conf.type;
@@ -14,7 +16,9 @@ class Config {
         this.config_data = {
             app_version: config_d.app_version,
             api_version: config_d.api_version,
-            package: config_d.package
+            wp_noticias: config_d.wp_noticias,
+            package: config_d.package,
+            packages: config_d.packages
         };
         let dat = (0, fs_1.readFileSync)((0, path_1.join)(__dirname, `../../database.${this.typeinstance}.json`));
         this.database = JSON.parse(dat.toString());

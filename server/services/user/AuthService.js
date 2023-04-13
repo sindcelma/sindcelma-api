@@ -37,7 +37,7 @@ class AuthService {
             SELECT id, senha FROM user WHERE email = ?
         `, [user.getEmail()], (err, result) => __awaiter(this, void 0, void 0, function* () {
             if (err)
-                return (0, response_1.default)(res).error(500, 'Internal Error');
+                return (0, response_1.default)(res).error(500, err);
             if (result.length == 0)
                 return (0, response_1.default)(res).error(404, 'usuario não encontrado');
             const senhaHash = result[0]['senha'];
@@ -125,7 +125,13 @@ class AuthService {
             if (remem) {
                 let conn = (0, mysqli_1.default)();
                 message.remembermetk = user.getRememberMeToken();
-                conn.query("INSERT INTO user_devices (user_id, header, rememberme) VALUES (?,?,?)", [user.getId(), user.getAgent(), message.remembermetk]);
+                try {
+                    yield conn.query(`DELETE FROM user_devices WHERE user_id = ?`, [user.getId()]);
+                    yield conn.query("INSERT INTO user_devices (user_id, rememberme) VALUES (?,?)", [user.getId(), message.remembermetk]);
+                }
+                catch (error) {
+                    return (0, response_1.default)(res).error(500, 'Erro no servidor');
+                }
             }
             return (0, response_1.default)(res).success(message);
         }), remem);

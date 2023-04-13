@@ -18,8 +18,7 @@ const mysqli_1 = __importDefault(require("../../lib/mysqli"));
 const response_1 = __importDefault(require("../../lib/response"));
 const Socio_1 = __importDefault(require("../../model/Socio"));
 const crypto_1 = __importDefault(require("crypto"));
-const fs_1 = require("fs");
-const path_1 = require("path");
+const node_fetch_1 = __importDefault(require("node-fetch"));
 const firebase_1 = __importDefault(require("../../lib/firebase"));
 const aws_1 = __importDefault(require("../../lib/aws"));
 const config_1 = __importDefault(require("../../lib/config"));
@@ -347,7 +346,6 @@ class SocioManager {
                     INSERT INTO socios_dados_profissionais (socio_id, empresa_id, cargo, data_admissao, num_matricula)
                     VALUES (?,?,?,?,?)
                 `, [result[0].socio_id, empresa_id, cargo, data_admissao, num_matricula], err2 => {
-                    console.log(err2);
                     if (err2)
                         return (0, response_1.default)(res).error(500, err2);
                     (0, response_1.default)(res).success();
@@ -480,24 +478,33 @@ class SocioManager {
             if (assert.index != 0 && req.body.key != result[0].temp_key) {
                 return (0, response_1.default)(res).error(403, 'need refresh key');
             }
-            conn.query("UPDATE user SET email = ? WHERE id = ?", [email, result[0].id], err2 => {
-                if (err2) {
+            conn.query("UPDATE user SET email = ? WHERE id = ?", [email, result[0].id], (err2) => __awaiter(this, void 0, void 0, function* () {
+                if (err2)
                     return (0, response_1.default)(res).error(500, 'Este email já está cadastrado');
-                }
                 try {
-                    const newF = `../../public/images/fav/${email}.jpg`;
-                    const oldF = `../../public/images/fav/${result[0].email}.jpg`;
-                    const fileN = (0, path_1.join)(__dirname, newF);
-                    const fileO = (0, path_1.join)(__dirname, oldF);
-                    (0, fs_1.renameSync)(fileO, fileN);
+                    let obj = {
+                        ext: `jpg`,
+                        dir: `images/fav`,
+                        old: result[0].email.trim(),
+                        new: email.trim(),
+                        pair: config_1.default.instance().getPair()
+                    };
+                    let reqq = yield (0, node_fetch_1.default)(`${config_1.default.instance().json().asset}/api/admin_file/change_name`, {
+                        method: 'POST',
+                        body: JSON.stringify(obj)
+                    });
+                    const body = yield reqq.text();
+                    const resp = yield JSON.parse(body);
+                    if (resp.code != 200)
+                        return (0, response_1.default)(res).error(resp.code, resp.message);
+                    conn.query("DELETE FROM user_devices WHERE user_id = ?", [result[0].id]);
+                    conn.query("UPDATE user SET version = version+1 WHERE id = ?", [result[0].id]);
+                    (0, response_1.default)(res).success();
                 }
                 catch (error) {
-                    console.log(error);
+                    (0, response_1.default)(res).error(500, error);
                 }
-                conn.query("DELETE FROM user_devices WHERE user_id = ?", [result[0].id]);
-                conn.query("UPDATE user SET version = version+1 WHERE id = ?", [result[0].id]);
-                (0, response_1.default)(res).success();
-            });
+            }));
         });
     }
     static verify_by_qrcode_token(req, res) {
@@ -1070,6 +1077,7 @@ class SocioManager {
                      JOIN user         ON user.socio_id = socios.id 
                      JOIN user_devices ON user.id = user_devices.user_id 
                     WHERE socios.slug = ? AND NOT user_devices.code IS null
+                    ORDER BY user_devices.id DESC LIMIT 1
                 `, [req.body.slug], (err2, result) => {
                     if (err2)
                         return;

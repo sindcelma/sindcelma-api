@@ -104,7 +104,7 @@ const getSocio = (email, senha, fn, remember) => {
        WHERE  user.email = ?`;
         conn.query(query, [email], (err, result) => __awaiter(void 0, void 0, void 0, function* () {
             if (err) {
-                return fn(new Visitante_1.default, true, "Internal Error");
+                return fn(new Visitante_1.default, true, err.message);
             }
             if (result.length > 0) {
                 const res = result[0];
@@ -168,6 +168,7 @@ const getSocioByRememberme = (remembermetk, fn) => {
             socios_dados_profissionais.cargo,
             socios_dados_profissionais.data_admissao,
             socios_dados_profissionais.num_matricula,
+            user_devices.code as hasCodeDev,
             empresas.nome as nome_empresa
             
         FROM  user
