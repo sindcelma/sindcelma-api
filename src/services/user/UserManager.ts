@@ -43,7 +43,7 @@ class UserManager {
 
     public static check_login(req:Request, res:Response){
 
-        const doc = req.body.doc
+        const doc = req.body.doc ? req.body.doc.trim() : null
         
         if(!doc) return response(res).error(400, "Bad Request")
 
@@ -102,7 +102,7 @@ class UserManager {
 
     public static check_email(req:Request, res:Response){
         
-        const email  = req.body.email
+        const email  = req.body.email ? req.body.email.trim() : null
 
         if(!email) return response(res).error(401, 'Unauthorized') 
         
@@ -146,9 +146,10 @@ class UserManager {
 
     public static async create_user(req:Request, res:Response) {
         
-        if(!req.body.senha || !req.body.email) return response(res).error(400, 'Bad Request')
+        const email = req.body.email ? req.body.email.trim() : null;
 
-        const email = req.body.email;
+        if(!req.body.senha || !email) return response(res).error(400, 'Bad Request')
+
         const doc   = Socio.transformCpf(req.body.doc);
         const senha = await hashPass(req.body.senha);
         

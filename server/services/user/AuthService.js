@@ -100,10 +100,11 @@ class AuthService {
         }));
     }
     static get_user(req, res) {
+        console.log(req.user);
         (0, response_1.default)(res).success(req.user);
     }
     static login(req, res) {
-        const email = req.body.email;
+        const email = req.body.email ? req.body.email.trim() : null;
         const senha = req.body.senha;
         const remem = req.body.rememberme;
         const type = req.body.type;
@@ -142,7 +143,7 @@ class AuthService {
     static recover(req, res) {
         // gerar o código e enviar via email ou telefone
         // alterar versão do usuário
-        let email = req.body.email;
+        let email = req.body.email ? req.body.email.trim() : null;
         let cpf = Socio_1.default.transformCpf(req.body.doc);
         let type = req.body.type;
         let to = req.body.to;
@@ -215,7 +216,7 @@ class AuthService {
      * testado: false
      */
     static check_code_recover(req, res) {
-        const email = req.body.email;
+        const email = req.body.email ? req.body.email.trim() : null;
         const codigo = req.body.codigo;
         if (!email || !codigo)
             return (0, response_1.default)(res).error(400, 'Bad Request');
@@ -244,7 +245,7 @@ class AuthService {
         }));
     }
     static change_pass_using_code(req, res) {
-        const email = req.body.email;
+        const email = req.body.email ? req.body.email.trim() : null;
         const codigo = req.body.codigo;
         const senha = req.body.senha;
         if (!email || !senha || !codigo)

@@ -37,6 +37,10 @@ export default {
             return console.log("Não foi possível enviar as notificações pois a API está em módulo de desenvolvimento.");
         }
         */
+        if(devices.length == 0){
+            console.log("Não há aparelhos para enviar...");
+            return;
+        }
         try {
             firebase.messaging(app).sendToDevice(devices, {
                 notification:{

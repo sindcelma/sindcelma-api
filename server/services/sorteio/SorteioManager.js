@@ -164,6 +164,7 @@ class SorteioManager {
         });
     }
     static add(req, res) {
+        var _a;
         try {
             (0, assertion_1.default)()
                 .isAdmin(req.user)
@@ -172,7 +173,7 @@ class SorteioManager {
         catch (e) {
             return (0, response_1.default)(res).error(401, 'Unauthorized');
         }
-        const titulo = req.body.titulo, premios = req.body.premios, tipo = req.body.tipo, qt_venc = Number(req.body.qt_venc), data_so = (0, data_1.dateFormat)(req.body.data_so, 'yyyy-MM-dd H:i:s'), data_in = (0, data_1.dateFormat)(req.body.data_in, 'yyyy-MM-dd H:i:s');
+        const titulo = req.body.titulo, premios = req.body.premios, tipo = (_a = req.body.tipo) !== null && _a !== void 0 ? _a : 'todos', qt_venc = Number(req.body.qt_venc), data_so = (0, data_1.dateFormat)(req.body.data_so, 'yyyy-MM-dd H:i:s'), data_in = (0, data_1.dateFormat)(req.body.data_in, 'yyyy-MM-dd H:i:s');
         if ((new Date(data_so.toString())).getTime() < (new Date(data_in.toString())).getTime())
             return (0, response_1.default)(res).error(400, 'Bad Request - A data de inscrição não pode ser maior que a data do sorteio');
         (0, mysqli_1.default)().query(`
@@ -185,6 +186,7 @@ class SorteioManager {
         });
     }
     static update(req, res) {
+        var _a;
         try {
             (0, assertion_1.default)()
                 .isAdmin(req.user)
@@ -193,7 +195,7 @@ class SorteioManager {
         catch (e) {
             return (0, response_1.default)(res).error(401, 'Unauthorized');
         }
-        const titulo = req.body.titulo, tipo = req.body.tipo, premios = req.body.premios, soteio_id = Number(req.body.soteio_id), qt_venc = Number(req.body.qt_venc), data_so = (0, data_1.dateFormat)(req.body.data_so, 'yyyy-MM-dd H:i:s'), data_in = (0, data_1.dateFormat)(req.body.data_in, 'yyyy-MM-dd H:i:s');
+        const titulo = req.body.titulo, tipo = (_a = req.body.tipo) !== null && _a !== void 0 ? _a : 'todos', premios = req.body.premios, soteio_id = Number(req.body.soteio_id), qt_venc = Number(req.body.qt_venc), data_so = (0, data_1.dateFormat)(req.body.data_so, 'yyyy-MM-dd H:i:s'), data_in = (0, data_1.dateFormat)(req.body.data_in, 'yyyy-MM-dd H:i:s');
         if ((new Date(data_so.toString())).getTime() < (new Date(data_in.toString())).getTime())
             return (0, response_1.default)(res).error(400, 'Bad Request - A data de inscrição não pode ser maior que a data do sorteio');
         (0, mysqli_1.default)().query(`

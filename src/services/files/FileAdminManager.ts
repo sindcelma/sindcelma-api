@@ -2,9 +2,6 @@ import { Request, Response } from "express";
 import fetch from 'node-fetch';
 import assertion from "../../lib/assertion";
 import response from "../../lib/response";
-import {  appendFileSync, writeFileSync, renameSync } from 'fs';
-import { join } from 'path';
-import { generateSlug } from '../../lib/jwt'
 import Config from "../../lib/config";
 
 class FileAdminManager {

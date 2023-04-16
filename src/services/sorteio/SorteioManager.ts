@@ -213,7 +213,7 @@ class SorteioManager {
 
         const titulo  = req.body.titulo,
               premios = req.body.premios,
-              tipo    = req.body.tipo,
+              tipo    = req.body.tipo ?? 'todos',
               qt_venc = Number(req.body.qt_venc),
               data_so = dateFormat(req.body.data_so, 'yyyy-MM-dd H:i:s'),
               data_in = dateFormat(req.body.data_in, 'yyyy-MM-dd H:i:s')
@@ -242,7 +242,7 @@ class SorteioManager {
         }
 
         const titulo    = req.body.titulo,
-              tipo      = req.body.tipo,
+              tipo      = req.body.tipo ?? 'todos',
               premios   = req.body.premios,
               soteio_id = Number(req.body.soteio_id),
               qt_venc   = Number(req.body.qt_venc),

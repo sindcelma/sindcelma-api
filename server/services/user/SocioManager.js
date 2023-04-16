@@ -444,7 +444,7 @@ class SocioManager {
     static update_email(req, res) {
         // alterar email
         let slug = req.body.slug;
-        let email = req.body.email;
+        let email = req.body.email ? req.body.email.trim() : null;
         if (!slug || !email) {
             return (0, response_1.default)(res).error(400, 'bad request');
         }
@@ -640,7 +640,7 @@ class SocioManager {
             const nome = req.body.nome;
             const sobrenome = req.body.sobrenome;
             const cpf = Socio_1.default.transformCpf(req.body.cpf);
-            const email = req.body.email;
+            const email = req.body.email ? req.body.email.trim() : null;
             const senha = yield (0, jwt_1.hashPass)(pass);
             const rg = req.body.rg;
             const sexo = req.body.sexo[0];
@@ -786,9 +786,9 @@ class SocioManager {
         });
     }
     static get_socio_by_login(req, res) {
-        let email = req.body.email;
+        let email = req.body.email ? req.body.email.trim() : null;
         let doc = Socio_1.default.transformCpf(req.body.doc);
-        if (!email && !doc) {
+        if (!email || !doc) {
             return (0, response_1.default)(res).error(400, 'Bad Request');
         }
         const conn = (0, mysqli_1.default)();
@@ -845,7 +845,7 @@ class SocioManager {
     }
     static cadastrar_usuario(req, res) {
         // verificar se o cliente enviou o CPF, email, senha
-        let email = req.body.email;
+        let email = req.body.email ? req.body.email.trim() : null;
         let doc = Socio_1.default.transformCpf(req.body.doc);
         let senha = req.body.senha;
         let news = req.body.news;

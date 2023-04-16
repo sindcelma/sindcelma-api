@@ -17,6 +17,7 @@ class Config {
             app_version: config_d.app_version,
             api_version: config_d.api_version,
             wp_noticias: config_d.wp_noticias,
+            wp_url: config_d.wp_url,
             package: config_d.package,
             packages: config_d.packages
         };

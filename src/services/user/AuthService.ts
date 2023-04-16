@@ -120,12 +120,14 @@ class AuthService {
     }
 
     static get_user(req:Request, res:Response){
+        console.log(req.user);
+        
         response(res).success(req.user)
     }
 
     static login(req:Request, res:Response){
 
-        const email = req.body.email
+        const email = req.body.email ? req.body.email.trim() : null
         const senha = req.body.senha
         const remem = req.body.rememberme
         const type  = req.body.type
@@ -179,7 +181,7 @@ class AuthService {
     public static recover(req:Request, res:Response){
         // gerar o código e enviar via email ou telefone
         // alterar versão do usuário
-        let email = req.body.email
+        let email = req.body.email ? req.body.email.trim() : null
         let cpf = Socio.transformCpf(req.body.doc) 
         let type = req.body.type
         let to = req.body.to
@@ -269,7 +271,7 @@ class AuthService {
      */
     public static check_code_recover(req:Request, res:Response) {
         
-        const email  = req.body.email;
+        const email  = req.body.email ? req.body.email.trim() : null;
         const codigo = req.body.codigo;
 
         if(!email || !codigo) return response(res).error(400, 'Bad Request')
@@ -306,7 +308,7 @@ class AuthService {
 
     public static change_pass_using_code(req:Request, res:Response){
         
-        const email  = req.body.email;
+        const email  = req.body.email ? req.body.email.trim() : null;
         const codigo = req.body.codigo;
         const senha  = req.body.senha;
 

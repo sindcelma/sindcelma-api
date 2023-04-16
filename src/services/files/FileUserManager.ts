@@ -1,130 +1,154 @@
 import { Request, Response } from 'express'
-import mysqli from '../../lib/mysqli'
-import { generateSlug } from '../../lib/jwt'
-import {  appendFileSync, copyFileSync, writeFileSync, renameSync } from 'fs';
-import { join } from 'path';
 import response from '../../lib/response';
+import assertion from "../../lib/assertion";
+import Config from "../../lib/config";
 
 import Jimp from 'jimp';
 
 
 class FileUserManager {
 
-    public static create_ghost(req:Request, res:Response){
+    public static async create_ghost(req:Request, res:Response){
         
-        const user_id = req.user.getId();
+        try {
+            assertion()
+            .isSocio(req.user)
+            .assert()
+        } catch(e){
+            return response(res).error(401, 'Unauthorized')
+        }
+
         const ext     = req.body.ext;
-        const type    = req.body.type != null ? req.body.type : "fav";
+        const dir     = req.body.type == null || req.body.type == 'fav' ? "nodoc" : req.body.type ;
 
-        if(!ext || !type) return response(res).error(400, 'Bad Request')
+        if(!ext) return response(res).error(400, 'Bad Request')
 
-        const slug = generateSlug(`${user_id}${Date()}`)+`_${type}`;
-        
-        const conn = mysqli()
-        conn.query("INSERT INTO user_images (user_id, slug, type, ext) VALUES (?,?,?,?)", 
-            [user_id, slug, type, ext], err => {
-            
-            if(err) return response(res).error(500, err.message);
-            const fileStr = `../../public/images/${type}/${slug}.${ext}.ghost`;
-            const file    = join(__dirname, fileStr);
 
-            try {
-                writeFileSync(file, "", {
-                    flag: 'w',
+        const urlAssets = Config.instance().json().asset
+
+        try {
+
+            const resp = await fetch(urlAssets+'/api/admin_file/create', {
+                method: 'POST', 
+                body: JSON.stringify({
+                    pair:Config.instance().getPair(),
+                    ext:ext,
+                    dir:'images/'+dir,
+                    salt:req.user.getId()
                 })
-                response(res).success({
+            })
+
+            const body = await resp.json()
+
+            if(body.code != 200){
+                return response(res).error(body.code, body.message)
+            }
+
+            response(res).success({
+                slug: body.message.slug
+            })
+        } catch (e) {
+            response(res).error(500, e)
+        }
+        
+
+    }
+
+    public static async append(req:Request, res:Response){
+        
+        try {
+            assertion()
+            .isSocio(req.user)
+            .assert()
+        } catch(e){
+            return response(res).error(401, 'Unauthorized')
+        }
+        
+        const data = req.body.data;
+        const slug = req.body.slug;
+        const ext  = req.body.ext;
+        const dir  = req.body.dir == null || req.body.dir == 'fav' ? "nodoc" : req.body.dir ;
+
+        if(!slug || !ext || !dir){
+            return response(res).error(400, 'Bad Request')
+        }
+
+        const urlAssets = Config.instance().json().asset
+        
+        try {
+
+            const resp = await fetch(urlAssets+'/api/admin_file/append', {
+                method: 'POST', 
+                body: JSON.stringify({
+                    pair:Config.instance().getPair(),
+                    ext:ext,
+                    dir:'images/'+dir,
+                    data:data,
                     slug:slug
                 })
-            } catch (e) {
-                response(res).error(500, e)
+            })
+
+            const body = await resp.json()
+
+            if(body.code != 200){
+                return response(res).error(body.code, body.message)
             }
-
-        })
+            
+            response(res).success()
         
-
-    }
-
-    public static append(req:Request, res:Response){
-        
-        const user_id = req.user.getId();
-        const data    = req.body.data;
-        const slug    = req.body.slug;
-
-        if(!data || !slug) return response(res).error(400, 'Bad Request')
-
-        const conn = mysqli();
-
-        conn.query("SELECT ext, user_id, type FROM user_images WHERE slug = ? AND ativo = 0", [slug], (err, result) => {
-            
-            if(err) return response(res).error(500, 'Internal Error')
-            if(result.length == 0) return response(res).error()
-
-            const fileSel = result[0];
-            if(fileSel.user_id != user_id) return response(res).error(401, 'Unauthorized')
-            
-            const buff    =  Buffer.from(data, "base64")
-            const fileStr = `../../public/images/${fileSel.type}/${slug}.${fileSel.ext}.ghost`;
-            const file    = join(__dirname, fileStr);
-            
-            try {
-                appendFileSync(file, buff)
-                response(res).success()
-            } catch (e) {
-                response(res).error(500, 'Este arquivo não existe')
-            }
-        })
+        } catch (e) {
+            response(res).error(500, e)
+        }
 
     }
 
 
-    public static commit(req:Request, res:Response){
+    public static async commit(req:Request, res:Response){
 
-        const user_id = req.user.getId();
-        const email   = req.user.getEmail();
-        const slug    = req.body.slug;
 
-        if(!slug) return response(res).error(400, 'Bad Request')
+        try {
+            assertion()
+            .isSocio(req.user)
+            .assert()
+        } catch(e){
+            return response(res).error(401, 'Unauthorized')
+        }
 
-        const conn = mysqli();
-        conn.query("SELECT ext, user_id, type FROM user_images WHERE slug = ? AND ativo = 0", [slug], (err, result) => {
-            
-            if(err) return response(res).error(500, 'Internal Error 1')
-            if(result.length == 0) return response(res).error()
-            
-            const fileSel = result[0];
-            if(fileSel.user_id != user_id) return response(res).error(401, 'Unauthorized')
-            
-            const newF    = `../../public/images/${fileSel.type}/${slug}.${fileSel.ext}`;
-            const oldF    = `${newF}.ghost`;
-            const fileN   = join(__dirname, newF);
-            const fileO   = join(__dirname, oldF);
-            
-            try {
+        const slug = req.body.slug;
+        const ext  = req.body.ext;
+        const dir  = req.body.dir == null || req.body.dir == 'fav' ? "nodoc" : req.body.dir ;
+        console.log(dir);
+        
+        if(!slug || !ext || !dir){
+            return response(res).error(400, 'Bad Request')
+        }
 
-                renameSync(fileO, fileN)
-                
-                if(fileSel.type == 'nodoc' || fileSel.type == 'fav'){
-                    let fileFav   = `../../public/images/fav/${email}.${fileSel.ext}`
-                    const copy    = join(__dirname, fileFav)
-                    copyFileSync(fileN, copy)
-                    if(fileSel.ext != "jpg"){
-                        let to = `../../public/images/fav/${email}.jpg`
-                        FileUserManager.__save_fav_jpg(copy, to)
-                    }
-                }
+        const urlAssets = Config.instance().json().asset
+        
+        try {
 
-                conn.query("UPDATE user_images SET ativo = 1 WHERE slug = ?", [slug], err => {
-                    if(err) return response(res).error(500, 'Internal Error 1')
-                    response(res).success()
+            const resp1 = await fetch(urlAssets+'/api/admin_file/commit', {
+                method: 'POST', 
+                body: JSON.stringify({
+                    pair:Config.instance().getPair(),
+                    ext:ext,
+                    dir:'images/'+dir,
+                    to: dir == 'nodoc' ? 'images/fav/' : '',
+                    copy: dir == 'nodoc' ? req.user.getEmail() : '',
+                    slug: slug
                 })
+            })
 
-                
-            } catch (e) {
-                response(res).error(404, 'Este arquivo não existe')
+            const body = await resp1.json()
+            if(body.code != 200){
+                return response(res).error(body.code, body.message)
             }
-
-        })
-
+            
+            response(res).success(body.message)
+        
+        } catch (e) {
+            response(res).error(500, e)
+        }
 
     }
 
@@ -141,7 +165,6 @@ class FileUserManager {
         });
 
     }
-
 
 }
 

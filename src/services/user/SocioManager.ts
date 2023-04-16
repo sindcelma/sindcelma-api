@@ -522,7 +522,7 @@ class SocioManager {
         // alterar email
 
         let slug  = req.body.slug 
-        let email = req.body.email
+        let email = req.body.email ? req.body.email.trim() : null
 
         if(!slug || !email){
             return response(res).error(400, 'bad request')
@@ -762,7 +762,7 @@ class SocioManager {
         const nome       = req.body.nome 
         const sobrenome  = req.body.sobrenome 
         const cpf        = Socio.transformCpf(req.body.cpf);
-        const email      = req.body.email 
+        const email      = req.body.email ? req.body.email.trim() : null
         const senha      = await hashPass(pass)
         const rg         = req.body.rg
         const sexo       = req.body.sexo[0]
@@ -955,10 +955,10 @@ class SocioManager {
 
     public static get_socio_by_login(req:Request, res:Response){
 
-        let email = req.body.email 
+        let email = req.body.email ? req.body.email.trim() : null
         let doc   = Socio.transformCpf(req.body.doc);
         
-        if(!email && !doc){
+        if(!email || !doc){
             return response(res).error(400, 'Bad Request')
         }
         
@@ -1027,7 +1027,7 @@ class SocioManager {
 
     public static cadastrar_usuario(req:Request, res:Response){
         // verificar se o cliente enviou o CPF, email, senha
-        let email = req.body.email 
+        let email = req.body.email ? req.body.email.trim() : null
         let doc   = Socio.transformCpf(req.body.doc); 
         let senha = req.body.senha 
         let news  = req.body.news

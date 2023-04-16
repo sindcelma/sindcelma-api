@@ -48,7 +48,7 @@ class UserManager {
         });
     }
     static check_login(req, res) {
-        const doc = req.body.doc;
+        const doc = req.body.doc ? req.body.doc.trim() : null;
         if (!doc)
             return (0, response_1.default)(res).error(400, "Bad Request");
         const cpf = Socio_1.default.transformCpf(req.body.doc);
@@ -92,7 +92,7 @@ class UserManager {
         });
     }
     static check_email(req, res) {
-        const email = req.body.email;
+        const email = req.body.email ? req.body.email.trim() : null;
         if (!email)
             return (0, response_1.default)(res).error(401, 'Unauthorized');
         const conn = (0, mysqli_1.default)();
@@ -123,9 +123,9 @@ class UserManager {
     }
     static create_user(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!req.body.senha || !req.body.email)
+            const email = req.body.email ? req.body.email.trim() : null;
+            if (!req.body.senha || !email)
                 return (0, response_1.default)(res).error(400, 'Bad Request');
-            const email = req.body.email;
             const doc = Socio_1.default.transformCpf(req.body.doc);
             const senha = yield (0, jwt_1.hashPass)(req.body.senha);
             const conn = (0, mysqli_1.default)();
