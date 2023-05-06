@@ -120,8 +120,6 @@ class AuthService {
     }
 
     static get_user(req:Request, res:Response){
-        console.log(req.user);
-        
         response(res).success(req.user)
     }
 

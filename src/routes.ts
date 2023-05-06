@@ -8,6 +8,7 @@ import sorteios_routes    from './services/sorteio/routes'
 import noticias_routes    from './services/noticias/routes'
 import comunicados_routes from './services/comunicados/routes'
 import convenios_routes   from './services/convenios/routes'
+import notify_routes      from './services/notifications/routes'
 
 import Info from './services/Info'
 
@@ -22,6 +23,7 @@ export default (app:Express) => {
     app.use('/noticias', noticias_routes())
     app.use('/comunicados', comunicados_routes())
     app.use('/convenios', convenios_routes())
+    app.use('/notifications', notify_routes())
     app.use('/', (req:Request, res:Response) => res.send("BAD REQUEST"))
 
 }

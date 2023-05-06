@@ -12,6 +12,7 @@ interface conf {
     package:string,
     packages:packages,
     wp_noticias:boolean,
+    wp_categories:string,
     wp_url:string
 }
 
@@ -48,7 +49,8 @@ class Config {
             wp_noticias:config_d.wp_noticias,
             wp_url:     config_d.wp_url,
             package:    config_d.package,
-            packages:   config_d.packages
+            packages:   config_d.packages,
+            wp_categories: config_d.wp_categories
         }
 
         let dat:Buffer    = readFileSync(join(__dirname, `../../database.${this.typeinstance}.json`))

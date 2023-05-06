@@ -100,7 +100,6 @@ class AuthService {
         }));
     }
     static get_user(req, res) {
-        console.log(req.user);
         (0, response_1.default)(res).success(req.user);
     }
     static login(req, res) {
