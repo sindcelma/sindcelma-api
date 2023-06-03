@@ -1,3 +1,5 @@
+# ignore arquivos com dados sensiveis em desenvolvimento
+aws_commit.sh
 
 # ignore imagens de usuários
 src/public/images/doc/*.jpg

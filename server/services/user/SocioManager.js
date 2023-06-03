@@ -22,7 +22,40 @@ const node_fetch_1 = __importDefault(require("node-fetch"));
 const firebase_1 = __importDefault(require("../../lib/firebase"));
 const aws_1 = __importDefault(require("../../lib/aws"));
 const config_1 = __importDefault(require("../../lib/config"));
+const jwt_2 = require("../../lib/jwt");
 class SocioManager {
+    static cancelar_inscricao(req, res) {
+        let pass = req.body.pass;
+        if (!req.body.key || !pass) {
+            return (0, response_1.default)(res).error(400, 'bad request');
+        }
+        let user = req.user;
+        const conn = (0, mysqli_1.default)();
+        conn.query(`
+            SELECT temp_key, senha, socio_id
+            FROM   user
+            WHERE  id = ?
+        `, [user.getId()], (err1, result) => __awaiter(this, void 0, void 0, function* () {
+            if (err1) {
+                return (0, response_1.default)(res).error(500, err1);
+            }
+            if (result.length == 0) {
+                return (0, response_1.default)(res).error(404, 'Not Found');
+            }
+            if (req.body.key != result[0].temp_key) {
+                return (0, response_1.default)(res).error(403, 'need refresh key');
+            }
+            if (!(yield (0, jwt_2.comparePass)(pass, result[0].senha))) {
+                return (0, response_1.default)(res).error(402, 'senha incorreta');
+            }
+            conn.query("DELETE FROM socios WHERE id = ?", [result[0].socio_id], (err2) => {
+                if (err2) {
+                    return (0, response_1.default)(res).error(500, err2);
+                }
+                (0, response_1.default)(res).success();
+            });
+        }));
+    }
     static ghosts(req, res) {
         try {
             (0, assertion_1.default)()

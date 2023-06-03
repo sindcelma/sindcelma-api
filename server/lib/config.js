@@ -20,7 +20,8 @@ class Config {
             wp_url: config_d.wp_url,
             package: config_d.package,
             packages: config_d.packages,
-            wp_categories: config_d.wp_categories
+            wp_categories: config_d.wp_categories,
+            wp_categories_full: config_d.wp_categories_full
         };
         let dat = (0, fs_1.readFileSync)((0, path_1.join)(__dirname, `../../database.${this.typeinstance}.json`));
         this.database = JSON.parse(dat.toString());

@@ -3,7 +3,17 @@
     "app_version":"2.0.0",
     "package":"https://play.google.com/store/apps/details?id=sindcelma.com.br.sindcelma_app",
     "wp_noticias":true,
-    "wp_categories":"10,12",
+    "wp_categories":"5,4",
+    "wp_categories_full":[
+    	{
+	   "slug":"infoset",
+	   "id":"4"
+	},
+	{
+	   "slug":"sindcelma",
+	   "id":"5"
+	}
+    ],
     "packages":{
         "ios":"",
         "android":"https://play.google.com/store/apps/details?id=sindcelma.com.br.sindcelma_app"

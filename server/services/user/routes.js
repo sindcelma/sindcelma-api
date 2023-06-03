@@ -55,6 +55,7 @@ exports.default = () => {
     router.post('/socios/update_dados_profissionais', SocioManager_1.default.update_dados_profissionais);
     router.post('/socios/update_dados_pessoais', SocioManager_1.default.update_dados_pessoais);
     router.post('/socios/check_document', SocioManager_1.default.check_document);
+    router.post('/socios/cancelar_inscricao', SocioManager_1.default.cancelar_inscricao);
     return router;
 };
 //# sourceMappingURL=routes.js.map

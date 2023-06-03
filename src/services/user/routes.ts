@@ -64,6 +64,7 @@ export default () => {
     router.post('/socios/update_dados_pessoais', SocioManager.update_dados_pessoais)
 
     router.post('/socios/check_document', SocioManager.check_document)
+    router.post('/socios/cancelar_inscricao', SocioManager.cancelar_inscricao)
     
     return router
 

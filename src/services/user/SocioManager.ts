@@ -11,7 +11,57 @@ import firebase from "../../lib/firebase";
 import AwsService from "../../lib/aws";
 import Config from '../../lib/config';
 
+import User from '../../model/User'
+import { comparePass } from "../../lib/jwt";
+
 class SocioManager {
+
+    public static cancelar_inscricao(req:Request, res:Response){
+
+        let pass = req.body.pass
+
+        if(!req.body.key || !pass){
+            return response(res).error(400, 'bad request')
+        }
+
+        let user:User  = req.user 
+
+        const conn = mysqli()
+        
+        conn.query(`
+            SELECT temp_key, senha, socio_id
+            FROM   user
+            WHERE  id = ?
+        `, [user.getId()], async (err1, result) => { 
+
+            if(err1) {
+                return response(res).error(500, err1)
+            }
+
+            if(result.length == 0){
+                return response(res).error(404, 'Not Found')
+            }
+            
+            if(req.body.key != result[0].temp_key){
+                return response(res).error(403, 'need refresh key')
+            }
+
+            if(!(await comparePass(pass, result[0].senha))){
+                return response(res).error(402, 'senha incorreta')
+            }
+
+            conn.query("DELETE FROM socios WHERE id = ?", [result[0].socio_id], (err2) => {
+                
+                if(err2) {
+                    return response(res).error(500, err2)
+                }
+
+                response(res).success()
+            })
+
+        })
+
+    }
 
     public static ghosts(req:Request, res:Response){
         
@@ -622,7 +672,7 @@ class SocioManager {
 
         try {
 
-            const objDataUser:{slug:String, duration:Number} = JSON.parse(datasender);
+            const objDataUser:{slug:String, duration:number} = JSON.parse(datasender);
             
             if(Date.now() > objDataUser.duration){
                 return response(res).error(403, 'Forbiden - Link Expired')

@@ -6,6 +6,11 @@ interface packages {
     android:string
 }
 
+interface categ {
+    id:number,
+    slug:string
+}
+
 interface conf {
     app_version:string,
     api_version:string,
@@ -13,6 +18,7 @@ interface conf {
     packages:packages,
     wp_noticias:boolean,
     wp_categories:string,
+    wp_categories_full:categ[],
     wp_url:string
 }
 
@@ -44,13 +50,14 @@ class Config {
         const config_d    = JSON.parse(confd.toString())
 
         this.config_data  = {
-            app_version:config_d.app_version,
-            api_version:config_d.api_version,
-            wp_noticias:config_d.wp_noticias,
-            wp_url:     config_d.wp_url,
-            package:    config_d.package,
-            packages:   config_d.packages,
-            wp_categories: config_d.wp_categories
+            app_version:        config_d.app_version,
+            api_version:        config_d.api_version,
+            wp_noticias:        config_d.wp_noticias,
+            wp_url:             config_d.wp_url,
+            package:            config_d.package,
+            packages:           config_d.packages,
+            wp_categories:      config_d.wp_categories,
+            wp_categories_full: config_d.wp_categories_full
         }
 
         let dat:Buffer    = readFileSync(join(__dirname, `../../database.${this.typeinstance}.json`))
