@@ -8,8 +8,11 @@ const SocioManager_1 = __importDefault(require("./SocioManager"));
 const AuthService_1 = __importDefault(require("./AuthService"));
 const UserManager_1 = __importDefault(require("./UserManager"));
 const AdminManager_1 = __importDefault(require("./AdminManager"));
+const MailingManager_1 = __importDefault(require("./MailingManager"));
 const router = (0, express_1.Router)();
 exports.default = () => {
+    // mailing
+    router.post('/mailing/salvar', MailingManager_1.default.salvar);
     // admin
     router.post('/admin/list', AdminManager_1.default.list);
     router.post('/admin/add', AdminManager_1.default.add);

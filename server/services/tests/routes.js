@@ -22,6 +22,7 @@ exports.default = () => {
         router.get('/set/', Tests_1.default.setEmail);
         router.post('/api/', Tests_1.default.api_post);
         router.get('/401/', Tests_1.default.logout);
+        router.post('/salvar_email', Tests_1.default.save_email);
     }
     return router;
 };

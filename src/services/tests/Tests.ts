@@ -2,12 +2,21 @@ import { Request, Response } from "express"
 import response from "../../lib/response"
 import Config from '../../lib/config';
 import fetch from 'node-fetch'
+import mailing from '../../lib/mailing'
 
 class Tests {
 
+    public static async save_email(req:Request, res:Response){
+
+        mailing.salvar_email(req.body.nome, req.body.email, true, s => {
+            if(!s) return response(res).error(500, 'Erro ao tentar salvar')
+            response(res).success()
+        })
+        
+    }
+
     public static async change_image(req:Request, res:Response){
 
-    
         let result = await fetch(`${Config.instance().json().asset}/api/admin_file/change_name`, {
             method:'POST',
             body:JSON.stringify(req.body)

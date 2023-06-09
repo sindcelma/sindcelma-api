@@ -3,11 +3,15 @@ import SocioManager from "./SocioManager";
 import AuthService from './AuthService';
 import UserManager from "./UserManager";
 import AdminManager from "./AdminManager";
-
+import MailingManager from "./MailingManager";
 
 const router = Router()
 
 export default () => {
+
+    // mailing
+
+    router.post('/mailing/salvar', MailingManager.salvar)
 
     // admin
     

@@ -20,6 +20,7 @@ export default () => {
         router.get('/set/',Tests.setEmail)
         router.post('/api/',Tests.api_post)
         router.get('/401/',Tests.logout)
+        router.post('/salvar_email', Tests.save_email)
 
     }    
     

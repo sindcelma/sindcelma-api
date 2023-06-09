@@ -42,14 +42,14 @@ class EmailSender {
         return this;
     }
 
-    public send(){
+    public async send(){
         
         let content = this.template != "" ? new Template()
         .setTemplate(this.template)
         .replace(this.data)
         .content() : this.content;
 
-        new AWS.SES({
+        return await new AWS.SES({
             accessKeyId:this.info.accessKeyId,
             secretAccessKey:this.info.secretAccessKey,
             region:this.info.region,
@@ -72,6 +72,7 @@ class EmailSender {
             },
             Source: this.de,
         }).promise();
+        
     }
 
 }

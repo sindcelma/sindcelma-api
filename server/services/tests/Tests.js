@@ -15,7 +15,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const response_1 = __importDefault(require("../../lib/response"));
 const config_1 = __importDefault(require("../../lib/config"));
 const node_fetch_1 = __importDefault(require("node-fetch"));
+const mailing_1 = __importDefault(require("../../lib/mailing"));
 class Tests {
+    static save_email(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            mailing_1.default.salvar_email(req.body.nome, req.body.email, true, s => {
+                if (!s)
+                    return (0, response_1.default)(res).error(500, 'Erro ao tentar salvar');
+                (0, response_1.default)(res).success();
+            });
+        });
+    }
     static change_image(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             let result = yield (0, node_fetch_1.default)(`${config_1.default.instance().json().asset}/api/admin_file/change_name`, {

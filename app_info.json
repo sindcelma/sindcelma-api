@@ -6,13 +6,13 @@
     "wp_categories":"5,4",
     "wp_categories_full":[
     	{
-	   "slug":"infoset",
-	   "id":"4"
-	},
-	{
-	   "slug":"sindcelma",
-	   "id":"5"
-	}
+        "slug":"infoset",
+        "id":"4"
+        },
+        {
+        "slug":"sindcelma",
+        "id":"5"
+        }
     ],
     "packages":{
         "ios":"",
