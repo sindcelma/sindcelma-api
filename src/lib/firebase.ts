@@ -45,6 +45,7 @@ export default {
 
         if(devices.length == 0){
             mysqli().query("SELECT user_devices.code FROM `user_devices` WHERE NOT user_devices.code is null;", (err, resp) => {
+                if(resp.length == 0) return;
                 sending(title, message, resp.map(r => r.code));
             })
             return;
