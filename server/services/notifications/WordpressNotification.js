@@ -8,13 +8,13 @@ const response_1 = __importDefault(require("../../lib/response"));
 const firebase_1 = __importDefault(require("../../lib/firebase"));
 class WordpressNotification {
     static send(req, res) {
-        if (!req.body.pair || !req.body.title || !req.body.text) {
+        if (!req.body.pair || !req.body.title) {
             return (0, response_1.default)(res).error(400, 'Bad Request');
         }
         if (req.body.pair != config_1.default.instance().getPair()) {
             return (0, response_1.default)(res).error(401, 'Unauthorized');
         }
-        firebase_1.default.sendNotification(req.body.title, req.body.text);
+        firebase_1.default.sendNotification('Notícias', req.body.title);
         (0, response_1.default)(res).success();
     }
 }

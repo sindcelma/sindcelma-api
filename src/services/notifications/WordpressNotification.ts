@@ -8,7 +8,7 @@ class WordpressNotification {
 
     public static send(req:Request, res:Response){
 
-        if(!req.body.pair || !req.body.title || !req.body.text){
+        if(!req.body.pair || !req.body.title){
             return response(res).error(400, 'Bad Request')
         }
 
@@ -16,7 +16,7 @@ class WordpressNotification {
             return response(res).error(401, 'Unauthorized')
         }
 
-        firebase.sendNotification(req.body.title, req.body.text)
+        firebase.sendNotification('Notícias', req.body.title)
         response(res).success()
 
     }
