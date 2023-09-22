@@ -16,6 +16,63 @@ interface msg { session:String, user:User, remembermetk?:any }
 
 class AuthService {
 
+    static login(req:Request, res:Response){
+
+        const email = req.body.email ? req.body.email.trim() : null
+        const senha = req.body.senha
+        const remem = req.body.rememberme
+        const type  = req.body.type
+
+        getUser(type, email, senha, async (user, error, msg) => {
+
+            await new Promise(r => setTimeout(r, 1500));
+
+            if(error){
+                return response(res).error(500, msg)
+            }
+            
+            const token = generateToken(type, {
+                id:user.getId(),
+                email:user.getEmail(),
+                version:user.getVersion()
+            })
+
+            const message:msg = {
+                session: token,
+                user:user
+            }
+
+            message.session = token
+                    
+            if(remem){
+
+                let conn = mysqli()
+                message.remembermetk = user.getRememberMeToken()
+                try {
+                    await conn.query(`DELETE FROM user_devices WHERE user_id = ?`, [user.getId()]);
+                    await conn.query(
+                        "INSERT INTO user_devices (user_id, rememberme) VALUES (?,?)", 
+                        [user.getId(), message.remembermetk]
+                    )
+                } catch (error) {
+                    return response(res).error(500, 'Erro no servidor')
+                }
+                
+            }
+            
+            return response(res).success(message)
+
+        }, remem)
+
+    }
+
+    static rememberme_web_session(req:Request, res:Response){
+        
+    }
+
+    static web_login(req:Request, res:Response) {
+
+    }
 
     static generate_temp_key(req:Request, res:Response){
 
@@ -123,55 +180,7 @@ class AuthService {
         response(res).success(req.user)
     }
 
-    static login(req:Request, res:Response){
-
-        const email = req.body.email ? req.body.email.trim() : null
-        const senha = req.body.senha
-        const remem = req.body.rememberme
-        const type  = req.body.type
-
-        getUser(type, email, senha, async (user, error, msg) => {
-
-            await new Promise(r => setTimeout(r, 1500));
-
-            if(error){
-                return response(res).error(500, msg)
-            }
-            
-            const token = generateToken(type, {
-                id:user.getId(),
-                email:user.getEmail(),
-                version:user.getVersion()
-            })
-
-            const message:msg = {
-                session: token,
-                user:user
-            }
-
-            message.session = token
-                    
-            if(remem){
-
-                let conn = mysqli()
-                message.remembermetk = user.getRememberMeToken()
-                try {
-                    await conn.query(`DELETE FROM user_devices WHERE user_id = ?`, [user.getId()]);
-                    await conn.query(
-                        "INSERT INTO user_devices (user_id, rememberme) VALUES (?,?)", 
-                        [user.getId(), message.remembermetk]
-                    )
-                } catch (error) {
-                    return response(res).error(500, 'Erro no servidor')
-                }
-                
-            }
-            
-            return response(res).success(message)
-
-        }, remem)
-
-    }
+    
 
     /**
      * testado: false
