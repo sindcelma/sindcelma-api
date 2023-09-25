@@ -24,6 +24,44 @@ const path_1 = require("path");
 const config_1 = __importDefault(require("../../lib/config"));
 const Admin_1 = __importDefault(require("../../model/Admin"));
 class AuthService {
+    static login(req, res) {
+        const email = req.body.email ? req.body.email.trim() : null;
+        const senha = req.body.senha;
+        const remem = req.body.rememberme;
+        const type = req.body.type;
+        (0, UserFactory_1.getUser)(type, email, senha, (user, error, msg) => __awaiter(this, void 0, void 0, function* () {
+            yield new Promise(r => setTimeout(r, 1500));
+            if (error) {
+                return (0, response_1.default)(res).error(500, msg);
+            }
+            const token = (0, jwt_1.generateToken)(type, {
+                id: user.getId(),
+                email: user.getEmail(),
+                version: user.getVersion()
+            });
+            const message = {
+                session: token,
+                user: user
+            };
+            message.session = token;
+            if (remem) {
+                let conn = (0, mysqli_1.default)();
+                message.remembermetk = user.getRememberMeToken();
+                try {
+                    yield conn.query(`DELETE FROM user_devices WHERE user_id = ?`, [user.getId()]);
+                    yield conn.query("INSERT INTO user_devices (user_id, rememberme) VALUES (?,?)", [user.getId(), message.remembermetk]);
+                }
+                catch (error) {
+                    return (0, response_1.default)(res).error(500, 'Erro no servidor');
+                }
+            }
+            return (0, response_1.default)(res).success(message);
+        }), remem);
+    }
+    static rememberme_web_session(req, res) {
+    }
+    static web_login(req, res) {
+    }
     static generate_temp_key(req, res) {
         const senha = req.body.senha;
         if (!senha)
@@ -101,40 +139,6 @@ class AuthService {
     }
     static get_user(req, res) {
         (0, response_1.default)(res).success(req.user);
-    }
-    static login(req, res) {
-        const email = req.body.email ? req.body.email.trim() : null;
-        const senha = req.body.senha;
-        const remem = req.body.rememberme;
-        const type = req.body.type;
-        (0, UserFactory_1.getUser)(type, email, senha, (user, error, msg) => __awaiter(this, void 0, void 0, function* () {
-            yield new Promise(r => setTimeout(r, 1500));
-            if (error) {
-                return (0, response_1.default)(res).error(500, msg);
-            }
-            const token = (0, jwt_1.generateToken)(type, {
-                id: user.getId(),
-                email: user.getEmail(),
-                version: user.getVersion()
-            });
-            const message = {
-                session: token,
-                user: user
-            };
-            message.session = token;
-            if (remem) {
-                let conn = (0, mysqli_1.default)();
-                message.remembermetk = user.getRememberMeToken();
-                try {
-                    yield conn.query(`DELETE FROM user_devices WHERE user_id = ?`, [user.getId()]);
-                    yield conn.query("INSERT INTO user_devices (user_id, rememberme) VALUES (?,?)", [user.getId(), message.remembermetk]);
-                }
-                catch (error) {
-                    return (0, response_1.default)(res).error(500, 'Erro no servidor');
-                }
-            }
-            return (0, response_1.default)(res).success(message);
-        }), remem);
     }
     /**
      * testado: false

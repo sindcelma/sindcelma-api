@@ -18,6 +18,7 @@ const mysqli_1 = __importDefault(require("../../lib/mysqli"));
 const response_1 = __importDefault(require("../../lib/response"));
 const Socio_1 = __importDefault(require("../../model/Socio"));
 const crypto_1 = __importDefault(require("crypto"));
+const data_1 = require("../../lib/data");
 const node_fetch_1 = __importDefault(require("node-fetch"));
 const firebase_1 = __importDefault(require("../../lib/firebase"));
 const aws_1 = __importDefault(require("../../lib/aws"));
@@ -664,6 +665,124 @@ class SocioManager {
             });
         });
     }
+    static get_data(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!req.params.slug)
+                return (0, response_1.default)(res).error(404, "Not Found");
+            let slug = req.params.slug;
+            (0, mysqli_1.default)().query(`select 
+                    socios.nome as nome,
+                    socios.sobrenome as sobrenome,
+                    socios.cpf as cpf,
+                    socios.np as np,
+                    socios.status as status,
+                    dados_pess.rg as rg,
+                    dados_pess.sexo as genero,
+                    dados_pess.estado_civil as estado_civil,
+                    dados_pess.data_nascimento as data_nascimento,
+                    dados_pess.telefone as telefone,
+                    dados_prof.cargo as cargo,
+                    dados_prof.data_admissao as data_admissao,
+                    user.email as email
+                from socios 
+                    join user on user.socio_id = socios.id 
+                    join socios_dados_profissionais as dados_prof on dados_prof.socio_id = socios.id 
+                    join socios_dados_pessoais as dados_pess on dados_pess.socio_id = socios.id 
+                where socios.slug = ? AND socios.status < 3;`, [slug], (err, result) => {
+                if (err)
+                    return (0, response_1.default)(res).error(500, 'Server Error');
+                if (result.length == 0)
+                    return (0, response_1.default)(res).error(404, "Not Found");
+                let socio = result[0];
+                if (socio.status > 2)
+                    return (0, response_1.default)(res).error(404, "Not Found");
+                socio.data_nascimento = (0, data_1.dateFormat)(new Date(socio.data_nascimento.toString()), "dd/MM/yyyy");
+                socio.data_admissao = (0, data_1.dateFormat)(new Date(socio.data_admissao.toString()), "dd/MM/yyyy");
+                (0, response_1.default)(res).success(socio);
+            });
+        });
+    }
+    static cadastrar_full_socio_web(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const pass = req.body.senha.trim();
+            if (pass == "")
+                return (0, response_1.default)(res).error(400, 'Bad Request 1');
+            const empresa_id = 1;
+            const nome = req.body.nome;
+            const sobrenome = req.body.sobrenome;
+            const cpf = Socio_1.default.transformCpf(req.body.cpf);
+            const email = req.body.email ? req.body.email.trim() : null;
+            const senha = yield (0, jwt_1.hashPass)(pass);
+            const rg = req.body.rg;
+            const sexo = req.body.sexo[0];
+            const civil = req.body.estado_civil;
+            const nascimento = req.body.data_nascimento;
+            const telefone = req.body.telefone;
+            const cargo = req.body.cargo;
+            const admissao = req.body.data_admissao;
+            const np = req.body.np;
+            if (!email || !cpf || !senha || !nome || !sobrenome || !rg || !sexo
+                || !civil || !nascimento || !telefone || !cargo || !admissao || !np) {
+                return (0, response_1.default)(res).error(400, 'Bad Request 1');
+            }
+            const conn = (0, mysqli_1.default)();
+            const slug = (0, jwt_1.generateSlug)(cpf + String(new Date().getMilliseconds()) + String(Math.random()));
+            const salt = (0, jwt_1.generateSlug)(slug + String(new Date().getMilliseconds()) + String(Math.random()));
+            conn.query('SELECT id FROM user WHERE email = ?', [email], (err1, resultemail) => {
+                if (err1)
+                    return (0, response_1.default)(res).error(500, "Erro no banco de dados");
+                if (resultemail.length > 0)
+                    return (0, response_1.default)(res).error(400, 'Este e-mail já está em uso');
+                conn.query(`
+                INSERT INTO socios (nome, sobrenome, np, cpf, slug, salt, status)
+                VALUES (?,?,?,?,?,?,0)
+            `, [nome, sobrenome, np, cpf, slug, salt], (err2, result) => __awaiter(this, void 0, void 0, function* () {
+                    if (err2)
+                        return (0, response_1.default)(res).error(500, "Já existe um sócio cadastrado com este documento");
+                    const socio_id = result.insertId;
+                    try {
+                        yield (0, node_fetch_1.default)(`${config_1.default.instance().json().asset}/api/server_file/add_random_fav`, {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                pair: config_1.default.instance().getPair(),
+                                email: email
+                            })
+                        });
+                    }
+                    catch (error) {
+                        console.log("nao conseguiu...");
+                    }
+                    conn.query(`
+                    INSERT INTO user (email, senha, socio_id) VALUES (?,?,?)
+                `, [email, senha, socio_id], (err3) => {
+                        if (err3)
+                            return (0, response_1.default)(res).error(400, 'Este e-mail já está em uso');
+                        conn.query(`
+                        INSERT INTO socios_dados_pessoais
+                        (socio_id, rg, sexo, estado_civil, data_nascimento, telefone)
+                        VALUES (?,?,?,?,?,?)
+                    `, [socio_id, rg, sexo, civil, nascimento, telefone], err4 => {
+                            if (err4)
+                                return (0, response_1.default)(res).error(500, err4.message);
+                            conn.query(`
+                            INSERT INTO socios_dados_profissionais
+                            (empresa_id, socio_id, cargo, data_admissao, num_matricula)
+                            VALUES (?,?,?,?,?)
+                        `, [empresa_id, socio_id, cargo, admissao, '']);
+                            conn.query("UPDATE socios SET status = 2 WHERE id = ?", [socio_id], (err5) => {
+                                if (err5) {
+                                    return (0, response_1.default)(res).error(500, err5.message);
+                                }
+                                (0, response_1.default)(res).success({
+                                    slug: slug
+                                });
+                            });
+                        });
+                    });
+                }));
+            });
+        });
+    }
     static cadastrar_full_socio(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             const pass = req.body.senha.trim();
@@ -689,43 +808,38 @@ class SocioManager {
             const conn = (0, mysqli_1.default)();
             const slug = (0, jwt_1.generateSlug)(cpf + String(new Date().getMilliseconds()) + String(Math.random()));
             const salt = (0, jwt_1.generateSlug)(slug + String(new Date().getMilliseconds()) + String(Math.random()));
-            conn.query('SELECT id FROM user WHERE email = ?', [email], (err, resultemail) => {
-                if (err)
-                    return (0, response_1.default)(res).error(500, "Já existe um sócio cadastrado com este documento");
+            conn.query('SELECT id FROM user WHERE email = ?', [email], (err1, resultemail) => {
+                if (err1)
+                    return (0, response_1.default)(res).error(500, "Erro no banco de dados");
                 if (resultemail.length > 0)
                     return (0, response_1.default)(res).error(400, 'Este e-mail já está em uso');
                 conn.query(`
                 INSERT INTO socios (nome, sobrenome, cpf, slug, salt, status)
                 VALUES (?,?,?,?,?,0)
-            `, [nome, sobrenome, cpf, slug, salt], (err, result) => {
-                    if (err) {
+            `, [nome, sobrenome, cpf, slug, salt], (err2, result) => {
+                    if (err2)
                         return (0, response_1.default)(res).error(500, "Já existe um sócio cadastrado com este documento");
-                    }
                     const socio_id = result.insertId;
                     conn.query(`
                     INSERT INTO user (email, senha, socio_id) VALUES (?,?,?)
-                `, [email, senha, socio_id], (err) => {
-                        if (err)
+                `, [email, senha, socio_id], (err3) => {
+                        if (err3)
                             return (0, response_1.default)(res).error(400, 'Este e-mail já está em uso');
-                        if (err) {
-                            return (0, response_1.default)(res).error(500, 'Este e-mail já está cadastrado');
-                        }
                         conn.query(`
                         INSERT INTO socios_dados_pessoais
                         (socio_id, rg, sexo, estado_civil, data_nascimento, telefone)
                         VALUES (?,?,?,?,?,?)
-                    `, [socio_id, rg, sexo, civil, nascimento, telefone], err2 => {
-                            if (err2) {
-                                return (0, response_1.default)(res).error(500, err2.message);
-                            }
+                    `, [socio_id, rg, sexo, civil, nascimento, telefone], err4 => {
+                            if (err4)
+                                return (0, response_1.default)(res).error(500, err4.message);
                             conn.query(`
                             INSERT INTO socios_dados_profissionais
                             (empresa_id, socio_id, cargo, data_admissao, num_matricula)
                             VALUES (?,?,?,?,?)
                         `, [empresa_id, socio_id, cargo, admissao, '']);
-                            conn.query("UPDATE socios SET status = 1 WHERE id = ?", [socio_id], (err4) => {
-                                if (err4) {
-                                    return (0, response_1.default)(res).error(500, err4.message);
+                            conn.query("UPDATE socios SET status = 1 WHERE id = ?", [socio_id], (err5) => {
+                                if (err5) {
+                                    return (0, response_1.default)(res).error(500, err5.message);
                                 }
                                 (0, response_1.default)(res).success({
                                     cpf: cpf,

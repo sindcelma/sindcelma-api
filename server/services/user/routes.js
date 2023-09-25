@@ -34,6 +34,7 @@ exports.default = () => {
     router.post('/close_all_sessions', UserManager_1.default.close_all_sessions);
     router.post('/check_login', UserManager_1.default.check_login);
     // socios
+    router.get('/socios/data/:slug', SocioManager_1.default.get_data);
     router.post('/socios/ghosts', SocioManager_1.default.ghosts);
     router.post('/socios/set_ghost', SocioManager_1.default.set_ghost);
     router.post('/socios/set_diretor', SocioManager_1.default.set_diretor);
@@ -42,6 +43,7 @@ exports.default = () => {
     router.post('/socios/update_doc_by_np', SocioManager_1.default.update_doc_by_np);
     router.post('/socios/check_status', SocioManager_1.default.check_status);
     router.post('/socios/cadastrar_full_socio', SocioManager_1.default.cadastrar_full_socio);
+    router.post('/socios/cadastrar_full_socio_web', SocioManager_1.default.cadastrar_full_socio_web);
     router.post('/socios/cadastrar_usuario', SocioManager_1.default.cadastrar_usuario);
     router.post('/socios/delete_usuario', SocioManager_1.default.delete_usuario);
     router.post('/socios/cadastrar_socio', SocioManager_1.default.cadastrar_socio);

@@ -40,6 +40,8 @@ export default () => {
 
     // socios
 
+    router.get('/socios/data/:slug', SocioManager.get_data)
+
     router.post('/socios/ghosts', SocioManager.ghosts)
     router.post('/socios/set_ghost', SocioManager.set_ghost)
     router.post('/socios/set_diretor', SocioManager.set_diretor)
@@ -49,6 +51,7 @@ export default () => {
     router.post('/socios/update_doc_by_np', SocioManager.update_doc_by_np)
     router.post('/socios/check_status', SocioManager.check_status)
     router.post('/socios/cadastrar_full_socio', SocioManager.cadastrar_full_socio)
+    router.post('/socios/cadastrar_full_socio_web', SocioManager.cadastrar_full_socio_web)
     router.post('/socios/cadastrar_usuario', SocioManager.cadastrar_usuario)
     router.post('/socios/delete_usuario', SocioManager.delete_usuario)
     router.post('/socios/cadastrar_socio', SocioManager.cadastrar_socio)
